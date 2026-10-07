@@ -1967,6 +1967,61 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
      `Beat    ${B.bpm?Math.round(B.bpm)+' BPM':'-'}  sure ${pc(B.conf)} %  (2 s avg ${pc(G.cs)} %)\n`+
      `Bass    ${pc(G.ls)} %  (music usually 70-90, talk 50-60)\n`+
      `Gate    ${pc(L.gate)} %  resting: ${why}\n`+pl;},250);}
+/* Oct 7: stats recorder (designer tools only: #dev). A "● Log" button in the top-right corner (clear of the phone song bar and the listening read-out, top-left). Tap it, play
+   something (a song file, the demo or Listen live), tap it again: the page saves a spreadsheet (CSV) with one row per frame
+   (~60 a second) of what the ears heard and what each player did. Made for the calibration track (TestTrack v1, made by
+   tools/test-track/make_calibration_track.py in the claude.ai project), whose every hit and sung line is known, so
+   tools/score-log.py can score a log against it instead of anyone judging screenshots.
+   - Song file ("direct feed": the file goes straight into the ears, no mic) = the perfect-signal baseline; song_t is the
+     playhead, so rows line up with the track exactly.
+   - Listen live (speaker + mic) = the real-room test; song_t is empty and the scorer lines the log up on the track's
+     level-set hiss (3.0 s) and its two slate beeps (1.0 s, 186.0 s).
+   It only reads what the band already works out each frame (nothing changes in how the band plays) and the file only leaves
+   the device through saveFile when the designer taps Stop. Logging stops by itself after 15 minutes. */
+{const btn=document.createElement('button');btn.id='statsLog';btn.type='button';btn.hidden=true;
+ btn.style.cssText='position:fixed;right:calc(10px + env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));z-index:71;font:12px system-ui,sans-serif;color:#fff;background:rgba(0,0,0,.6);'+
+   'border:1px solid #777;border-radius:14px;padding:5px 11px;cursor:pointer';
+ document.body.appendChild(btn);
+ const LOG={on:false,rows:[],t0:0,meta:{},prev:{}};window.STATSLOG=LOG;
+ const COLS=['t','song_t','mode','playing','in_db','turnup_db','background_db','music_on','gate','talking','bpm','beat_conf','beat_n','bob','bass_share',
+   'drums','bass','guitar','keys','vocals','kick_hit','snare_hit','hat_hit','sing_line','mouth_open'];
+ const tdb=new Float32Array(2048),r3=v=>v==null||!isFinite(v)?'':Math.round(v*1000)/1000,db1=v=>v>0?Math.round(200*Math.log10(v))/10:-99;
+ const pl=document.getElementById('player'),M=id=>members.find(m=>m.id===id);
+ const songT=()=>L.mode!=='file'?null:L.via==='buffer'?(L.buf?L.bufPos():null):(pl?pl.currentTime:null);
+ const playing=()=>L.mode==='file'?(L.via==='buffer'?!!L.bs:!!(pl&&!pl.paused)):!!L.mode;
+ function row(){if(!L.ctx||!L.an)return;
+   L.an.getFloatTimeDomainData(tdb);let r=0;for(let i=0;i<tdb.length;i++)r+=tdb[i]*tdb[i];r=Math.sqrt(r/tdb.length);
+   const A=L.ms&&L.agc?L.agc:null;if(A)r/=Math.max(1e-6,A.g||1);   // live sound: the level BEFORE the turn-up (what the mic really hears)
+   const B=L.beat||{},d=M('drums'),v=M('vocals'),hit=k=>{const x=d&&d.last?d.last[k]:null,p=LOG.prev[k];LOG.prev[k]=x;return x!=null&&p!=null&&x!==p?1:0;};
+   LOG.rows.push([r3((performance.now()-LOG.t0)/1000),r3(songT()),L.mode||'',playing()?1:0,db1(r),A?db1(A.g||1):'',A?db1(A.nf||0):'',A?(A.on?1:0):'',
+     r3(L.gate),L.talking?1:0,B.bpm?Math.round(B.bpm*10)/10:'',r3(B.conf),B.n||0,r3(BV.a),r3(L.energy(40,150)),
+     ...['drums','bass','guitar','keys','vocals'].map(id=>r3((M(id)||{}).env)),hit('k'),hit('s'),hit('h'),v&&v.open?1:0,v&&v.mouth?1:0]);}
+ function loop(){if(!LOG.on)return;requestAnimationFrame(loop);
+   try{row();}catch(e){}   // a bad frame never stops the log
+   if(performance.now()-LOG.t0>15*60e3)stop();}
+ function start(){LOG.rows=[];LOG.prev={};LOG.t0=performance.now();LOG.on=true;
+   const tr=L.stream&&L.stream.getAudioTracks()[0],s=tr&&tr.getSettings?tr.getSettings():{};
+   LOG.meta={started:new Date().toISOString(),song:L.songName||'',mode:L.mode||'',sample_rate:L.ctx?L.ctx.sampleRate:'',
+     mic_clean_up:L.ms?`echo ${s.echoCancellation} noise ${s.noiseSuppression} auto ${s.autoGainControl}`:'',
+     screen:`${innerWidth}x${innerHeight}@${devicePixelRatio}`,browser:navigator.userAgent};
+   requestAnimationFrame(loop);}
+ async function stop(){if(!LOG.on)return;LOG.on=false;
+   const seen=[...new Set(LOG.rows.map(r=>r[2]).filter(Boolean))];if(seen.length)LOG.meta.mode=seen.join('+');   // the source may start after the log
+   if(!LOG.meta.song&&L.songName)LOG.meta.song=L.songName;if(!LOG.meta.sample_rate&&L.ctx)LOG.meta.sample_rate=L.ctx.sampleRate;
+   const esc=x=>/[",\n]/.test(String(x))?'"'+String(x).replace(/"/g,'""')+'"':x;
+   const head=Object.entries(LOG.meta).map(([k,v])=>'# '+k+','+esc(v));
+   const csv=[...head,COLS.join(','),...LOG.rows.map(r=>r.join(','))].join('\n')+'\n';
+   const st=new Date(),p2=n=>String(n).padStart(2,'0'),nm=(LOG.meta.mode==='mic'?'mic':LOG.meta.mode||'log')+'-'+
+     (LOG.meta.song||'').replace(/[^\w-]+/g,'').slice(0,24);
+   await saveFile(`band-log-${st.getFullYear()}${p2(st.getMonth()+1)}${p2(st.getDate())}-${p2(st.getHours())}${p2(st.getMinutes())}-${nm}.csv`,
+     new Blob([csv],{type:'text/csv'}));}
+ btn.onclick=()=>{if(LOG.on)stop();else start();paint();};
+ const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
+ function paint(){const cl=document.body.classList,vis=cl.contains('dev')&&(LOG.on||!cl.contains('starting')&&!!L.mode);   // while logging it stays, so it can always be stopped
+   btn.hidden=!vis;if(!vis)return;
+   btn.textContent=LOG.on?`■ Stop log ${fmt((performance.now()-LOG.t0)/1000)} · ${LOG.rows.length} rows`:'● Log';
+   btn.style.background=LOG.on?'rgba(190,30,30,.85)':'rgba(0,0,0,.6)';}
+ setInterval(paint,250);}
 /* PATCH08: "How it works" popup (3 cards), the "?" on the menu, social links. Comes before UIART so its buttons get dressed too. */
 const SOCIAL=[   /* the designer's accounts: put the full address in url ('' = shown dimmed, "Coming soon") */
   {id:'instagram',name:'Instagram',short:'IG',url:''},
