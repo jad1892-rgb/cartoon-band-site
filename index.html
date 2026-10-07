@@ -521,8 +521,10 @@ const artURL=u=>(typeof u==='string'&&u.startsWith('@s:'))?((typeof S!=='undefin
 // Designer tools -> "Try-out options" on the Edit band screen (or #opt=smoothBeat,softLights in the address). Remembered by this
 // browser only; a user never sees them. Each option is checked where it acts: OPT.on('name'). The bar hides when the list is empty.
 window.OPT=(function(){
-  const LIST=[];   // Oct 7: all six try-outs (smoothBeat, softLights, halfLights, roomVocals, closerHint, talkCheck) were signed off
+  const LIST=[   // Oct 7: the first six try-outs (smoothBeat, softLights, halfLights, roomVocals, closerHint, talkCheck) were signed off
                   // and are now normal behaviour. Add new ones here as ['key','Label','tip']; dropped ones are deleted.
+    ['quietMusic','Quiet music (Listen live)','Oct 7, from the TestTrack phone logs: the room background is learned only from quiet moments, a lower "too quiet" floor, music held through the gaps between hits, and the talk check waits 6 s. Quiet verses should keep the band playing.'],
+  ];
   let v={};try{v=JSON.parse(localStorage.getItem('bandOpt')||'{}')||{};}catch(e){}
   const m=location.hash.match(/opt=([\w,]+)/);if(m)m[1].split(',').forEach(k=>{v[k]=true;});
   const O={list:LIST,on:k=>!!v[k],set(k,b){v[k]=!!b;try{localStorage.setItem('bandOpt',JSON.stringify(v));}catch(e){}}};
@@ -564,8 +566,33 @@ const L={ctx:null,an:null,data:new Uint8Array(1024),mode:null,tb:new Float32Arra
     if(A.t==null){Object.assign(A,{t:tt,t0:tt,pw:r*r,nf:Math.min(r,.001),on:false});}const dt=Math.min(.25,Math.max(0,tt-A.t));A.t=tt;
     A.pw+=(r*r-A.pw)*(1-Math.exp(-dt/.3));const sl=Math.sqrt(A.pw);   // the level averaged over ~0.3 s
     // the room's background: follows the quiet moments down within ~1 s, creeps up over ~60 s, never above 20 dB under the music
+    if(window.OPT&&OPT.on('quietMusic')){
+      /* Oct 7 try-out "quietMusic" (TestTrack v1 on an iPhone 25 cm from a studio monitor, 62 and 70 dB). The old rule
+         let the room's "background" creep up towards the music while the band played loud, so a verse 18 dB quieter than
+         the chorus counted as background and the band rested; and its fixed -54 dBFS floor sits right where a phone hears
+         normal listening volume. Tuned by replaying this rule on room recordings of TestTrack (tools/test-track):
+         - the first second of listening learns the room (its quietest level, ignoring the digital silence of a mic
+           waking up); after that the background follows the room's average over ~3 s once nothing has played for 2 s, and
+           while music plays it creeps up at most 1 dB a minute (an air conditioner switched on mid-song is learned in
+           the next pause), so the music itself is never learned as background;
+         - music switches on 6 dB above the room (both the ~0.3 s level and a quick-release level must agree) and stays
+           on while the quick level is 4.5 dB above it, held 0.7 s through the gaps between drum hits; the quick release
+           lets the band settle about as fast as before when the music stops;
+         - the only fixed floor is -66 dBFS (background never assumed quieter than that).
+         Replayed on four rooms: quiet band 0-24 % -> 83-100 % detected (except where it is truly at room level), kick-only
+         intro 50-100 % -> 100 %, silence and a noisy empty room 0 % (the old rule called a noisy empty room music). */
+      if(tt-A.t0<1){if(r>1e-6){A.nf=A.lr?Math.min(A.nf,Math.max(sl,r)):r;A.lr=1;}A.on=false;}
+      else{
+        if(A.on||A.offT==null)A.offT=tt;   // the room is re-learned upwards only after 2 s of real quiet (not in the gaps of a song)
+        if(sl<A.nf||(!A.on&&tt-A.offT>2))A.nf+=(sl-A.nf)*(1-Math.exp(-dt/3));else if(A.on)A.nf=Math.min(sl,A.nf*Math.pow(10,dt/1200));
+        A.nf=Math.max(A.nf,.0005);
+        A.pd=A.pd==null?sl*sl:A.pd+(r*r-A.pd)*(1-Math.exp(-dt/(r*r>A.pd?.3:.08)));const pd=Math.sqrt(A.pd);
+        const lvl=sl>A.nf*2&&pd>A.nf*2;if(lvl||(A.on&&pd>A.nf*1.68))A.onT=tt;
+        A.on=lvl||(!!A.on&&A.onT!=null&&tt-A.onT<.7);}
+    }else{
     A.nf+=(sl-A.nf)*(1-Math.exp(-dt/(sl<A.nf?1:60)));if(A.ref>0)A.nf=Math.min(A.nf,A.ref*.1);
     A.on=sl>Math.max(.002,A.nf*2);   // music (or someone's voice) is playing in the room
+    }
     if(!A.on||r<.001)return;        // nothing playing, or near silence: hold the level
     if(r>A.ref)A.ref+=(r-A.ref)*(1-Math.exp(-dt/.3));else if(r>A.ref*.1)A.ref*=Math.exp(-dt/8);   // more than 20 dB below the music (a pause): hold
     const want=Math.min(63,Math.max(1,.316/Math.max(A.ref,1e-4))),up=tt-A.t0<1?.2:2;   // first second: find the level quickly
@@ -643,7 +670,10 @@ const L={ctx:null,an:null,data:new Uint8Array(1024),mode:null,tb:new Float32Arra
     let talk=false;
     if(this.ms){const c=this.beat?this.beat.conf:0,lo=this.energy(40,150),k=1-Math.exp(-dt/2);
       G.cs=G.cs==null?c:G.cs+(c-G.cs)*k;G.ls=G.ls==null?lo:G.ls+(lo-G.ls)*k;
-      G.tk=G.cs<.2&&G.ls<.66?Math.min(3,(G.tk||0)+dt):0;talk=G.tk>1.5;}
+      // Oct 7 try-out "quietMusic": the talk check waits until sound has been playing for 6 s (the beat clock needs a few
+      // seconds to lock; the iPhone logs showed the first ~8 s of drums treated as talking)
+      const qm=window.OPT&&OPT.on('quietMusic');if(qm){G.hd=this.agc&&this.agc.on?(G.hd||0)+dt:0;}
+      G.tk=G.cs<.2&&G.ls<.66&&(!qm||G.hd>6)?Math.min(3,(G.tk||0)+dt):0;talk=G.tk>1.5;}
     this.talking=talk;
     const want=E<.02||talk||(this.ms&&this.agc&&this.agc.on===false)?0:Math.min(1,Math.max(0,(Ee-.15*G.ref)/(.2*G.ref+1e-9)));
     G.g+=(want-G.g)*(1-Math.exp(-dt/(want>G.g?.25:.08)));this.gate=G.g;},
@@ -1966,7 +1996,7 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
      `Turn-up +${db(A.g||1)} dB (max +36)\n`+
      `Beat    ${B.bpm?Math.round(B.bpm)+' BPM':'-'}  sure ${pc(B.conf)} %  (2 s avg ${pc(G.cs)} %)\n`+
      `Bass    ${pc(G.ls)} %  (music usually 70-90, talk 50-60)\n`+
-     `Gate    ${pc(L.gate)} %  resting: ${why}\n`+pl;},250);}
+     `Gate    ${pc(L.gate)} %  resting: ${why}${window.OPT&&OPT.on('quietMusic')?'  [try-out: quiet music]':''}\n`+pl;},250);}
 /* Oct 7: stats recorder (designer tools only: #dev). A "● Log" button in the top-right corner (clear of the phone song bar and the listening read-out, top-left). Tap it, play
    something (a song file, the demo or Listen live), tap it again: the page saves a spreadsheet (CSV) with one row per frame
    (~60 a second) of what the ears heard and what each player did. Made for the calibration track (TestTrack v1, made by
@@ -2003,7 +2033,7 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
    const tr=L.stream&&L.stream.getAudioTracks()[0],s=tr&&tr.getSettings?tr.getSettings():{};
    LOG.meta={started:new Date().toISOString(),song:L.songName||'',mode:L.mode||'',sample_rate:L.ctx?L.ctx.sampleRate:'',
      mic_clean_up:L.ms?`echo ${s.echoCancellation} noise ${s.noiseSuppression} auto ${s.autoGainControl}`:'',
-     screen:`${innerWidth}x${innerHeight}@${devicePixelRatio}`,browser:navigator.userAgent};
+     options:window.OPT?OPT.list.filter(o=>OPT.on(o[0])).map(o=>o[0]).join(' ')||'none':'',screen:`${innerWidth}x${innerHeight}@${devicePixelRatio}`,browser:navigator.userAgent};
    requestAnimationFrame(loop);}
  async function stop(){if(!LOG.on)return;LOG.on=false;
    const seen=[...new Set(LOG.rows.map(r=>r[2]).filter(Boolean))];if(seen.length)LOG.meta.mode=seen.join('+');   // the source may start after the log
