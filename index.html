@@ -892,20 +892,31 @@ const V2H={arm:.85,arm2:.85,armL:.85,armR:.85,armS:.6,armH:.6,armV:.85,fore:.65}
 const adjOf=l=>{const o={x:l.x,y:l.y,s:l.s,a:l.a};if(l.eb!=null)o.eb=l.eb;if(l.v2)o.v2=+l.v2||1;return o;};   // PATCH01: v2 = version of the new sheet the piece was placed from   // v2: piece drawn on a new sheet   // arms also keep their elbow bend (even 0)   // a piece's nudges, as saved
 // Saved settings (slider positions, artwork, nudges) live in this browser
 let S={v:{},art:{},adj:{}};try{S=Object.assign(S,JSON.parse(localStorage.getItem('bandSave')||'{}'));}catch(e){}
-// Oct 4 fix: this browser's memory belongs to one band file. Its drawings are stored as references into that file's own picture
-// list, which every Save band file numbers afresh, so memory from another version showed wrong pictures or placeholders.
-// Each file has a fingerprint (its BAND SETTINGS block); opening a different file starts clean from that file's built-in defaults
-// (the old memory is kept aside as 'bandSave.prev'). Reopening the same file keeps unsaved changes.
+// This browser's memory belongs to one band file (its fingerprint, FILE_SIG = its BAND SETTINGS block). When the file changes
+// (the designer ships a new built-in band) the memory is carried over below, once the drawing helpers exist.
 const FILE_SIG=(()=>{const s=(document.getElementById('band-settings')||{}).textContent||'';let h=0;for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return (h>>>0).toString(36)+'.'+s.length;})();
-if(S.fileSig!==FILE_SIG){const had=Object.keys(S).some(k=>!['v','art','adj'].includes(k))||Object.keys(S.art).length||Object.keys(S.v).length;
-  if(had){try{localStorage.setItem('bandSave.prev',localStorage.getItem('bandSave')||'');}catch(e){}}
-  S={v:{},art:{},adj:{}};}
-S.fileSig=FILE_SIG;
 S.sheetLog=Object.assign({},SHEET_LOG,S.sheetLog||{});   // sheets known to this file + sheets printed in this browser
 // Drawings in this browser are kept ONCE, in S.lib, and everything else (current look, defaults, presets) points to them
 // ('@s:' + a fingerprint). Drawings already built into this file are pointed to by name ('@b:'), so they take no space here.
 function fp(u){let h=2166136261;for(let i=0;i<u.length;i++){h^=u.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36)+'_'+u.length.toString(36);}
 const ART_BY_CONTENT=new Map();for(const k in BUILTIN_ART)if(!ART_BY_CONTENT.has(BUILTIN_ART[k]))ART_BY_CONTENT.set(BUILTIN_ART[k],k);
+/* Oct 7 (keep your band, step 1; designer chose "their drawings stay, the rest updates"). Before, opening a different band
+   file (e.g. the website after the designer shipped a new built-in band) set ALL of this browser's memory aside
+   ('bandSave.prev'), so a user's own drawings, band name and stage vanished. Now, when the file changes:
+   - kept: the user's OWN drawings (pictures in S.lib that are not now built into this file) with their nudges, the band
+     name, scene, stage positions, saved presets, printed-sheet codes and the drawing library;
+   - dropped: references to the old file's built-in pictures and their nudges, the old sound sliders, "my default" and the
+     current-preset marks, so everything the user didn't draw follows the new file. (player-cards.js lays the new default
+     under a player's own pieces.) The whole old memory is still kept aside in 'bandSave.prev', as before. */
+if(S.fileSig!==FILE_SIG){const old=S,had=Object.keys(old).some(k=>!['v','art','adj'].includes(k))||Object.keys(old.art||{}).length||Object.keys(old.v||{}).length;
+  if(had){try{localStorage.setItem('bandSave.prev',localStorage.getItem('bandSave')||'');}catch(e){}}
+  const builtFp=new Set(Object.values(BUILTIN_ART).map(fp));
+  const own=u=>{if(typeof u!=='string'||!u.startsWith('@s:'))return false;const f=u.slice(3);return !builtFp.has(f)&&!(typeof BUILTIN_SEEN!=='undefined'&&BUILTIN_ART[BUILTIN_SEEN[f]]);};
+  S={v:{},art:{},adj:{}};
+  for(const k in old.art||{})if(own(old.art[k])){S.art[k]=old.art[k];if(old.adj&&old.adj[k])S.adj[k]=old.adj[k];}
+  for(const k of ['lib','libInDb','sheetLog','bandName','scene','stage','open','presets','layoutVer','fix26','tidy08','persistAsked'])if(old[k]!==undefined)S[k]=old[k];
+  if(Object.keys(S.art).length)S.carried=1;}   // player-cards.js: lay the new default under the user's own pieces
+S.fileSig=FILE_SIG;
 function keep(u){if(typeof u!=='string'||!u.startsWith('data:'))return u;
   const b=ART_BY_CONTENT.get(u);if(b)return '@b:'+b;
   const f=fp(u),seen=typeof BUILTIN_SEEN!=='undefined'&&BUILTIN_SEEN[f];if(seen&&BUILTIN_ART[seen])return '@b:'+seen;   // same drawing, stored in this file in a smaller format
@@ -914,8 +925,45 @@ function tidy(){const fix=a=>{if(a)for(const k in a)a[k]=keep(a[k]);};
   fix(S.art);Object.values(S.defaults||{}).forEach(p=>p&&fix(p.art));Object.values(S.presets||{}).forEach(l=>(l||[]).forEach(p=>p&&fix(p.art)));
   const used=new Set(),note=a=>{if(a)for(const k in a)if(typeof a[k]==='string'&&a[k].startsWith('@s:'))used.add(a[k].slice(3));};
   note(S.art);Object.values(S.defaults||{}).forEach(p=>p&&note(p.art));Object.values(S.presets||{}).forEach(l=>(l||[]).forEach(p=>p&&note(p.art)));
-  for(const f in S.lib||{})if(!used.has(f))delete S.lib[f];}
-function save(){try{tidy();localStorage.setItem('bandSave',JSON.stringify(S));}catch(e){msg('Could not save (artwork files may be too large).');}}
+  if(S.libInDb&&!ARTDB.ok)return;   // Oct 7: while the drawings are still loading from the browser's database, never throw any away
+  for(const f in S.lib||{})if(!used.has(f))delete S.lib[f];}   // (writeLib removes them from the database too)
+/* Oct 7 (keep your band, step 1): the drawings themselves (S.lib) live in the browser's database (IndexedDB), which holds
+   hundreds of MB; this browser's small store (localStorage, ~5 MB, and Safari counts it double) keeps only the settings and
+   the references. A fully drawn band of PNG pieces could pass 5 MB and stop saving. The library is loaded in the background
+   at start; pieces drawn by the user appear a moment later (ARTDB.refresh). If the database can't be used (some private
+   windows), everything stays in localStorage as before. The browser is also asked to keep this site's storage
+   (navigator.storage.persist) once the user has a drawing of their own. */
+const ARTDB={ok:false,keys:new Set(),pending:new Set(),refresh:[],
+  open(){return new Promise((res,rej)=>{try{const r=indexedDB.open('cartoon-band',1);r.onupgradeneeded=()=>r.result.createObjectStore('lib');
+    r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});}};
+// New drawings stay ALSO in localStorage ("pending") until the database confirms them: a whole sheet of drawings takes the
+// browser a second or two to store, and closing or reloading the page in that time would otherwise lose some (seen in tests).
+function writeLib(){if(!ARTDB.db)return;const lib=S.lib||{},put=[],del=[];
+  for(const f in lib)if(!ARTDB.keys.has(f))put.push(f);for(const f of ARTDB.keys)if(!(f in lib))del.push(f);
+  if(!put.length&&!del.length)return;put.forEach(f=>{ARTDB.keys.add(f);ARTDB.pending.add(f);});del.forEach(f=>{ARTDB.keys.delete(f);ARTDB.pending.delete(f);});
+  try{const t=ARTDB.db.transaction('lib','readwrite'),st=t.objectStore('lib');put.forEach(f=>st.put(lib[f],f));del.forEach(f=>st.delete(f));
+    t.oncomplete=()=>{put.forEach(f=>ARTDB.pending.delete(f));writeSmall();};
+    t.onerror=t.onabort=()=>{put.forEach(f=>{ARTDB.keys.delete(f);ARTDB.pending.delete(f);});};}catch(e){}}
+function writeSmall(){const {lib,...rest}=S,keepNow={};for(const f of ARTDB.pending)if(lib&&lib[f])keepNow[f]=lib[f];
+  ARTDB.unsafe=false;
+  if(Object.keys(keepNow).length){try{localStorage.setItem('bandSave',JSON.stringify(Object.assign({},rest,{lib:keepNow})));return;}catch(e){ARTDB.unsafe=true;}}
+  localStorage.setItem('bandSave',JSON.stringify(rest));}
+// a very large batch of new drawings that doesn't fit localStorage while the database is still storing it: ask before leaving
+addEventListener('beforeunload',e=>{if(ARTDB.unsafe&&ARTDB.pending.size){e.preventDefault();e.returnValue='';}});
+function saveOk(){try{tidy();   // true when saved; player-cards.js uses it to undo a preset change that didn't fit
+  if(ARTDB.ok&&S.libInDb){writeLib();writeSmall();}
+  else localStorage.setItem('bandSave',JSON.stringify(S));
+  if(!S.persistAsked&&Object.values(S.art).some(u=>typeof u==='string'&&u.startsWith('@s:'))){S.persistAsked=1;try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}}
+  return true;}catch(e){return false;}}
+function save(){if(!saveOk())msg('Could not save (artwork files may be too large).');}
+// start: open the database; first time, move the library out of localStorage; otherwise load it and show the user's own pieces
+(()=>{if(!window.indexedDB)return;ARTDB.open().then(db=>{ARTDB.db=db;
+  return new Promise((res,rej)=>{const out={},c=db.transaction('lib','readonly').objectStore('lib').openCursor();
+    c.onsuccess=()=>{const k=c.result;if(k){out[k.key]=k.value;k.continue();}else res(out);};c.onerror=()=>rej(c.error);});}).then(stored=>{
+  ARTDB.ok=true;stored=stored||{};for(const f in stored)ARTDB.keys.add(f);
+  if(S.libInDb){S.lib=Object.assign(stored,S.lib||{});ARTDB.refresh.forEach(fn=>{try{fn();}catch(e){}});save();}
+  else{S.libInDb=true;S.lib=Object.assign(stored,S.lib||{});save();}   // one-time move out of localStorage
+}).catch(()=>{ARTDB.ok=false;});})();
 // Placeholder pieces: simple flat shapes, one per slot, replaced when you upload art
 function phImg(m,k){const col=C[m.id],sk='#ffd9b3',dk='#222',g='#d4a017';
   const Ln=(a,b,c,d,f,w)=>`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="${f}" stroke-width="${w}" stroke-linecap="round"/>`;
@@ -965,12 +1013,13 @@ members.forEach(m=>{
     const row=c.querySelector(`[data-s="${k}"]`).parentNode;
     const sv=r=>r.value=r.dataset.a==='eb'?(ly.eb||0):ly[r.dataset.a];
     row.querySelectorAll('[data-a]').forEach(r=>{sv(r);r.oninput=()=>{ly[r.dataset.a]=+r.value;if(ARMS.has(k))ly.peek=performance.now()+1500;S.adj[key]=adjOf(ly);save();};});   // arms: elbow dot shows while adjusting
-    const set=u=>{u=artURL(u);if(!u)return;const im=new Image();im.onload=()=>ly.img=im;im.src=u;};
+    const set=u=>{u=artURL(u);if(!u)return;ly.want=u;const im=new Image();im.onload=()=>{if(ly.want===u)ly.img=im;};im.src=u;};   // Oct 7: the last picture asked for wins, even if an earlier, bigger one finishes loading later
     ARTSET[key]=u=>{set(u);S.art[key]=u;save();};
     ARTCLEAR[key]=()=>{ly.img=null;delete S.art[key];};     // back to the placeholder (used by presets)
     ADJSET[key]=o=>{const d=Object.assign({x:0,y:0,s:1,a:0},DEF[key],o||{});['x','y','s','a'].forEach(q=>ly[q]=+d[q]);ly.v2=d.v2?(+d.v2||1):0;if(ARMS.has(k))ly.eb=+(d.eb||0);   // o missing = original layout
       row.querySelectorAll('[data-a]').forEach(sv);if(o)S.adj[key]=adjOf(ly);else delete S.adj[key];};
     if(S.art[key])set(S.art[key]);
+    ARTDB.refresh.push(()=>{if(S.art[key])set(S.art[key]);});   // Oct 7: the user's own drawings arrive from the browser's database a moment after start
     row.querySelector('[data-c]').onclick=()=>{ly.img=null;delete S.art[key];save();row.querySelector('[data-s]').value='';};
     row.querySelector('[data-s]').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{set(r.result);S.art[key]=r.result;save();};r.readAsDataURL(f);};
   });
@@ -986,7 +1035,7 @@ members.forEach(m=>{
     const isMine=pid=>mine().some(p=>p.id===pid);
     const isDef=pid=>pid===DEFID&&!!S.defaults[id];
     const say=t=>{st.textContent=t;};
-    const persist=()=>{try{tidy();localStorage.setItem('bandSave',JSON.stringify(S));return true;}catch(e){return false;}};
+    const persist=()=>saveOk();   // Oct 7: same path as save() (drawings in the browser's database)
     function fill(pick){
       sel.innerHTML='<option value="">Choose a preset...</option>';
       const g=(label,list)=>{if(!list.length)return;const og=document.createElement('optgroup');og.label=label;
@@ -1053,6 +1102,11 @@ members.forEach(m=>{
       clearTimeout(armed);armed=0;rs.textContent='↺ Reset';const before=SETS[id].map(k=>[pre+k,S.art[pre+k]]);m.example();fill(S.cur[id]);
       window.wsNote&&wsNote(m.name+' is back to the original drawings.',before,m.id);};}
     if(!S.cur[id]&&!SETS[id].some(k=>S.art[pre+k])){const auto=S.defaults[id]?DEFID:PRESET_AUTOLOAD[id];if(auto&&find(auto))apply(find(auto));}
+    /* Oct 7 (keep your band): this player has pieces the user drew, carried over from an older band file (browser-memory.js),
+       and no current preset: lay the new built-in default under them, then put the user's own pieces (and nudges) back on top */
+    else if(!S.cur[id]&&S.carried){const auto=PRESET_AUTOLOAD[id],p=auto&&find(auto);
+      if(p){const ownArt={},ownAdj={};SETS[id].forEach(k=>{if(S.art[pre+k]){ownArt[pre+k]=S.art[pre+k];if(S.adj[pre+k])ownAdj[pre+k]=S.adj[pre+k];}});
+        apply(p);for(const key in ownArt){ARTSET[key](ownArt[key]);if(ownAdj[key])ADJSET[key](ownAdj[key]);}save();}}
     fill(S.cur[id]);
   })();
 });
@@ -1383,7 +1437,7 @@ document.getElementById('dump').onclick=()=>{try{const {text,day}=bandFileText()
   catch(e){msg("Couldn't make the file: "+e.message);}};
 let resetArmed=0;document.getElementById('reset').onclick=()=>{const b=document.getElementById('reset');
   if(!resetArmed){b.textContent='Sure? Press again';msg('Reset clears art, layout and sliders on screen. Your saved presets and defaults are kept.');resetArmed=setTimeout(()=>{b.textContent='↺ Reset all';resetArmed=0;},3000);return;}
-  S={v:{},art:{},adj:{},presets:S.presets||{},defaults:S.defaults||{},sheetLog:S.sheetLog||{},layoutVer:S.layoutVer,lib:S.lib||{},tidy08:S.tidy08,fix26:S.fix26};try{localStorage.setItem('bandSave',JSON.stringify(S));}catch(e){try{localStorage.removeItem('bandSave');}catch(e2){}}location.reload();};   // your saved presets and defaults survive a reset
+  S={v:{},art:{},adj:{},presets:S.presets||{},defaults:S.defaults||{},sheetLog:S.sheetLog||{},layoutVer:S.layoutVer,lib:S.lib||{},tidy08:S.tidy08,fix26:S.fix26,fileSig:S.fileSig,libInDb:S.libInDb,persistAsked:S.persistAsked};save();setTimeout(()=>location.reload(),150);};   // Oct 7: through save(), so the drawings stay in the browser's database   // your saved presets and defaults survive a reset
 
 // ===== 3c. SHOW MODE: just the band, fullscreen, screen kept awake =====
 let wl=null,showT=0;
