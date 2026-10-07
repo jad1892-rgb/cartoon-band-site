@@ -97,6 +97,16 @@ body:not(.dev) .pv.empty{display:none}
 .rbcard video{width:100%;max-height:60vh;border-radius:10px;background:#000}.rbrow{display:flex;gap:8px}.rbrow button{flex:1;min-height:48px;font-size:16px}#recInfo{color:#bbb;font:12px system-ui,sans-serif;text-align:center}
 #beatDot{position:fixed;left:12px;bottom:12px;z-index:60;display:flex;align-items:center;gap:7px;font:12px system-ui,sans-serif;color:#bbb;background:rgba(0,0,0,.55);padding:5px 10px 5px 7px;border-radius:14px;pointer-events:none}#beatDot[hidden]{display:none}#beatDot i{width:14px;height:14px;border-radius:50%;background:#444;display:block}
 #bootMsg{position:fixed;inset:0;z-index:99999;background:#141016;color:#f3ece6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:28px;font:17px/1.5 -apple-system,system-ui,sans-serif}#bootMsg small{max-width:420px;opacity:.75;font-size:14px}#bootMsg code{display:block;max-width:90vw;white-space:pre-wrap;word-break:break-word;font-size:12px;color:#ffb4a8;opacity:1}body.ready #bootMsg{display:none}   /* PATCH05 */
+
+/* Oct 7 (designer, polish list): the start-up words flashed on every load of the website. The dark screen still covers the
+   page while it starts, but its words only fade in if starting takes more than 2.5 s (e.g. a preview that can't run the
+   band); an error shows at once. */
+#bootMsg>*{opacity:0;animation:bootIn .4s ease-out 2.5s forwards}#bootMsg.err>*{animation:none;opacity:1}
+@keyframes bootIn{to{opacity:1}}
+/* Oct 7: with Save my band / Open my band added, the menu was taller than a sideways phone. On short screens the card is
+   wider so the small buttons sit two to a row, and the gaps and big buttons are a little tighter. */
+@media (max-height:520px) and (orientation:landscape){#startCard{padding:8px}.stcard{width:min(100%,600px);gap:6px;padding-top:12px;padding-bottom:12px}
+  .stcard>button{min-height:44px}.strowb{flex-wrap:nowrap;margin-top:0}.strowb button{flex:1 1 0;min-width:0}}
 </style>
 <style id="howto-css">
 /* PATCH08: "How it works" popup, the "?" button and the social row on the start menu */
@@ -382,7 +392,7 @@ body.in-app #ws{padding-top:112px}
 <div id="stage" hidden=""><canvas id="stageCv"></canvas>
   <div id="stCtl" class="stctl"><button id="stPlay" aria-label="Play or pause">▶</button><div class="stmid"><div id="stSong">Demo beat</div><div class="strow"><input id="stPos" type="range" min="0" max="1000" value="0" aria-label="Position in the song"><span id="stTime"></span></div></div><label class="btn alt" id="stSongBtn">🎵 Song<input id="stFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""></label></div><div id="startCard" hidden=""><div class="stcard"><button id="goHelp" class="alt" aria-label="How it works">?</button>
 <button id="goSong">Pick song</button><button id="goDemo">Play demo</button>
-<div class="strowb"><button class="alt" id="goEdit">Edit band</button><button class="alt" id="goListen">Listen live</button></div><div id="stFollow" aria-hidden="true"></div><div id="stSocial" aria-label="Follow us"></div></div></div><div id="howBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="howT"><div class="howcard"><button id="howX" aria-label="Close"></button><div class="howhead" aria-hidden="true"></div><div class="howpic" aria-hidden="true"></div><h3 id="howT"></h3><p id="howP"></p><div class="howdots" aria-hidden="true"><i></i><i></i><i></i></div><div class="howrow"><button class="alt" id="howBack">Back</button><button id="howNext">Next</button></div></div></div><input id="startFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""><div id="stNameBox" hidden=""><input id="stNameIn" maxlength="30" placeholder="Band name (empty = none)" autocomplete="off"><button id="stNameOk">OK</button></div><button id="recDot" hidden="" aria-label="Stop recording">● REC <span>0:00</span><i class="recbar"><b></b></i></button><div id="recPick" hidden="" role="menu" aria-label="Record"><div class="rptitle">Record</div><button role="menuitem" data-rec="15">15 s clip</button><button role="menuitem" data-rec="30">30 s clip</button><button role="menuitem" data-rec="song">Whole song</button><div class="rpnote">Keeps going while you move the players</div></div><div id="recBox" hidden=""><div class="rbcard"><video id="recVid" playsinline="" controls="" loop=""></video><div class="rbrow"><button id="recShare" hidden="">Share</button><button id="recSave">Save</button><button class="alt" id="recDel">Delete</button></div><div id="recInfo"></div></div></div><div id="stTip" hidden="">Turn your phone sideways for a bigger band ↻</div><div class="stbar"><button class="alt" id="stName" style="display:none">✏️ Name</button><button class="alt" id="stScene" style="display:none">🎭 Scene</button><button class="alt" id="stReset" style="display:none">↺ Positions</button><button class="alt" id="stRec" aria-haspopup="true">● Record</button><button class="alt" id="stFull">⛶ Full screen</button><button id="stExit">☰ Menu</button></div></div>
+<div class="strowb"><button class="alt" id="goEdit">Edit band</button><button class="alt" id="goListen">Listen live</button></div><div class="strowb"><button class="alt" id="goSaveBand">Save my band</button><button class="alt" id="goOpenBand">Open my band</button><input type="file" id="bandFileIn" hidden=""></div><div id="stFollow" aria-hidden="true"></div><div id="stSocial" aria-label="Follow us"></div></div></div><div id="howBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="howT"><div class="howcard"><button id="howX" aria-label="Close"></button><div class="howhead" aria-hidden="true"></div><div class="howpic" aria-hidden="true"></div><h3 id="howT"></h3><p id="howP"></p><div class="howdots" aria-hidden="true"><i></i><i></i><i></i></div><div class="howrow"><button class="alt" id="howBack">Back</button><button id="howNext">Next</button></div></div></div><input id="startFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""><div id="stNameBox" hidden=""><input id="stNameIn" maxlength="30" placeholder="Band name (empty = none)" autocomplete="off"><button id="stNameOk">OK</button></div><button id="recDot" hidden="" aria-label="Stop recording">● REC <span>0:00</span><i class="recbar"><b></b></i></button><div id="recPick" hidden="" role="menu" aria-label="Record"><div class="rptitle">Record</div><button role="menuitem" data-rec="15">15 s clip</button><button role="menuitem" data-rec="30">30 s clip</button><button role="menuitem" data-rec="song">Whole song</button><div class="rpnote">Keeps going while you move the players</div></div><div id="recBox" hidden=""><div class="rbcard"><video id="recVid" playsinline="" controls="" loop=""></video><div class="rbrow"><button id="recShare" hidden="">Share</button><button id="recSave">Save</button><button class="alt" id="recDel">Delete</button></div><div id="recInfo"></div></div></div><div id="stTip" hidden="">Turn your phone sideways for a bigger band ↻</div><div class="stbar"><button class="alt" id="stName" style="display:none">✏️ Name</button><button class="alt" id="stScene" style="display:none">🎭 Scene</button><button class="alt" id="stReset" style="display:none">↺ Positions</button><button class="alt" id="stRec" aria-haspopup="true">● Record</button><button class="alt" id="stFull">⛶ Full screen</button><button id="stExit">☰ Menu</button></div></div>
 <audio id="player" controls="" style="width:100%;margin-top:10px;display:none"></audio>
 <div id="bufUI" style="display:none;gap:8px;align-items:center;margin-top:10px"><button id="bPlay" class="alt">⏸ Pause</button><input id="bSeek" type="range" min="0" max="1000" value="0" style="flex:1"><span id="bTime" class="hint" style="font-size:12px"></span></div>
 
@@ -534,7 +544,7 @@ const BUILTIN_SEEN={"yak4e6_r9i":"art9","534jyv_n06":"art10","ochfra_2kpy":"art4
 </script>
 <script>
 /* PATCH05: if something fails while the band is starting, say so on the start-up message (with the line) instead of leaving a dead screen */
-window.addEventListener('error',e=>{try{if(document.body.classList.contains('ready'))return;const b=document.getElementById('bootMsg');if(!b)return;let c=b.querySelector('code');if(!c){c=document.createElement('code');b.appendChild(c);b.querySelector('b').textContent='The band could not start';b.querySelector('small').textContent='Please send a screenshot of this to Claude.';}c.textContent+=(e.message||'error')+' (line '+(e.lineno||'?')+')\n';}catch(_){}});
+window.addEventListener('error',e=>{try{if(document.body.classList.contains('ready'))return;const b=document.getElementById('bootMsg');if(!b)return;b.classList.add('err');let c=b.querySelector('code');if(!c){c=document.createElement('code');b.appendChild(c);b.querySelector('b').textContent='The band could not start';b.querySelector('small').textContent='Please send a screenshot of this to Claude.';}c.textContent+=(e.message||'error')+' (line '+(e.lineno||'?')+')\n';}catch(_){}});
 // ===== 0. SMALL HELPERS =====
 const msg=t=>{const e=document.getElementById('msg');if(e)e.textContent=t;};
 const artURL=u=>(typeof u==='string'&&u.startsWith('@s:'))?((typeof S!=='undefined'&&S.lib)||{})[u.slice(3)]:(typeof u==='string'&&u.startsWith('@b:'))?(BUILTIN_ART[u.slice(3)]||(typeof BUILTIN_ALIAS!=='undefined'?BUILTIN_ART[BUILTIN_ALIAS[u.slice(3)]]:undefined)):u;   // built-in art is stored as a short reference (an old name may point to the same picture under another name)
@@ -918,7 +928,7 @@ if(S.fileSig!==FILE_SIG){const old=S,had=Object.keys(old).some(k=>!['v','art','a
   const own=u=>{if(typeof u!=='string'||!u.startsWith('@s:'))return false;const f=u.slice(3);return !builtFp.has(f)&&!(typeof BUILTIN_SEEN!=='undefined'&&BUILTIN_ART[BUILTIN_SEEN[f]]);};
   S={v:{},art:{},adj:{}};
   for(const k in old.art||{})if(own(old.art[k])){S.art[k]=old.art[k];if(old.adj&&old.adj[k])S.adj[k]=old.adj[k];}
-  for(const k of ['lib','libInDb','sheetLog','bandName','scene','stage','open','presets','layoutVer','fix26','tidy08','persistAsked'])if(old[k]!==undefined)S[k]=old[k];
+  for(const k of ['lib','libInDb','sheetLog','bandName','scene','stage','open','presets','layoutVer','fix26','tidy08','persistAsked','bandSaved','saveTip'])if(old[k]!==undefined)S[k]=old[k];
   if(Object.keys(S.art).length)S.carried=1;}   // player-cards.js: lay the new default under the user's own pieces
 S.fileSig=FILE_SIG;
 function keep(u){if(typeof u!=='string'||!u.startsWith('data:'))return u;
@@ -2066,6 +2076,47 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
  document.getElementById('show').addEventListener('click',sync);}
 
 
+/* Oct 7: keep your band, step 2 — "Save my band" / "Open my band" (start menu; typed labels until the design batch).
+   Save my band writes one small file the user keeps (Files, AirDrop, email): their OWN drawings with their nudges, band
+   name, scene and stage positions. Pieces they didn't draw aren't in it: like a new band file (step 1), opening it lays
+   this file's default band under the user's own pieces, so a saved band also opens on a newer website.
+   Open my band reads such a file (checked: only pictures for known pieces, numbers only), asks before replacing the band
+   on this device, puts every player back to the default, adds the file's own pieces on top, then reloads once the
+   drawings are safely stored. The file never leaves the device unless the user sends it somewhere.
+   Once the user has a drawing of their own and has never saved, the stage shows a one-time tip pointing to Save my band. */
+{const sv=document.getElementById('goSaveBand'),op=document.getElementById('goOpenBand'),fin=document.getElementById('bandFileIn');
+ const tip=(t,ms)=>{const tp=document.getElementById('stTip');if(!tp)return;if(!tp.dataset.rest)tp.dataset.rest=tp.textContent;
+   tp.textContent=t;tp.hidden=false;clearTimeout(tp._b);tp._b=setTimeout(()=>{tp.hidden=true;tp.textContent=tp.dataset.rest;},ms||4500);};
+ const ownKeys=()=>members.flatMap(m=>SETS[m.id].map(k=>m.id+'.'+k)).filter(key=>{const u=S.art[key];return typeof u==='string'&&u.startsWith('@s:');});
+ function bandData(){const art={},adj={};
+   for(const key of ownKeys()){const d=artURL(S.art[key]);if(d){art[key]=d;if(S.adj[key])adj[key]=S.adj[key];}}
+   return {app:'cartoon-band',kind:'my-band',version:1,saved:new Date().toISOString(),bandName:S.bandName,scene:S.scene,stage:S.stage||{},art,adj};}
+ sv.onclick=async()=>{if(window.STARTUI)STARTUI.close();
+   if(S.libInDb&&!ARTDB.ok){tip('One moment: your drawings are still loading');return;}
+   const nm=(((typeof bandName==='function')&&bandName())||S.bandName||STAGE_SET.bandName||'My band').replace(/[\\/:*?"<>|]+/g,'').trim()||'My band';
+   const r=await window.saveFile(nm+'.band',new Blob([JSON.stringify(bandData())],{type:'application/octet-stream'}));
+   if(r==='declined'){tip('Not saved');return;}
+   S.bandSaved=Date.now();save();tip('Band saved 💾 Open it on any phone or computer with Open my band');};
+ op.onclick=()=>{fin.value='';fin.click();};
+ fin.onchange=async()=>{const f=fin.files&&fin.files[0];if(!f)return;if(window.STARTUI)STARTUI.close();
+   let d=null;try{d=JSON.parse(await f.text());}catch(e){}
+   if(!d||d.app!=='cartoon-band'||d.kind!=='my-band'){tip("That isn't a saved Cartoon Band");return;}
+   if(!confirm('Open "'+String(d.bandName||f.name).slice(0,40)+'"?\nIt replaces the band on this device. Save yours first if you want to keep it.'))return;
+   const art={},adj={};
+   for(const m of members)for(const k of SETS[m.id]){const key=m.id+'.'+k,u=d.art&&d.art[key];
+     if(typeof u==='string'&&/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(u)&&u.length<8e6){art[key]=u;
+       const a=d.adj&&d.adj[key];if(a&&typeof a==='object'){const o={};['x','y','s','a','eb','v2'].forEach(q=>{if(a[q]!=null&&isFinite(+a[q]))o[q]=+a[q];});adj[key]=o;}}}
+   members.forEach(m=>{if(m.example)m.example();});   // every player back to this file's default…
+   for(const key in art){ARTSET[key](art[key]);if(adj[key])ADJSET[key](adj[key]);}   // …and the saved band's own pieces on top
+   S.bandName=typeof d.bandName==='string'?d.bandName.slice(0,30):undefined;
+   S.scene=typeof d.scene==='string'&&/^[a-z]+$/.test(d.scene)?d.scene:undefined;
+   S.stage={};if(d.stage&&typeof d.stage==='object')for(const id in d.stage){const p=d.stage[id];
+     if(members.some(m=>m.id===id)&&p&&isFinite(+p.x)&&isFinite(+p.y))S.stage[id]={x:+p.x,y:+p.y};}
+   S.bandSaved=Date.now();save();tip('Opening '+(S.bandName||'your band')+'…',15000);
+   const t0=Date.now(),wait=()=>{if(!ARTDB.pending.size||Date.now()-t0>15000)location.reload();else setTimeout(wait,200);};setTimeout(wait,300);};
+ // one-time tip: the user has drawings of their own and has never saved a copy
+ setInterval(()=>{const cl=document.body.classList;if(S.saveTip||S.bandSaved||!cl.contains('show')||cl.contains('starting')||!ownKeys().length)return;
+   S.saveTip=1;save();tip('Your band lives on this device. Menu → Save my band keeps a copy',7000);},3000);}
 /* Oct 7 (signed off Oct 7 as normal behaviour): while listening to the room, a friendly tip when the band can hardly hear the music:
    the input level control (ears/listener.js agcStep) has turned the sound up near its limit for 5 s, or it has heard
    nothing playing for 8 s. Each tip shows for 4 s, at most every 30 s. */
@@ -2234,7 +2285,7 @@ window.UIART=(function(){
     const sp=document.createElement('span');sp.textContent=t.textContent.trim();sp.style.cssText='display:inline-block;min-width:'+Math.max(48,sp.textContent.length*10)+'px';
     l.replaceChild(sp,t);dress(sp,{wh,wp:'left center'});}
   function apply(){const $=id=>document.getElementById(id);
-    dress($('goSong'),{frame:'big-a',wh:'22px'});dress($('goDemo'),{frame:'big-b',wh:'22px'});dress($('goEdit'),{frame:'sm-a',wh:'15px'});dress($('goListen'),{frame:'sm-b',wh:'15px'});
+    dress($('goSong'),{frame:'big-a',wh:'22px'});dress($('goDemo'),{frame:'big-b',wh:'22px'});dress($('goEdit'),{frame:'sm-a',wh:'15px'});dress($('goListen'),{frame:'sm-b',wh:'15px'});dress($('goSaveBand'),{frame:'sm-a',wh:'15px'});dress($('goOpenBand'),{frame:'sm-b',wh:'15px'});   /* Oct 7: typed in drawn frames until the words are drawn */
     dress($('stFull'),{frame:'sm-a',wh:'15px'});dress($('stExit'),{frame:'sm-b',wh:'15px'});dress($('stSongBtn'),{frame:'sm-b',wh:'15px'});
     const pl=$('stPlay');if(pl){pl.classList.add('ui-r');dress(pl,{keepAria:true});}
     dress($('show'),{frame:'med-b',wh:'16px'});dress($('sheetsBtn'),{frame:'med-a',wh:'16px'});dress($('scanBtn'),{frame:'med-b',wh:'16px'});
