@@ -183,7 +183,7 @@ body:not(.dev) .pv.empty{display:none}
 @media (max-width:600px){#recDot{top:62px;left:50%;transform:translateX(-50%)}#recPick{top:58px}}
 #stRec.on{color:#d0202a!important;font-weight:800;filter:drop-shadow(0 0 5px rgba(230,30,40,.8))}
 
-/* Oct 7 try-out "afterRec" C: the Clip ready bar sits where the REC badge was */
+/* Oct 7 (afterRec C, signed off): the Clip ready bar sits where the REC badge was */
 #recReady{position:absolute;top:14px;left:14px;z-index:7;display:flex;align-items:center;gap:6px;white-space:nowrap;background:rgba(20,18,26,.88);color:#fff;
   font:700 14px system-ui,sans-serif;padding:6px 8px 6px 14px;border-radius:20px;box-shadow:0 2px 10px rgba(0,0,0,.35)}#recReady[hidden]{display:none}
 #recReady .rrt{color:#9fe8a8;margin-right:4px}
@@ -532,11 +532,9 @@ const artURL=u=>(typeof u==='string'&&u.startsWith('@s:'))?((typeof S!=='undefin
 // Designer tools -> "Try-out options" on the Edit band screen (or #opt=smoothBeat,softLights in the address). Remembered by this
 // browser only; a user never sees them. Each option is checked where it acts: OPT.on('name'). The bar hides when the list is empty.
 window.OPT=(function(){
-  const LIST=[   // Oct 7: the first six try-outs (smoothBeat, softLights, halfLights, roomVocals, closerHint, talkCheck) and quietMusic
-                  // were signed off and are now normal behaviour. Add new ones here as ['key','Label','tip'] (a tick box) or
+  const LIST=[   // Oct 7: the first six try-outs (smoothBeat, softLights, halfLights, roomVocals, closerHint, talkCheck), quietMusic and
+                  // afterRec (C) were signed off and are now normal behaviour. Add new ones here as ['key','Label','tip'] (a tick box) or
                   // ['key','Label','tip',[['value','Choice label'],...]] (a choice; the first is the normal behaviour); dropped ones are deleted.
-    ['afterRec','After recording','Oct 7: what the music does when a recording finishes. A = pause the song, open the clip with sound (now). B = keep the song playing, open the clip silent. C = keep the song playing, show a small Clip ready bar (Watch / Save / Share).',
-      [['A','A: pause + watch the clip'],['B','B: keep playing, silent clip'],['C','C: keep playing, Clip ready bar']]],
   ];
   let v={};try{v=JSON.parse(localStorage.getItem('bandOpt')||'{}')||{};}catch(e){}
   const m=location.hash.match(/opt=([\w,]+)/);if(m)m[1].split(',').forEach(k=>{const i=k.indexOf('_');if(i>0)v[k.slice(0,i)]=k.slice(i+1);else v[k]=true;});   // #opt=quietThing,afterRec_C
@@ -1894,22 +1892,18 @@ try{if(window.claude&&window.top!==window.self&&matchMedia('(pointer:coarse)').m
  }catch(e){rec=null;cancelAnimationFrame(raf);tip('Recording is not available in this browser');}}
  function stop(){if(!rec||ending)return;ending=performance.now();btn.textContent='● Record';btn.classList.remove('on');dot.hidden=true;   /* end card first, then finish */
    setTimeout(()=>{clearInterval(tick);cancelAnimationFrame(raf);try{rec.stop();}catch(e){done();}},END*1000);}
- function pauseMusic(){try{if(typeof L!=='undefined'&&L.via==='buffer'&&L.bs)L.pauseBuf();else if(player&&!player.paused)player.pause();}catch(e){}}
  function done(){if(!rec)return;const mt=rec.mimeType||type();rec=null;ending=0;try{if(dest)L.an.disconnect(dest);}catch(e){}
    blob=new Blob(chunks,{type:mt.split(';')[0]});if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(blob);secs=(performance.now()-t0)/1000;
-   /* Oct 7 try-out "afterRec" (designer tools > Try-out options, or #opt=afterRec_B / afterRec_C): what the music does now.
-      A (as before): pause the song, open the clip with its sound. B: the song keeps playing, the clip opens silent (its own
-      speaker button unmutes it). C: the song keeps playing and only a small "Clip ready" bar appears (Watch / Save / Share / ✕).
-      Listening live (mic) the clip always starts silent, whatever the choice: its sound from the phone's speaker would be
-      heard by the mic, and the band would play along to its own clip. */
-   const how=window.OPT&&OPT.val?OPT.val('afterRec'):'A',live=typeof L!=='undefined'&&L.mode==='mic';
-   if(how==='A')pauseMusic();
-   vid.src=url;vid.muted=how!=='A'||live;
+   /* Oct 7 (afterRec C, signed off Oct 7, 15:20): when a recording finishes the song keeps playing and the show goes on; a
+      small "Clip ready" bar appears where the REC badge was (Watch / Save / Share / ✕). Watch opens the clip silent over
+      the stage (its own speaker button unmutes it), so it never fights the song. (Tried: A pause the song and open the clip
+      with sound, the old way; B keep playing and open the clip silent.) Listening live this also keeps the clip's sound off
+      the phone's speaker, where the mic would hear it and the band would play along to its own clip. */
+   vid.src=url;vid.muted=true;
    const f=new File([blob],fileName(),{type:blob.type});sh.hidden=!(navigator.canShare&&!window.claude&&(()=>{try{return navigator.canShare({files:[f]});}catch(e){return false;}})());
    info.textContent=fmt(secs)+' · '+(blob.size/1048576).toFixed(1)+' MB'+(document.body.classList.contains('dev')?` · ${mt} · ${rc.width}×${rc.height} · ${frames} frames`:'');
-   if(how==='C'){showReady();return;}
-   box.hidden=false;vid.play().catch(()=>{});}
- /* option C: the "Clip ready" bar, where the REC badge was */
+   showReady();}
+ /* the "Clip ready" bar, where the REC badge was */
  const ready=document.createElement('div');ready.id='recReady';ready.hidden=true;ready.setAttribute('role','status');
  ready.innerHTML='<span class="rrt">✓ Clip ready</span><button type="button" data-rr="watch">Watch</button><button type="button" data-rr="save">Save</button><button type="button" data-rr="share">Share</button><button type="button" data-rr="x" aria-label="Delete the clip">✕</button>';
  dot.after(ready);
