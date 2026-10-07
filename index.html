@@ -593,7 +593,7 @@ const L={ctx:null,an:null,data:new Uint8Array(1024),mode:null,tb:new Float32Arra
        the chorus counted as background and the band rested; and its fixed -54 dBFS floor sits right where a phone hears
        normal listening volume. Tuned by replaying this rule on room recordings of TestTrack (tools/test-track):
        - the first second of listening learns the room (its quietest level, ignoring the digital silence of a mic
-         waking up); after that the background follows the room's average over ~3 s once nothing has played for 2 s, and
+         waking up, and never above -60 dBFS); after that the background follows the room's average over ~3 s once nothing has played for 2 s, and
          while music plays it creeps up at most 1 dB a minute (an air conditioner switched on mid-song is learned in
          the next pause), so the music itself is never learned as background;
        - music switches on 6 dB above the room (both the ~0.3 s level and a quick-release level must agree) and stays
@@ -602,7 +602,10 @@ const L={ctx:null,an:null,data:new Uint8Array(1024),mode:null,tb:new Float32Arra
        - the only fixed floor is -66 dBFS (background never assumed quieter than that).
        Replayed on four rooms: quiet band 0-24 % -> 83-100 % detected (except where it is truly at room level), kick-only
        intro 50-100 % -> 100 %, silence and a noisy empty room 0 % (the old rule called a noisy empty room music). */
-    if(tt-A.t0<1){if(r>1e-6){A.nf=A.lr?Math.min(A.nf,Math.max(sl,r)):r;A.lr=1;}A.on=false;}
+    // first second: learn the room, but never assume it is louder than a quiet room (-60 dBFS): Listen live is often started
+    // while the music already plays, and a busy song with no gaps would otherwise be learned as "the room" and the band
+    // would rest all song (found Oct 7 on Divvy through a simulated room)
+    if(tt-A.t0<1){if(r>1e-6){A.nf=Math.min(.001,A.lr?Math.min(A.nf,Math.max(sl,r)):r);A.lr=1;}A.on=false;}
     else{
       if(A.on||A.offT==null)A.offT=tt;   // the room is re-learned upwards only after 2 s of real quiet (not in the gaps of a song)
       if(sl<A.nf||(!A.on&&tt-A.offT>2))A.nf+=(sl-A.nf)*(1-Math.exp(-dt/3));else if(A.on)A.nf=Math.min(sl,A.nf*Math.pow(10,dt/1200));
