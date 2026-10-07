@@ -2017,7 +2017,7 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
      new Blob([csv],{type:'text/csv'}));}
  btn.onclick=()=>{if(LOG.on)stop();else start();paint();};
  const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
- function paint(){const cl=document.body.classList,vis=cl.contains('dev')&&(LOG.on||!cl.contains('starting')&&!!L.mode);   // while logging it stays, so it can always be stopped
+ function paint(){const cl=document.body.classList,vis=cl.contains('dev');   // Oct 7: always there with designer tools on (also on the start menu), so a log can start before the music
    btn.hidden=!vis;if(!vis)return;
    btn.textContent=LOG.on?`■ Stop log ${fmt((performance.now()-LOG.t0)/1000)} · ${LOG.rows.length} rows`:'● Log';
    btn.style.background=LOG.on?'rgba(190,30,30,.85)':'rgba(0,0,0,.6)';}
