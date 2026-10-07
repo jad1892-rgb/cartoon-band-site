@@ -201,6 +201,10 @@ body:not(.dev) .pv.empty{display:none}
 #recCount[hidden]{display:none}
 #recCount.pop{animation:recpop 1s ease-out}
 @keyframes recpop{0%{transform:scale(1.6);opacity:0}15%{transform:scale(1);opacity:1}80%{opacity:1}100%{transform:scale(.85);opacity:0}}
+/* Oct 7 (designer's iPhone): the drawn buttons kept their full width, so Share / Save / Delete ran off a phone screen.
+   They now share the row equally and may shrink; on a narrow phone the card's drawn border and padding are thinner. */
+#recBox .rbrow{gap:6px}#recBox .rbrow button{flex:1 1 0;min-width:0;padding-left:4px;padding-right:4px;white-space:nowrap}
+@media (max-width:430px){#recBox{padding:10px}#recBox .rbcard{border-width:16px;border-image-width:16px;padding:8px}#recBox .rbrow button{font-size:15px}}
 </style>
 <style id="touch-bars-css">
 /* PATCH13: touch screens: the stage bars never vanish; they rest at 40 % and stay tappable */
