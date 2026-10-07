@@ -359,7 +359,7 @@ body.in-app #ws{padding-top:112px}
 <div id="stage" hidden=""><canvas id="stageCv"></canvas>
   <div id="stCtl" class="stctl"><button id="stPlay" aria-label="Play or pause">▶</button><div class="stmid"><div id="stSong">Demo beat</div><div class="strow"><input id="stPos" type="range" min="0" max="1000" value="0" aria-label="Position in the song"><span id="stTime"></span></div></div><label class="btn alt" id="stSongBtn">🎵 Song<input id="stFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""></label></div><div id="startCard" hidden=""><div class="stcard"><button id="goHelp" class="alt" aria-label="How it works">?</button>
 <button id="goSong">Pick song</button><button id="goDemo">Play demo</button>
-<div class="strowb"><button class="alt" id="goEdit">Edit band</button><button class="alt devonly" id="goListen">Listen (test)</button></div><div id="stFollow" aria-hidden="true"></div><div id="stSocial" aria-label="Follow us"></div></div></div><div id="howBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="howT"><div class="howcard"><button id="howX" aria-label="Close"></button><div class="howhead" aria-hidden="true"></div><div class="howpic" aria-hidden="true"></div><h3 id="howT"></h3><p id="howP"></p><div class="howdots" aria-hidden="true"><i></i><i></i><i></i></div><div class="howrow"><button class="alt" id="howBack">Back</button><button id="howNext">Next</button></div></div></div><input id="startFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""><div id="stNameBox" hidden=""><input id="stNameIn" maxlength="30" placeholder="Band name (empty = none)" autocomplete="off"><button id="stNameOk">OK</button></div><button id="recDot" hidden="" aria-label="Stop recording">● REC <span>0:00</span><i class="recbar"><b></b></i></button><div id="recPick" hidden="" role="menu" aria-label="Record"><div class="rptitle">Record</div><button role="menuitem" data-rec="15">15 s clip</button><button role="menuitem" data-rec="30">30 s clip</button><button role="menuitem" data-rec="song">Whole song</button><div class="rpnote">Keeps going while you move the players</div></div><div id="recBox" hidden=""><div class="rbcard"><video id="recVid" playsinline="" controls="" loop=""></video><div class="rbrow"><button id="recShare" hidden="">Share</button><button id="recSave">Save</button><button class="alt" id="recDel">Delete</button></div><div id="recInfo"></div></div></div><div id="stTip" hidden="">Turn your phone sideways for a bigger band ↻</div><div class="stbar"><button class="alt" id="stName" style="display:none">✏️ Name</button><button class="alt" id="stScene" style="display:none">🎭 Scene</button><button class="alt" id="stReset" style="display:none">↺ Positions</button><button class="alt" id="stRec" aria-haspopup="true">● Record</button><button class="alt" id="stFull">⛶ Full screen</button><button id="stExit">☰ Menu</button></div></div>
+<div class="strowb"><button class="alt" id="goEdit">Edit band</button><button class="alt" id="goListen">Listen live</button></div><div id="stFollow" aria-hidden="true"></div><div id="stSocial" aria-label="Follow us"></div></div></div><div id="howBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="howT"><div class="howcard"><button id="howX" aria-label="Close"></button><div class="howhead" aria-hidden="true"></div><div class="howpic" aria-hidden="true"></div><h3 id="howT"></h3><p id="howP"></p><div class="howdots" aria-hidden="true"><i></i><i></i><i></i></div><div class="howrow"><button class="alt" id="howBack">Back</button><button id="howNext">Next</button></div></div></div><input id="startFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""><div id="stNameBox" hidden=""><input id="stNameIn" maxlength="30" placeholder="Band name (empty = none)" autocomplete="off"><button id="stNameOk">OK</button></div><button id="recDot" hidden="" aria-label="Stop recording">● REC <span>0:00</span><i class="recbar"><b></b></i></button><div id="recPick" hidden="" role="menu" aria-label="Record"><div class="rptitle">Record</div><button role="menuitem" data-rec="15">15 s clip</button><button role="menuitem" data-rec="30">30 s clip</button><button role="menuitem" data-rec="song">Whole song</button><div class="rpnote">Keeps going while you move the players</div></div><div id="recBox" hidden=""><div class="rbcard"><video id="recVid" playsinline="" controls="" loop=""></video><div class="rbrow"><button id="recShare" hidden="">Share</button><button id="recSave">Save</button><button class="alt" id="recDel">Delete</button></div><div id="recInfo"></div></div></div><div id="stTip" hidden="">Turn your phone sideways for a bigger band ↻</div><div class="stbar"><button class="alt" id="stName" style="display:none">✏️ Name</button><button class="alt" id="stScene" style="display:none">🎭 Scene</button><button class="alt" id="stReset" style="display:none">↺ Positions</button><button class="alt" id="stRec" aria-haspopup="true">● Record</button><button class="alt" id="stFull">⛶ Full screen</button><button id="stExit">☰ Menu</button></div></div>
 <audio id="player" controls="" style="width:100%;margin-top:10px;display:none"></audio>
 <div id="bufUI" style="display:none;gap:8px;align-items:center;margin-top:10px"><button id="bPlay" class="alt">⏸ Pause</button><input id="bSeek" type="range" min="0" max="1000" value="0" style="flex:1"><span id="bTime" class="hint" style="font-size:12px"></span></div>
 
@@ -1911,9 +1911,12 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
   document.getElementById('goDemo').onclick=()=>{if(window.playDemo)playDemo();close();fs();};   // the demo track, looping
   card.addEventListener('click',e=>{if(!inner.contains(e.target)){fs();close();}});   // a click anywhere off the menu goes back to the show
   document.getElementById('goEdit').onclick=()=>{close();showMode(false);};
-  /* Oct 6 (mic test, designer tools only): listen to the room through the microphone instead of a song file */
-  {const gl=document.getElementById('goListen');if(gl)gl.onclick=async()=>{close();const t=document.getElementById('stSong');
-    try{await L.mic();}catch(e){if(t)t.textContent='Microphone not allowed here';}};}   // the song bar then shows "Microphone"
+  /* Listen live: the band listens to the room through the microphone instead of a song file. Oct 6: designer tools only
+     (mic test); Oct 7: for everyone (designer: "listen live should definitely be an option"). If the browser or page gives no
+     microphone (refused, or the Claude app's preview), the song bar and a stage tip say so. */
+  {const gl=document.getElementById('goListen');if(gl)gl.onclick=async()=>{close();const t=document.getElementById('stSong'),tip=document.getElementById('stTip');
+    try{await L.mic();}catch(e){const m=e&&e.name==='NotAllowedError'?'Allow the microphone to listen live':'No microphone here: try Pick song';
+      if(t)t.textContent=m;if(tip){const r=tip.textContent;tip.textContent=m+' 🎤';tip.hidden=false;clearTimeout(tip._t);tip._t=setTimeout(()=>{tip.hidden=true;tip.textContent=r;},4000);}}};}   // the song bar then shows "Microphone"
   if(!/edit/.test(location.hash))setTimeout(()=>open(false),0);
   return {open,close,isOpen:()=>!card.hidden};})();
 
@@ -1935,6 +1938,35 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
    const say=faint>=5?'Move closer to the speaker for a livelier band 🔊':none>=8?"Can't hear any music: turn it up, or move closer 🔊":'';
    if(say&&now-lastTip>30000&&STAGE.isOpen()){lastTip=now;tip.textContent=say;tip.hidden=false;clearTimeout(tip._t);
      tip._t=setTimeout(()=>{tip.hidden=true;tip.textContent=REST;},4000);}},1000);}
+/* Oct 7: listening read-out (designer tools only: #dev). While the band listens live (microphone), a small panel in the
+   top-left corner shows what the ears get, so a real-room test can tell WHY the band struggles:
+   - Mic: whether the browser really switched off its call clean-up (echo cancelling, noise suppression, auto level). Phones
+     sometimes keep it on whatever the page asks, and call clean-up treats music as noise.
+   - Heard: the room level before our turn-up (dB below full scale; music close to a speaker ~ -20, across a room ~ -40),
+     the room's background level, and whether it counts as "music playing".
+   - Turn-up: how much the input level control adds (at most +36 dB; near the top = the mic hears very little).
+   - Beat: tempo and how sure the beat clock is (the band bobs from 10 %; under 20 % with little bass = "talk-like").
+   - Bass: 40-150 Hz share (a tablet or phone speaker gives almost none, so the bass player and kick drum get little).
+   - Rest: why the band is resting, if it is (quiet / talk check / nothing heard).
+   - Players: how much each one is moving (0-99).
+   A screenshot of this panel during a test is the most useful thing to send back. */
+{const box=document.createElement('div');box.id='listenMeter';box.hidden=true;
+ box.style.cssText='position:fixed;left:8px;top:8px;z-index:70;background:rgba(0,0,0,.72);color:#e8e8e8;font:11px/1.35 ui-monospace,Menlo,monospace;'+
+   'padding:6px 8px;border-radius:8px;pointer-events:none;white-space:pre;max-width:calc(100vw - 16px);overflow:hidden';
+ document.body.appendChild(box);
+ const db=v=>v>0?Math.round(20*Math.log10(v)):-99,pc=v=>Math.round(100*Math.max(0,Math.min(1,v||0)));
+ const on=v=>v===false?'off ✓':v===true?'ON ✗':'?';
+ setInterval(()=>{const live=document.body.classList.contains('dev')&&L.mode==='mic'&&L.ms;box.hidden=!live;if(!live)return;
+   const tr=L.stream&&L.stream.getAudioTracks()[0],s=tr&&tr.getSettings?tr.getSettings():{},A=L.agc||{},G=L.gt||{},B=L.beat||{};
+   const sl=A.pw!=null?Math.sqrt(A.pw):0,why=!A.on?'nothing heard':L.talking?'talk check':L.gate!=null&&L.gate<.3?'quiet':'-';
+   const pl=members.map(m=>m.id.slice(0,3)+' '+String(Math.min(99,Math.round(99*(m.env||0)))).padStart(2)).join('  ');
+   box.textContent=
+     `Mic     echo ${on(s.echoCancellation)}  noise ${on(s.noiseSuppression)}  auto ${on(s.autoGainControl)}  ${s.sampleRate||L.ctx.sampleRate} Hz\n`+
+     `Heard   ${db(sl)} dB  background ${db(A.nf||0)} dB  music ${A.on?'yes':'no'}\n`+
+     `Turn-up +${db(A.g||1)} dB (max +36)\n`+
+     `Beat    ${B.bpm?Math.round(B.bpm)+' BPM':'-'}  sure ${pc(B.conf)} %  (2 s avg ${pc(G.cs)} %)\n`+
+     `Bass    ${pc(G.ls)} %  (music usually 70-90, talk 50-60)\n`+
+     `Gate    ${pc(L.gate)} %  resting: ${why}\n`+pl;},250);}
 /* PATCH08: "How it works" popup (3 cards), the "?" on the menu, social links. Comes before UIART so its buttons get dressed too. */
 const SOCIAL=[   /* the designer's accounts: put the full address in url ('' = shown dimmed, "Coming soon") */
   {id:'instagram',name:'Instagram',short:'IG',url:''},
@@ -2009,7 +2041,7 @@ window.UIART=(function(){
     const sp=document.createElement('span');sp.textContent=t.textContent.trim();sp.style.cssText='display:inline-block;min-width:'+Math.max(48,sp.textContent.length*10)+'px';
     l.replaceChild(sp,t);dress(sp,{wh,wp:'left center'});}
   function apply(){const $=id=>document.getElementById(id);
-    dress($('goSong'),{frame:'big-a',wh:'22px'});dress($('goDemo'),{frame:'big-b',wh:'22px'});dress($('goEdit'),{frame:'sm-a',wh:'15px'});
+    dress($('goSong'),{frame:'big-a',wh:'22px'});dress($('goDemo'),{frame:'big-b',wh:'22px'});dress($('goEdit'),{frame:'sm-a',wh:'15px'});dress($('goListen'),{frame:'sm-b',wh:'15px'});
     dress($('stFull'),{frame:'sm-a',wh:'15px'});dress($('stExit'),{frame:'sm-b',wh:'15px'});dress($('stSongBtn'),{frame:'sm-b',wh:'15px'});
     const pl=$('stPlay');if(pl){pl.classList.add('ui-r');dress(pl,{keepAria:true});}
     dress($('show'),{frame:'med-b',wh:'16px'});dress($('sheetsBtn'),{frame:'med-a',wh:'16px'});dress($('scanBtn'),{frame:'med-b',wh:'16px'});
