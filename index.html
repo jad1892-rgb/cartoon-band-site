@@ -193,6 +193,14 @@ body:not(.dev) .pv.empty{display:none}
   #recReady button{padding:5px 8px;font-size:12px}#recReady .rrt{margin-right:2px}}
 @media (max-width:360px){#recReady .rrt{font-size:0}#recReady .rrt::before{content:'✓ Clip';font-size:13px}}
 @media (pointer:coarse){#recReady{top:auto;bottom:170px;left:50%;transform:translateX(-50%)}}
+
+/* Oct 7: the 3-2-1 countdown before recording (on the stage only, never in the clip) */
+#recCount{position:absolute;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font:900 min(38vw,38vh)/1 system-ui,-apple-system,sans-serif;color:#fff;text-shadow:0 0 .12em rgba(255,80,170,.9),0 .04em .08em rgba(0,0,0,.6);
+  background:radial-gradient(circle,rgba(0,0,0,.25),rgba(0,0,0,0) 60%);-webkit-user-select:none;user-select:none}
+#recCount[hidden]{display:none}
+#recCount.pop{animation:recpop 1s ease-out}
+@keyframes recpop{0%{transform:scale(1.6);opacity:0}15%{transform:scale(1);opacity:1}80%{opacity:1}100%{transform:scale(.85);opacity:0}}
 </style>
 <style id="touch-bars-css">
 /* PATCH13: touch screens: the stage bars never vanish; they rest at 40 % and stay tappable */
@@ -1915,8 +1923,20 @@ try{if(window.claude&&window.top!==window.self&&matchMedia('(pointer:coarse)').m
  /* the choice panel */
  function openPick(){pick.hidden=false;const b=pick.querySelector('button');if(b)b.focus();}
  function closePick(){pick.hidden=true;}
- btn.addEventListener('click',e=>{e.stopPropagation();if(rec)stop();else pick.hidden?openPick():closePick();});
- pick.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('[data-rec]');if(!b)return;const v=b.dataset.rec;start(v==='song'?{song:true}:{secs:+v});});
+ btn.addEventListener('click',e=>{e.stopPropagation();if(cdN)cancelCount();else if(rec)stop();else pick.hidden?openPick():closePick();});
+ pick.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('[data-rec]');if(!b)return;const v=b.dataset.rec;countdown(v==='song'?{song:true}:{secs:+v});});
+ /* Oct 7: a 3-2-1 countdown on the stage before recording starts (not in the clip), so the person can get ready (point the
+    phone, cue the song). A whole-song recording restarts the song at "go". Tap the numbers or the Record button to cancel.
+    Typed numbers for now; the drawn ones come from design sheet page 7 (countdown 3-2-1). */
+ const cd=document.createElement('div');cd.id='recCount';cd.hidden=true;cd.setAttribute('aria-live','assertive');stg.appendChild(cd);
+ let cdT=0,cdN=0;
+ function countdown(o){closePick();if(rec||cdN)return;let n=3;cdN=1;cd.hidden=false;btn.textContent='✕ Cancel';btn.classList.add('on');ready.hidden=true;
+   const show=()=>{if(!cdN)return;
+     if(n>0){cd.textContent=n;cd.classList.remove('pop');void cd.offsetWidth;cd.classList.add('pop');n--;cdT=setTimeout(show,1000);}
+     else{cdN=0;cd.hidden=true;start(o);}};   // start() sets the button to Stop
+   show();}
+ function cancelCount(){clearTimeout(cdT);cdN=0;cd.hidden=true;btn.textContent='● Record';btn.classList.remove('on');}
+ cd.addEventListener('click',e=>{e.stopPropagation();cancelCount();});
  document.addEventListener('pointerdown',e=>{if(!pick.hidden&&!pick.contains(e.target)&&!btn.contains(e.target))closePick();},true);
  addEventListener('keydown',e=>{if(e.key==='Escape'&&!pick.hidden){e.stopImmediatePropagation();closePick();}},true);
  dot.onclick=e=>{e.stopPropagation();stop();};
