@@ -1863,7 +1863,7 @@ try{if(window.claude&&window.top!==window.self&&matchMedia('(pointer:coarse)').m
   del=document.getElementById('recDel'),info=document.getElementById('recInfo'),cvs=document.getElementById('stageCv'),stg=document.getElementById('stage'),player=document.getElementById('player');
  const type=()=>['video/mp4;codecs=avc1.640028,mp4a.40.2','video/mp4;codecs=avc1.4D4028,mp4a.40.2','video/mp4;codecs=avc1,mp4a.40.2','video/mp4;codecs=avc1','video/mp4','video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>window.MediaRecorder&&MediaRecorder.isTypeSupported(t));
  if(!cvs.captureStream||!type())btn.style.display='none';
- let rec=null,chunks=[],t0=0,tick=0,blob=null,url=null,dest=null,rc=null,rx=null,vt=null,raf=0,frames=0,lastF=0,plan=null,ending=0,secs=0;
+ let rec=null,chunks=[],t0=0,tick=0,blob=null,url=null,dest=null,recG=null,rc=null,rx=null,vt=null,raf=0,frames=0,lastF=0,plan=null,ending=0,secs=0;
  const fmt=s=>Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');
  const tip=t=>{const tp=document.getElementById('stTip');if(!tp)return;tp.textContent=t;tp.hidden=false;clearTimeout(tp.__r);tp.__r=setTimeout(()=>tp.hidden=true,3500);};
  /* the end card, drawn only into the video */
@@ -1893,7 +1893,13 @@ try{if(window.claude&&window.top!==window.self&&matchMedia('(pointer:coarse)').m
    frames=0;lastF=0;ending=0;cancelAnimationFrame(raf);raf=requestAnimationFrame(pump);const tracks=[vt];
    plan=o.song?{song:true,mic:typeof L!=='undefined'&&L.mode==='mic'}:{secs:o.secs||15};
    if(plan.song&&!plan.mic)await restartSong();
-   if(typeof L!=='undefined'&&L.ctx&&L.an){dest=dest||L.ctx.createMediaStreamDestination();try{L.an.connect(dest);}catch(e){}tracks.push(...dest.stream.getAudioTracks());}
+   /* Oct 7: the clip's sound goes through its own volume control (recG), so it can fade: in over 0.2 s at the start (no click
+      on the first note) and out over the end card when recording stops (the designer: the cut-off at the end was jarring).
+      Only the clip fades; what plays out of the speakers is untouched. */
+   if(typeof L!=='undefined'&&L.ctx&&L.an){dest=dest||L.ctx.createMediaStreamDestination();recG=recG||L.ctx.createGain();
+     try{recG.connect(dest);}catch(e){}try{L.an.connect(recG);}catch(e){}
+     const n=L.ctx.currentTime,g=recG.gain;g.cancelScheduledValues(n);g.setValueAtTime(0,n);g.linearRampToValueAtTime(1,n+.2);
+     tracks.push(...dest.stream.getAudioTracks());}
    const mt=type();rec=new MediaRecorder(new MediaStream(tracks),{mimeType:mt,videoBitsPerSecond:plan.song?2.5e6:5e6,audioBitsPerSecond:128e3});chunks=[];
    rec.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};rec.onstop=done;rec.start(1000);
    t0=performance.now();ready.hidden=true;btn.classList.add('on');btn.textContent='■ Stop';dot.hidden=false;dot.classList.toggle('song',!!plan.song);bar.style.width='0';dot.querySelector('span').textContent='0:00';
@@ -1901,9 +1907,10 @@ try{if(window.claude&&window.top!==window.self&&matchMedia('(pointer:coarse)').m
      dot.querySelector('span').textContent=fmt(s)+(plan.secs?' / '+fmt(plan.secs):'');if(plan.secs)bar.style.width=Math.min(100,s/plan.secs*100)+'%';
      if((plan.secs&&s>=plan.secs)||(plan.song&&!plan.mic&&songOver(s))||s>=SONG_MAX)stop();},200);
  }catch(e){rec=null;cancelAnimationFrame(raf);tip('Recording is not available in this browser');}}
- function stop(){if(!rec||ending)return;ending=performance.now();btn.textContent='● Record';btn.classList.remove('on');dot.hidden=true;   /* end card first, then finish */
+ function stop(){if(!rec||ending)return;ending=performance.now();
+   try{if(recG){const n=L.ctx.currentTime,g=recG.gain;g.cancelScheduledValues(n);g.setValueAtTime(g.value,n);g.exponentialRampToValueAtTime(.01,n+END-.3);g.linearRampToValueAtTime(0,n+END-.2);}}catch(e){}   /* fade the clip's sound out under the end card: evenly in loudness (-40 dB over ~1.5 s), as a mixing desk fader would */btn.textContent='● Record';btn.classList.remove('on');dot.hidden=true;   /* end card first, then finish */
    setTimeout(()=>{clearInterval(tick);cancelAnimationFrame(raf);try{rec.stop();}catch(e){done();}},END*1000);}
- function done(){if(!rec)return;const mt=rec.mimeType||type();rec=null;ending=0;try{if(dest)L.an.disconnect(dest);}catch(e){}
+ function done(){if(!rec)return;const mt=rec.mimeType||type();rec=null;ending=0;try{if(recG)L.an.disconnect(recG);}catch(e){}
    blob=new Blob(chunks,{type:mt.split(';')[0]});if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(blob);secs=(performance.now()-t0)/1000;
    /* Oct 7 (afterRec C, signed off Oct 7, 15:20): when a recording finishes the song keeps playing and the show goes on; a
       small "Clip ready" bar appears where the REC badge was (Watch / Save / Share / ✕). Watch opens the clip silent over
