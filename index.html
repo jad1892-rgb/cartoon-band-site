@@ -46,7 +46,8 @@ input[type=range]{width:100%}
 .art input{width:100%;font-size:11px}
 body.show{padding:0;height:100%;overflow:hidden}
 body.show h1,body.show .bar,body.show #msg,body.show #player,body.show #out,body.show .grid{display:none!important}
-#stage{position:fixed;inset:0;z-index:50;background:#000}#stage[hidden]{display:none}
+#stage{position:fixed;inset:0;z-index:50;background:#000;touch-action:manipulation}   /* Oct 7: no double-tap zoom on the stage (iPad); see stage/no-zoom.js */
+#stage[hidden]{display:none}
 #stage canvas{width:100%;height:100%;aspect-ratio:auto;border-radius:0;background:none;touch-action:none;display:block}
 .stbar{position:absolute;top:12px;right:12px;display:flex;gap:8px;align-items:center;transition:opacity .8s}
 .stbar span{color:#ffffffaa;font-size:13px;text-shadow:0 1px 3px #000}
@@ -2315,6 +2316,22 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
    btn.textContent=LOG.on?`■ Stop log ${fmt((performance.now()-LOG.t0)/1000)} · ${LOG.rows.length} rows`:'● Log';
    btn.style.background=LOG.on?'rgba(190,30,30,.85)':'rgba(0,0,0,.6)';}
  setInterval(paint,250);}
+/* Oct 7 (designer's iPad, home-screen app): a pinch or double tap zoomed the whole page (stage, buttons, song bar) into a
+   corner, and with the stage filling the screen there was no way back: taps landed on the wrong things, the song wouldn't
+   start. Zooming means nothing on the stage, so while the band is on show (body.show):
+   1. double tap doesn't zoom (touch-action: manipulation on #stage, styles/base.css; the canvas already has none);
+   2. pinch doesn't zoom (Safari's own pinch events, gesturestart/gesturechange, are cancelled);
+   3. if a zoom slips through anyway, the page snaps back to normal size (the viewport tag is briefly told
+      maximum-scale=1, which makes Safari reset the zoom, then put back so the Edit band screen can still be zoomed). */
+{const vm=document.querySelector('meta[name="viewport"]'),base=vm?vm.getAttribute('content'):'';
+ const onShow=()=>document.body.classList.contains('show');
+ for(const ev of ['gesturestart','gesturechange'])document.addEventListener(ev,e=>{if(onShow())e.preventDefault();},{passive:false});
+ let busy=false;
+ function unzoom(){const vv=window.visualViewport;if(busy||!vm||!vv||!onShow()||vv.scale<=1.01)return;busy=true;
+   vm.setAttribute('content',base+', maximum-scale=1');
+   setTimeout(()=>{vm.setAttribute('content',base);window.scrollTo(0,0);busy=false;},300);}
+ if(window.visualViewport){visualViewport.addEventListener('resize',unzoom);visualViewport.addEventListener('scroll',unzoom);}
+ setInterval(unzoom,1000);}   // belt and braces: some zooms finish without a resize signal
 /* PATCH08: "How it works" popup (3 cards), the "?" on the menu, social links. Comes before UIART so its buttons get dressed too. */
 const SOCIAL=[   /* the designer's accounts: put the full address in url ('' = shown dimmed, "Coming soon") */
   {id:'instagram',name:'Instagram',short:'IG',url:''},
