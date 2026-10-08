@@ -2197,7 +2197,22 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
  if(HAS&&'serviceWorker' in navigator&&window.isSecureContext)
    window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});   // offline helper: opens with no signal
  if(HAS&&installed()){document.body.classList.add('installed');try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}}
- const show=()=>{if(row)row.hidden=!(HAS&&!installed()&&(iOS||ask||touch));};
+ /* Oct 8: Apple bug (WebKit 291892): in home-screen apps on iPhone/iPad version 18 (and early 26) the sound engine often
+    stays off: the band moves to the demo with no sound, songs don't play, the mic hears nothing; the same page in Safari
+    is fine. The designer's iPad (18.7.8) hit it, the iPhone (26) didn't. So: no install button on Apple devices before 26,
+    and if an installed band can't start its sound, say so once and point to Safari. */
+ const appleVer=(()=>{const m=navigator.userAgent.match(/OS (\d+)_\d+.*like Mac OS X/)||navigator.userAgent.match(/Version\/(\d+)/);return m?+m[1]:0;})();
+ const oldApple=iOS&&appleVer>0&&appleVer<26;
+ const show=()=>{if(row)row.hidden=!(HAS&&!installed()&&!oldApple&&(iOS||ask||touch));};
+ if(HAS&&iOS&&installed()){let last=null,told=false;
+   setInterval(()=>{if(told||typeof L==='undefined'||!L.ctx)return;
+     const pl=document.getElementById('player'),want=!!L.bs||(L.via==='element'&&pl&&!pl.paused)||L.mode==='mic';
+     const t=L.ctx.currentTime,stuck=want&&(L.ctx.state!=='running'||(last!==null&&t===last));last=want?t:null;
+     if(!stuck)return;told=true;
+     const tp=document.getElementById('stTip');if(!tp)return;if(!tp.dataset.rest)tp.dataset.rest=tp.textContent;
+     tp.textContent='No sound? This '+(/iPad/.test(navigator.userAgent)||navigator.maxTouchPoints>1&&navigator.platform==='MacIntel'?'iPad':'iPhone')+
+       ' blocks sound for home-screen apps (an Apple bug). Update it, or open the band in Safari.';
+     tp.hidden=false;clearTimeout(tp._b);tp._b=setTimeout(()=>{tp.hidden=true;tp.textContent=tp.dataset.rest;},12000);},2000);}
  if(go)go.textContent=touch?'Add to home screen':'Install the band';
  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();ask=e;show();});
  window.addEventListener('appinstalled',()=>{ask=null;if(row)row.hidden=true;});
