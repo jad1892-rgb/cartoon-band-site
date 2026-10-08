@@ -10,6 +10,14 @@
     
     <meta charset="utf-8">
 <meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Cartoon Band">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#000000">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Cartoon Band</title>
 <script>try{if(sessionStorage.getItem("bandOpening"))document.documentElement.classList.add("opening")}catch(e){}</script>
@@ -142,6 +150,13 @@ html.opening #bandCurtain.up{opacity:0;transition-duration:.7s}
 .howrow{display:flex;gap:10px;justify-content:center;width:100%}.howrow button{min-width:110px;min-height:46px;font-size:16px}
 #howBack.off{display:none}
 @media (max-height:480px){.howpic{height:64px}.howcard{padding:12px 16px 10px;gap:4px}.howcard p{min-height:0}}
+/* Oct 7: Add to home screen steps (memory/home-screen.js), same paper card as How it works; typed until the design batch */
+#homeBox{position:absolute;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55);padding:16px;box-sizing:border-box}#homeBox[hidden]{display:none}
+.hbcard{width:min(100%,420px);max-height:100%;overflow:auto;box-sizing:border-box;padding:22px 20px 16px;border-radius:22px;background:#fff;color:#1c1c20;border-style:solid;border-color:transparent;border-width:30px;border-image:var(--ui-menu-card-start-menu) 64 fill / 30px stretch;display:flex;flex-direction:column;gap:8px;text-align:left}
+.hbcard h3{margin:0;font:800 20px system-ui,sans-serif;text-align:center}.hbcard p,.hbcard li{margin:0;font:15px/1.4 system-ui,sans-serif}
+.hbcard ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}.hbcard .hbnote{background:#fff2b8;border-radius:10px;padding:8px 10px}.hbcard .hbnote[hidden]{display:none}
+.hbcard #homeOk{align-self:center;min-width:120px;margin-top:4px}
+@media (max-height:480px){.hbcard{padding:10px 16px 8px;gap:4px}.hbcard p,.hbcard li{font-size:14px;line-height:1.3}}
 </style>
 <style id="phone-cards-css">
 /* PATCH09: player cards on a phone (users' view): wide cards, big picture, stacked full-width buttons; no sideways scrolling */
@@ -402,7 +417,7 @@ body.in-app #ws{padding-top:112px}
 <div id="stage" hidden=""><canvas id="stageCv"></canvas>
   <div id="stCtl" class="stctl"><button id="stPlay" aria-label="Play or pause">▶</button><div class="stmid"><div id="stSong">Demo beat</div><div class="strow"><input id="stPos" type="range" min="0" max="1000" value="0" aria-label="Position in the song"><span id="stTime"></span></div></div><label class="btn alt" id="stSongBtn">🎵 Song<input id="stFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""></label></div><div id="startCard" hidden=""><div class="stcard"><button id="goHelp" class="alt" aria-label="How it works">?</button>
 <button id="goSong">Pick song</button><button id="goDemo">Play demo</button>
-<div class="strowb"><button class="alt" id="goEdit">Edit band</button><button class="alt" id="goListen">Listen live</button></div><div class="strowb"><button class="alt" id="goSaveBand">Save my band</button><button class="alt" id="goOpenBand">Open my band</button><input type="file" id="bandFileIn" hidden=""></div><div id="stFollow" aria-hidden="true"></div><div id="stSocial" aria-label="Follow us"></div></div></div><div id="howBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="howT"><div class="howcard"><button id="howX" aria-label="Close"></button><div class="howhead" aria-hidden="true"></div><div class="howpic" aria-hidden="true"></div><h3 id="howT"></h3><p id="howP"></p><div class="howdots" aria-hidden="true"><i></i><i></i><i></i></div><div class="howrow"><button class="alt" id="howBack">Back</button><button id="howNext">Next</button></div></div></div><input id="startFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""><div id="stNameBox" hidden=""><input id="stNameIn" maxlength="30" placeholder="Band name (empty = none)" autocomplete="off"><button id="stNameOk">OK</button></div><button id="recDot" hidden="" aria-label="Stop recording">● REC <span>0:00</span><i class="recbar"><b></b></i></button><div id="recPick" hidden="" role="menu" aria-label="Record"><div class="rptitle">Record</div><button role="menuitem" data-rec="15">15 s clip</button><button role="menuitem" data-rec="30">30 s clip</button><button role="menuitem" data-rec="song">Whole song</button><div class="rpnote">Keeps going while you move the players</div></div><div id="recBox" hidden=""><div class="rbcard"><video id="recVid" playsinline="" controls="" loop=""></video><div class="rbrow"><button id="recShare" hidden="">Share</button><button id="recSave">Save</button><button class="alt" id="recDel">Delete</button></div><div id="recInfo"></div></div></div><div id="stTip" hidden="">Turn your phone sideways for a bigger band ↻</div><div class="stbar"><button class="alt" id="stName" style="display:none">✏️ Name</button><button class="alt" id="stScene" style="display:none">🎭 Scene</button><button class="alt" id="stReset" style="display:none">↺ Positions</button><button class="alt" id="stRec" aria-haspopup="true">● Record</button><button class="alt" id="stFull">⛶ Full screen</button><button id="stExit">☰ Menu</button></div></div>
+<div class="strowb"><button class="alt" id="goEdit">Edit band</button><button class="alt" id="goListen">Listen live</button></div><div class="strowb"><button class="alt" id="goSaveBand">Save my band</button><button class="alt" id="goOpenBand">Open my band</button><input type="file" id="bandFileIn" hidden=""></div><div class="strowb" id="homeRow" hidden=""><button class="alt" id="goHome">Add to home screen</button></div><div id="stFollow" aria-hidden="true"></div><div id="stSocial" aria-label="Follow us"></div></div></div><div id="homeBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="homeT"><div class="hbcard"><h3 id="homeT">Put the band on your home screen</h3><p>It opens like an app, full screen, and your band stays safe on this device.</p><ol></ol><p class="hbnote" hidden="">Already drawn players? The home-screen band starts fresh. First tap <b>Menu → Save my band</b> here, then <b>Open my band</b> from the new icon.</p><button id="homeOk">Got it</button></div></div><div id="howBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="howT"><div class="howcard"><button id="howX" aria-label="Close"></button><div class="howhead" aria-hidden="true"></div><div class="howpic" aria-hidden="true"></div><h3 id="howT"></h3><p id="howP"></p><div class="howdots" aria-hidden="true"><i></i><i></i><i></i></div><div class="howrow"><button class="alt" id="howBack">Back</button><button id="howNext">Next</button></div></div></div><input id="startFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""><div id="stNameBox" hidden=""><input id="stNameIn" maxlength="30" placeholder="Band name (empty = none)" autocomplete="off"><button id="stNameOk">OK</button></div><button id="recDot" hidden="" aria-label="Stop recording">● REC <span>0:00</span><i class="recbar"><b></b></i></button><div id="recPick" hidden="" role="menu" aria-label="Record"><div class="rptitle">Record</div><button role="menuitem" data-rec="15">15 s clip</button><button role="menuitem" data-rec="30">30 s clip</button><button role="menuitem" data-rec="song">Whole song</button><div class="rpnote">Keeps going while you move the players</div></div><div id="recBox" hidden=""><div class="rbcard"><video id="recVid" playsinline="" controls="" loop=""></video><div class="rbrow"><button id="recShare" hidden="">Share</button><button id="recSave">Save</button><button class="alt" id="recDel">Delete</button></div><div id="recInfo"></div></div></div><div id="stTip" hidden="">Turn your phone sideways for a bigger band ↻</div><div class="stbar"><button class="alt" id="stName" style="display:none">✏️ Name</button><button class="alt" id="stScene" style="display:none">🎭 Scene</button><button class="alt" id="stReset" style="display:none">↺ Positions</button><button class="alt" id="stRec" aria-haspopup="true">● Record</button><button class="alt" id="stFull">⛶ Full screen</button><button id="stExit">☰ Menu</button></div></div>
 <audio id="player" controls="" style="width:100%;margin-top:10px;display:none"></audio>
 <div id="bufUI" style="display:none;gap:8px;align-items:center;margin-top:10px"><button id="bPlay" class="alt">⏸ Pause</button><input id="bSeek" type="range" min="0" max="1000" value="0" style="flex:1"><span id="bTime" class="hint" style="font-size:12px"></span></div>
 
@@ -938,7 +953,7 @@ if(S.fileSig!==FILE_SIG){const old=S,had=Object.keys(old).some(k=>!['v','art','a
   const own=u=>{if(typeof u!=='string'||!u.startsWith('@s:'))return false;const f=u.slice(3);return !builtFp.has(f)&&!(typeof BUILTIN_SEEN!=='undefined'&&BUILTIN_ART[BUILTIN_SEEN[f]]);};
   S={v:{},art:{},adj:{}};
   for(const k in old.art||{})if(own(old.art[k])){S.art[k]=old.art[k];if(old.adj&&old.adj[k])S.adj[k]=old.adj[k];}
-  for(const k of ['lib','libInDb','sheetLog','bandName','scene','stage','open','presets','layoutVer','fix26','tidy08','persistAsked','bandSaved','saveTip'])if(old[k]!==undefined)S[k]=old[k];
+  for(const k of ['lib','libInDb','sheetLog','bandName','scene','stage','open','presets','layoutVer','fix26','tidy08','persistAsked','bandSaved','saveTip','homeTip'])if(old[k]!==undefined)S[k]=old[k];
   if(Object.keys(S.art).length)S.carried=1;}   // player-cards.js: lay the new default under the user's own pieces
 S.fileSig=FILE_SIG;
 function keep(u){if(typeof u!=='string'||!u.startsWith('data:'))return u;
@@ -2161,6 +2176,51 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
  // one-time tip: the user has drawings of their own and has never saved a copy
  setInterval(()=>{const cl=document.body.classList;if(S.saveTip||S.bandSaved||!cl.contains('show')||cl.contains('starting')||!ownKeys().length)return;
    S.saveTip=1;save();tip('Your band lives on this device. Menu → Save my band keeps a copy',7000);},3000);}
+/* Oct 7: keep your band, step 3 — "Add to home screen" (the band as an app icon on the phone).
+   Why: Safari clears a website's saved things (the user's drawings) after about 7 days of not being visited, unless the
+   site is on the home screen. Installed, the band also opens full screen, without the browser's address bar.
+   Only on the website: tools/make-site.py adds the app manifest, icons and the offline helper (sw.js) and a
+   <link rel="manifest"> to the page. Without that link (the desktop file, the phone link, the box) this file does nothing.
+   - Already installed (opened from the icon): nothing to show; ask the browser to keep the band's storage (persist).
+   - Android / desktop Chrome and Edge: the browser offers its own install box (beforeinstallprompt); the menu button opens it.
+   - iPhone / iPad: there is no install box a page can open, so the button shows the three steps (Share → Add to Home Screen → Add).
+   - Important on iPhone: the home-screen band has its OWN storage, separate from Safari's. Users who already drew players
+     are told to Save my band in Safari first, then Open my band from the new icon.
+   - One-time stage tip, after the Save my band tip, for users with their own drawings. */
+{const HAS=!!document.querySelector('link[rel="manifest"]'),row=document.getElementById('homeRow'),go=document.getElementById('goHome'),box=document.getElementById('homeBox');
+ const installed=()=>{try{return matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;}catch(e){return false;}};
+ const iOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+ const touch=iOS||/Android|Mobi/.test(navigator.userAgent);
+ const own=()=>Object.values(S.art||{}).some(u=>typeof u==='string'&&u.startsWith('@s:'));
+ let ask=null;   // the browser's own install box, when it offers one
+ if(HAS&&'serviceWorker' in navigator&&window.isSecureContext)
+   window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});   // offline helper: opens with no signal
+ if(HAS&&installed()){document.body.classList.add('installed');try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist();}catch(e){}}
+ const show=()=>{if(row)row.hidden=!(HAS&&!installed()&&(iOS||ask||touch));};
+ if(go)go.textContent=touch?'Add to home screen':'Install the band';
+ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();ask=e;show();});
+ window.addEventListener('appinstalled',()=>{ask=null;if(row)row.hidden=true;});
+ show();
+ function help(){if(!box)return;
+   const steps=iOS?['Tap the <b>Share</b> button (a square with an arrow ↑). On newer iPhones it is inside the <b>⋯</b> button.',
+                    'Choose <b>Add to Home Screen</b>.','Tap <b>Add</b>. From now on, open the band from its new icon.']
+                  :['Open your browser’s menu (<b>⋮</b> or <b>⋯</b>).','Choose <b>Add to Home screen</b> or <b>Install</b>.','Open the band from its new icon.'];
+   box.querySelector('ol').innerHTML=steps.map(s=>'<li>'+s+'</li>').join('');
+   box.querySelector('.hbnote').hidden=!(iOS&&own());   // the icon's band starts fresh on iPhone
+   box.hidden=false;}
+ if(go)go.onclick=async()=>{if(window.STARTUI)STARTUI.close();
+   if(ask){const a=ask;ask=null;try{a.prompt();const c=await a.userChoice;if(c&&c.outcome==='accepted'&&row)row.hidden=true;}catch(e){help();}show();return;}
+   help();};
+ if(box){box.querySelector('#homeOk').onclick=()=>{box.hidden=true;};box.addEventListener('click',e=>{if(e.target===box)box.hidden=true;});}
+ // one-time tip on the stage: the user has drawn players, has seen the Save my band tip, and the band isn't installed
+ let since=0;
+ setInterval(()=>{const cl=document.body.classList;
+   if(!HAS||installed()||S.homeTip||!S.saveTip||!own()||!row||row.hidden||!cl.contains('show')||cl.contains('starting')){since=0;return;}
+   if(!since){since=Date.now();return;}if(Date.now()-since<60000)return;   // a minute of watching after the save tip
+   const tp=document.getElementById('stTip');if(!tp||!tp.hidden)return;
+   S.homeTip=1;save();if(!tp.dataset.rest)tp.dataset.rest=tp.textContent;
+   tp.textContent='Keep your band safe: Menu → Add to home screen';tp.hidden=false;clearTimeout(tp._b);
+   tp._b=setTimeout(()=>{tp.hidden=true;tp.textContent=tp.dataset.rest;},7000);},5000);}
 /* Oct 7 (signed off Oct 7 as normal behaviour): while listening to the room, a friendly tip when the band can hardly hear the music:
    the input level control (ears/listener.js agcStep) has turned the sound up near its limit for 5 s, or it has heard
    nothing playing for 8 s. Each tip shows for 4 s, at most every 30 s. */
@@ -2329,7 +2389,7 @@ window.UIART=(function(){
     const sp=document.createElement('span');sp.textContent=t.textContent.trim();sp.style.cssText='display:inline-block;min-width:'+Math.max(48,sp.textContent.length*10)+'px';
     l.replaceChild(sp,t);dress(sp,{wh,wp:'left center'});}
   function apply(){const $=id=>document.getElementById(id);
-    dress($('goSong'),{frame:'big-a',wh:'22px'});dress($('goDemo'),{frame:'big-b',wh:'22px'});dress($('goEdit'),{frame:'sm-a',wh:'15px'});dress($('goListen'),{frame:'sm-b',wh:'15px'});dress($('goSaveBand'),{frame:'sm-a',wh:'15px'});dress($('goOpenBand'),{frame:'sm-b',wh:'15px'});   /* Oct 7: typed in drawn frames until the words are drawn */
+    dress($('goSong'),{frame:'big-a',wh:'22px'});dress($('goDemo'),{frame:'big-b',wh:'22px'});dress($('goEdit'),{frame:'sm-a',wh:'15px'});dress($('goListen'),{frame:'sm-b',wh:'15px'});dress($('goSaveBand'),{frame:'sm-a',wh:'15px'});dress($('goOpenBand'),{frame:'sm-b',wh:'15px'});if($('goHome'))dress($('goHome'),{frame:'sm-a',wh:'15px'});   /* Oct 7: typed in drawn frames until the words are drawn */
     dress($('stFull'),{frame:'sm-a',wh:'15px'});dress($('stExit'),{frame:'sm-b',wh:'15px'});dress($('stSongBtn'),{frame:'sm-b',wh:'15px'});
     const pl=$('stPlay');if(pl){pl.classList.add('ui-r');dress(pl,{keepAria:true});}
     dress($('show'),{frame:'med-b',wh:'16px'});dress($('sheetsBtn'),{frame:'med-a',wh:'16px'});dress($('scanBtn'),{frame:'med-b',wh:'16px'});
