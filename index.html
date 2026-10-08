@@ -1887,7 +1887,7 @@ function floorLines(order){const fl={};let row=[];
 function shadow(cx,fy,k,w){const rx=Math.max(42,Math.min(72,w/2+20))*k,ry=rx*.17;
   const g=x.createRadialGradient(0,0,0,0,0,rx);g.addColorStop(0,'rgba(0,0,0,.6)');g.addColorStop(.6,'rgba(0,0,0,.42)');g.addColorStop(1,'rgba(0,0,0,0)');
   x.save();x.translate(cx,fy);x.scale(1,ry/rx);x.fillStyle=g;x.beginPath();x.arc(0,0,rx,0,7);x.fill();x.restore();}
-function draw(t){if(!W||!H)size();if(!W||!H)return;   // the stage has no size yet (page still opening): skip this frame
+function draw(t){if(!W||!H||el.clientWidth!==W||el.clientHeight!==H)size();if(!W||!H)return;   /* Oct 7 (designer's iPhone, home-screen app): after turning the phone sideways and back, the resize signal came before the new size, so the stage kept the sideways picture stretched into the upright screen; now every frame checks the stage's real size */   // the stage has no size yet (page still opening): skip this frame
   x.setTransform(dpr,0,0,dpr,0,0);backdrop();
   {const pu=beatPulse();if(pu>.01&&STAGE_SET.lights){const g=geo(),w=x.createRadialGradient(W/2,g.back*.55,0,W/2,g.back*.55,W*.6);   // step 4.1: a warm wash on the curtain on each beat
     w.addColorStop(0,`rgba(255,235,200,${.10*pu})`);w.addColorStop(1,'rgba(255,235,200,0)');x.save();x.globalCompositeOperation='lighter';x.fillStyle=w;x.fillRect(0,0,W,g.back+1);x.restore();}}
