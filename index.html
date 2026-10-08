@@ -2094,13 +2094,38 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
  sv.onclick=async()=>{if(window.STARTUI)STARTUI.close();
    if(S.libInDb&&!ARTDB.ok){tip('One moment: your drawings are still loading');return;}
    const nm=(((typeof bandName==='function')&&bandName())||S.bandName||STAGE_SET.bandName||'My band').replace(/[\\/:*?"<>|]+/g,'').trim()||'My band';
-   const r=await window.saveFile(nm+'.band',new Blob([JSON.stringify(bandData())],{type:'application/octet-stream'}));
+   const r=await window.saveFile(nm+' (Cartoon Band).json',new Blob([JSON.stringify(bandData())],{type:'application/json'}));
    if(r==='declined'){tip('Not saved');return;}
    S.bandSaved=Date.now();save();tip('Band saved 💾 Open it on any phone or computer with Open my band');};
  op.onclick=()=>{fin.value='';fin.click();};
  fin.onchange=async()=>{const f=fin.files&&fin.files[0];if(!f)return;if(window.STARTUI)STARTUI.close();
-   let d=null;try{d=JSON.parse(await f.text());}catch(e){}
-   if(!d||d.app!=='cartoon-band'||d.kind!=='my-band'){tip("That isn't a saved Cartoon Band");return;}
+   /* Oct 7 (designer's iPhone: a good file was refused): read it in every way a browser may need (Blob.text, then FileReader),
+      skip anything in front of the opening brace, and if it still fails say why, so a screenshot tells us what the phone
+      handed over (its size and first characters). */
+   /* Oct 7 (2): the cause. On iPhones and Macs ".band" is GarageBand's project ending, a folder-like "package", so the phone
+      handed the page a zipped copy, not the file. Saves now end in .json; a zipped file (old .band ones) is unpacked here. */
+   const readBytes=()=>new Promise(res=>{const viaReader=()=>{try{const r=new FileReader();r.onload=()=>res(new Uint8Array(r.result));r.onerror=()=>res(null);r.readAsArrayBuffer(f);}catch(e){res(null);}};
+     try{if(f.arrayBuffer)f.arrayBuffer().then(b=>res(new Uint8Array(b)),viaReader);else viaReader();}catch(e){viaReader();}});
+   const unzip=async b=>{const v=new DataView(b.buffer,b.byteOffset,b.byteLength);let e=-1;   // the first band file in a zip (central directory, so sizes are right)
+     for(let i=b.length-22;i>=Math.max(0,b.length-66000);i--)if(v.getUint32(i,true)===0x06054b50){e=i;break;}
+     if(e<0)return null;let p=v.getUint32(e+16,true);const n=v.getUint16(e+10,true);
+     for(let k=0;k<n&&p+46<=b.length&&v.getUint32(p,true)===0x02014b50;k++){
+       const meth=v.getUint16(p+10,true),cs=v.getUint32(p+20,true),nl=v.getUint16(p+28,true),xl=v.getUint16(p+30,true),cl=v.getUint16(p+32,true),lo=v.getUint32(p+42,true);
+       const nm=new TextDecoder().decode(b.subarray(p+46,p+46+nl));p+=46+nl+xl+cl;
+       if(nm.endsWith('/')||/(^|\/)(__MACOSX|\.)/.test(nm))continue;
+       const st=lo+30+v.getUint16(lo+26,true)+v.getUint16(lo+28,true),raw=b.subarray(st,st+cs);
+       if(meth===0)return raw;if(meth!==8||typeof DecompressionStream!=='function')continue;
+       try{return new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());}catch(err){}}
+     return null;};
+   const readText=async()=>{let b=await readBytes();if(!b)return null;
+     if(b.length>4&&b[0]===0x50&&b[1]===0x4b&&b[2]===3&&b[3]===4){const u=await unzip(b);if(u)b=u;}
+     return new TextDecoder().decode(b);};
+   let txt=await readText(),d=null,why='';
+   if(txt==null)why="couldn't read it";else if(!f.size&&!txt.length)why='it is empty (still downloading from iCloud?)';
+   else{const i=txt.indexOf('{');try{d=JSON.parse(i>0?txt.slice(i):txt);}catch(e){why='not band data';}}
+   if(d&&(d.app!=='cartoon-band'||d.kind!=='my-band')){why='a different kind of file';d=null;}
+   if(!d){const peek=txt?txt.slice(0,24).replace(/\s+/g,' '):'';console.warn('Open my band:',why,f.name,f.size,f.type,peek);
+     tip("That isn't a saved Cartoon Band ("+why+"; "+String(f.name).slice(0,24)+", "+Math.round(f.size/1024)+" KB"+(peek?', "'+peek+'"':'')+")",9000);return;}
    if(!confirm('Open "'+String(d.bandName||f.name).slice(0,40)+'"?\nIt replaces the band on this device. Save yours first if you want to keep it.'))return;
    const art={},adj={};
    for(const m of members)for(const k of SETS[m.id]){const key=m.id+'.'+k,u=d.art&&d.art[key];
