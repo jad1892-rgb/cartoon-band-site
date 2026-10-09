@@ -3402,7 +3402,8 @@ function extract(box,ink){
     const sealed=dilate(wall,N,ink.sealGap),st=new Int32Array(N*N);outside=new Uint8Array(N*N);let sp=0;
     const push=p=>{if(!sealed[p]&&!outside[p]){outside[p]=1;st[sp++]=p;}};
     for(let i=0;i<N;i++){push(i);push((N-1)*N+i);push(i*N);push(i*N+N-1);}
-    while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;if(x>0)push(p-1);if(x<N-1)push(p+1);if(y>0)push(p-N);if(y<N-1)push(p+N);}}
+    while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;if(x>0)push(p-1);if(x<N-1)push(p+1);if(y>0)push(p-N);if(y<N-1)push(p+N);}
+    if(SOLIDFILL.test(key.split('.')[1]))solidFill(outside,pen,cmask,N,N,N,band);}
   const near=dilate(pen,N,2),nearC=col?dilate(cmask,N,1):null,img=new ImageData(N,N),o=img.data,boost=ink.colourBoost||1;
   const bold=(p,out)=>{const r=cn[0][p],gg=cn[1][p],b=cn[2][p],L=(r+gg+b)/3;out[0]=clamp((L+(r-L)*boost)*255,0,255);
     out[1]=clamp((L+(gg-L)*boost)*255,0,255);out[2]=clamp((L+(b-L)*boost)*255,0,255);return out;};
@@ -3424,6 +3425,27 @@ function extract(box,ink){
 const V2R=2.5;   // pixels per point for new-sheet pieces
 function v2marks(s){const o=[];for(const j of Object.values(s.J))o.push([j[0],j[1],18,3.4]);
   for(const p of s.dots)o.push([p[0],p[1],0,(p[3]||5)+1.8]);for(const p of s.spots)o.push([p[0],p[1],9,3.6]);return o;}
+/* Oct 9 (newcomer test: legs drawn as two lines left open at the ends, bodies open at the bottom, fishnet shading: they came
+   out see-through, "it still didn't fill"). For legs, bodies and heads, a drawing is filled across, line by line along the
+   piece's length, from its first line to its last wherever a line meets the drawing at least twice. So a tube, a torso with
+   an open bottom or a shaded leg is solid; a single stroke (a stick leg) stays a line. Instruments, hands and stands keep
+   the closed-outline rule (a drum stand's legs must not become a white triangle). */
+const SOLIDFILL=/^(legL|legR|body|head)$/;
+function solidFill(outside,pen,cmask,N,Wp,Hp,band){
+  let x0=Wp,x1=-1,y0=Hp,y1=-1;
+  for(let j=band;j<Hp-band;j++)for(let i=band;i<Wp-band;i++){const p=j*N+i;if(pen[p]|cmask[p]){if(i<x0)x0=i;if(i>x1)x1=i;if(j<y0)y0=j;if(j>y1)y1=j;}}
+  if(x1<0)return 0;const rows=(y1-y0)>=(x1-x0)*.8,GAP=4,MIN=5;let n=0;   // tall drawing: fill across rows; wide: across columns
+  const L=rows?[y0,y1]:[x0,x1],A=rows?[x0,x1]:[y0,y1];
+  for(let u=L[0];u<=L[1];u++){let runs=0,inRun=false,last=-99,first=-1,end=-1,lastStart=-1;
+    for(let v=A[0];v<=A[1];v++){const p=rows?u*N+v:v*N+u,k=pen[p]|cmask[p];
+      if(k){if(!inRun){if(v-last>GAP){runs++;if(first<0)first=v;lastStart=v;}inRun=true;}last=v;if(first>=0&&end<0)end=v;}
+      else{inRun=false;}}
+    if(runs<2)continue;
+    // fill from the end of the first line to the start of the last one
+    let a=first;while(a<=A[1]&&(pen[rows?u*N+a:a*N+u]|cmask[rows?u*N+a:a*N+u]))a++;
+    if(lastStart-a<MIN)continue;
+    for(let v=a;v<lastStart;v++){const p=rows?u*N+v:v*N+u;if(outside[p]){outside[p]=0;n++;}}}
+  return n;}
 function extract2(box,ink){
   const [key,bx,by,bw,bh]=box,R=V2R,Wp=Math.round(bw*R),Hp=Math.round(bh*R),N=Math.max(320,Math.ceil(Math.max(Wp,Hp)/64)*64),{Y,RGB,W,H}=S2.img,h=S2.h,col=ink.keepColour&&RGB,
     g=new Float32Array(N*N),cr=RGB&&[new Float32Array(N*N),new Float32Array(N*N),new Float32Array(N*N)],t3=[0,0,0];
@@ -3457,7 +3479,8 @@ function extract2(box,ink){
     for(let j=0;j<N;j++)for(let i=0;i<N;i++)if(!inR(i,j))outside[j*N+i]=1;
     const push=p=>{if(!sealed[p]&&!outside[p]){outside[p]=1;st[sp++]=p;}};
     for(let i=band;i<Wp-band;i++){push(band*N+i);push((Hp-band-1)*N+i);}for(let j=band;j<Hp-band;j++){push(j*N+band);push(j*N+Wp-band-1);}
-    while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;if(x>0)push(p-1);if(x<N-1)push(p+1);if(y>0)push(p-N);if(y<N-1)push(p+N);}}
+    while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;if(x>0)push(p-1);if(x<N-1)push(p+1);if(y>0)push(p-N);if(y<N-1)push(p+N);}
+    if(SOLIDFILL.test(key.split('.')[1]))solidFill(outside,pen,cmask,N,Wp,Hp,band);}
   const near=dilate(pen,N,2),nearC=col?dilate(cmask,N,1):null,cv=document.createElement('canvas');cv.width=Wp;cv.height=Hp;
   const cx=cv.getContext('2d'),img=cx.createImageData(Wp,Hp),o=img.data,boost=ink.colourBoost||1,c3=[0,0,0];
   const bold=(p,out)=>{const r=cn[0][p],gg=cn[1][p],b=cn[2][p],L=(r+gg+b)/3;out[0]=clamp((L+(r-L)*boost)*255,0,255);
