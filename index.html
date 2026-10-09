@@ -792,7 +792,18 @@ window.WTXT={
   'print.made': 'Made {n} sheet{s} ({mb} MB). Print at 100% / "actual size". If nothing downloaded, this page may be blocking downloads; open the band directly in your browser.',
   // printed on every drawing sheet
   'sheet.drawBig': 'Draw big · use a marker · no tiny details · stay inside the boxes',
-  'sheet.closeShapes': 'Close every shape. Pieces overlap at the dashed circles.',
+  'sheet.closeShapes': 'Close every outline or colour it in, like the ✓ hand on the right.',
+  'sheet.joinHint': 'pieces join at the dashed circles',
+  'sheet.strumHand': 'strumming hand',                    // guitar and bass: the small hand boxes
+  'sheet.neckHand': 'hand on the neck',
+  'sheet.strumSpot': 'strumming hand lands here',         // on the instrument: don't draw hands there
+  'sheet.neckSpot': 'neck hand lands here',
+  'sheet.strap': 'strap clips on here',
+  'sheet.instBox': '{name} only · one closed outline, colour it in',
+  'sheet.keysBox': 'keyboard only · hands go in the arm boxes',
+  'sheet.keysRight': 'right hand lands here',
+  'sheet.keysLeft': 'left hand lands here',
+  'sheet.mouthSpot': 'leave empty: the mouth goes here',
 
   // ---- Upload a drawn sheet
   'upload.title': '📷 Upload a drawn sheet',
@@ -2859,13 +2870,13 @@ const SHEETS2=(function(){
   function strings(id,instBox,shape,strum,strap,neck){const W1=[152,452],W2=[460,436];
     return {id,J:Object.assign({wrist:W1},J0),bodyPivot:[306,416],
       boxes:[['head',241,96,130,122,'head'],['body',226,224,160,190,'body'],['arm',102,230,120,220,'strum arm'],['arm2',390,230,120,220,'neck arm'],
-             ['hand',114,454,76,76,''],['grip',422,454,86,76,''],...legs.boxes,['inst',...instBox,id]],
+             ['hand',114,454,76,76,TXT('sheet.strumHand')],['grip',422,454,86,76,TXT('sheet.neckHand')],...legs.boxes,['inst',...instBox,TXT('sheet.instBox',{name:TXT('player.'+id).toLowerCase()})]],
       arms:{arm:{S:J0.shL,W:W1,h:.85},arm2:{S:J0.shR,W:W2,h:.85}},
       pivots:{head:J0.neck,body:[306,416],legL:J0.hipL,legR:J0.hipR,grip:[463,493],inst:strap,hand:W1},
       hand:{wrist:W1,from:mid(J0.shL,W1)},guitar:{strum,strap,neck,grip:[463,493]},
       hints:[HEAD,BODY,bar(J0.shL,W1),bar(J0.shR,W2),...legs.hints,MITT,PICK,...FING,...shape],
-      dots:[[...mid(J0.shL,W1),'elbow'],[...mid(J0.shR,W2),'elbow'],...legs.dots,[strap[0],strap[1],'strap',4]],
-      spots:[[...W2,''],[...strum,'strum hand'],[...neck,'neck hand'],[463,493,'']]};}
+      dots:[[...mid(J0.shL,W1),'elbow'],[...mid(J0.shR,W2),'elbow'],...legs.dots,[strap[0],strap[1],TXT('sheet.strap'),4]],
+      spots:[[...W2,''],[...strum,TXT('sheet.strumSpot')],[...neck,TXT('sheet.neckSpot')],[463,493,'']]};}
   const GUITAR=[['path','M166.5 694 c0 -26 18 -42 42 -42 c18 0 26 10 36 14 c8 3 14 -6 30 -6 c20 0 30 14 30 34 c0 20 -10 34 -30 34 c-16 0 -22 -9 -30 -6 c-10 4 -18 14 -36 14 c-24 0 -42 -16 -42 -42 z'],
     ['rect',302.5,687,107,14],['path','M409.5 683 h32 l4 7 v8 l-4 7 h-32 z']];
   const BASS=[['path','M120 694 c0 -22 14 -36 34 -36 c14 0 20 8 28 10 c6 2 10 -4 22 -4 c16 0 24 12 24 28 c0 16 -8 28 -24 28 c-12 0 -16 -6 -22 -4 c-8 3 -14 12 -28 12 c-20 0 -34 -14 -34 -34 z'],
@@ -2878,12 +2889,12 @@ const SHEETS2=(function(){
     for(let i=1;i<24;i++)kb.push(['rect',612-(128+i*14.83)-1.2,672,1.2,30,'#e2e2e2']);
     for(let i=1;i<24;i++)if(i%7!==0&&i%7!==3)kb.push(['rect',612-(128+i*14.83-4)-8,684,8,18,'#e2e2e2']);
     S.keys={id:'keys',J:Object.assign({},J0),bodyPivot:[306,416],flipKeys:true,
-      boxes:[['head',241,96,130,122,'head'],['body',226,224,160,190,'body'],['armL',102,230,120,220,'right hand · high notes'],['armR',390,230,120,220,'left hand · low notes'],...legs.boxes,['inst',96,646,420,94,'keyboard']],
+      boxes:[['head',241,96,130,122,'head'],['body',226,224,160,190,'body'],['armL',102,230,120,220,'right hand · high notes'],['armR',390,230,120,220,'left hand · low notes'],...legs.boxes,['inst',96,646,420,94,TXT('sheet.keysBox')]],
       arms:{armL:{S:J0.shL,W:WL,h:.85},armR:{S:J0.shR,W:WR,h:.85}},
       pivots:{head:J0.neck,body:[306,416],legL:J0.hipL,legR:J0.hipR,inst:[306,693]},
       hints:[HEAD,BODY,bar(J0.shL,WL),bar(J0.shR,WR),['ell',166,448,15,11,'#e8e8e8'],['ell',446,448,15,11,'#e8e8e8'],...legs.hints,...kb],
       dots:[[...mid(J0.shL,WL),'elbow'],[...mid(J0.shR,WR),'elbow'],...legs.dots],
-      spots:[[...WL,''],[...WR,''],[200,687,'right hand plays here'],[412,687,'left hand plays here',-74]]};}
+      spots:[[...WL,''],[...WR,''],[200,687,TXT('sheet.keysRight')],[412,687,TXT('sheet.keysLeft'),-84]]};}
   // Drums (sheet version 2, Oct 5): no legs. Left box = his right arm (hi-hat, crosses the body on stage), right box = his left arm (snare,
   // by his side). One drawing per arm, hand and stick included. Kit row: bass drum, then snare and hi-hat side by side (screen right on stage).
   {const WL=[160,346],WR=[452,346],TL=[121,366],TR=[455,380];
@@ -2908,7 +2919,7 @@ const SHEETS2=(function(){
       hints:[HEAD,BODY,bar(J0.shL,WL),bar(J0.shR,WR),['line',WR,[456,420],12],['circ',460,432,11,'#e2e2e2'],...legs.hints,['ell',166,155,26,6],['ell',456,155,22,15]],
       dots:[[...mid(J0.shL,WL),'elbow'],[...mid(J0.shR,WR),'elbow'],...legs.dots],
       spots:[[...WL,''],[...WR,'mic hand']],
-      ovals:[[306,182,16,8,'mouth goes here (leave empty)']]};}
+      ovals:[[306,182,16,8,TXT('sheet.mouthSpot')]]};}
   return S;})();
 const SHEET2={code:1000,ids:Object.keys(SHEETS2)};   // every new sheet carries code 1000; the strip also says which player
 // (V2H, where the hand sits on arms drawn on a new sheet, lives with the puppets in puppeteer/members.js)
@@ -3029,6 +3040,18 @@ function renderPage2(id,code){const PG=SCAN_CONFIG.page,P=SS.dpi/72,c=document.c
     x.restore();x.strokeStyle=grey(120);x.lineWidth=1.6;x.stroke();};
   mit(486,56,.62,false);mit(538,56,.62,true);x.strokeStyle='#3a9a4a';x.lineWidth=2;x.beginPath();x.moveTo(462,90);x.lineTo(466,95);x.lineTo(474,85);x.stroke();
   x.strokeStyle='#c0392b';x.beginPath();x.moveTo(514,86);x.lineTo(522,94);x.moveTo(522,86);x.lineTo(514,94);x.stroke();
+  /* Oct 9 (newcomer test: how the pieces join wasn't obvious): a small picture beside the title. Two separate pieces whose ends
+     reach into the same dashed circle -> on stage they are one player, joined there. */
+  {const RED='rgb(238,140,120)',G1='#e4e4e4',G2=grey(120);x.save();x.translate(318,49);x.scale(.8,.8);x.translate(-328,-42);   // kept clear of the code strip (y < 42) and the head box (y > 96)
+  x.lineWidth=1.3;x.strokeStyle=G2;x.fillStyle=G1;
+   x.beginPath();x.ellipse(338,52,9,10,0,0,7);x.fill();x.stroke();                                   // head piece
+   x.beginPath();x.moveTo(328,70);x.lineTo(348,70);x.lineTo(345,88);x.lineTo(331,88);x.closePath();x.fill();x.stroke();   // body piece
+   x.beginPath();x.moveTo(338,62);x.lineTo(338,73);x.stroke();                                       // neck reaching down
+   x.strokeStyle=RED;x.setLineDash([2.5,2]);x.beginPath();x.arc(338,66,7,0,7);x.stroke();x.setLineDash([]);
+   x.strokeStyle=G2;x.lineWidth=1.4;x.beginPath();x.moveTo(358,70);x.lineTo(374,70);x.moveTo(369,66);x.lineTo(374,70);x.lineTo(369,74);x.stroke();   // arrow
+   x.lineWidth=1.3;x.beginPath();x.moveTo(384,66);x.lineTo(404,66);x.lineTo(401,84);x.lineTo(387,84);x.closePath();x.fill();x.stroke();
+   x.beginPath();x.ellipse(394,56,9,10,0,0,7);x.fill();x.stroke();                                   // joined: one player
+   x.fillStyle=grey(110);x.setTransform(1,0,0,1,0,0);x.scale(SS.dpi/72,SS.dpi/72);x.font='6.5'+FONT;x.fillText(TXT('sheet.joinHint'),306,93);x.restore();}
   // soft grey hints
   for(const h of s2.hints){const t=h[0];x.save();
     if(t==='ell'){x.fillStyle=h[5]||'#eeeeee';x.beginPath();x.ellipse(h[1],h[2],h[3],h[4],0,0,7);x.fill();}
@@ -3045,10 +3068,13 @@ function renderPage2(id,code){const PG=SCAN_CONFIG.page,P=SS.dpi/72,c=document.c
   const RED='rgb(238,140,120)',BLUE='rgb(130,170,230)';
   x.strokeStyle=RED;x.lineWidth=1.3;x.setLineDash([4,3]);for(const [jx,jy] of Object.values(s2.J)){x.beginPath();x.arc(jx,jy,18,0,7);x.stroke();}x.setLineDash([]);
   x.fillStyle=RED;for(const [jx,jy] of Object.values(s2.J)){x.beginPath();x.arc(jx,jy,2.6,0,7);x.fill();}
-  x.font='7.5'+FONT;for(const [px,py,l,r] of s2.dots){x.beginPath();x.arc(px,py,r||5,0,7);x.fill();if(l)x.fillText(l,px+8,py+3);}
+  /* Oct 9: the words beside dots, spots and the mouth oval are printed grey (light enough for the scanner to ignore); in colour,
+     the longer labels were read as coloured drawing */
+  const LBL=grey(150),say=(t,tx,ty)=>{const f=x.fillStyle;x.fillStyle=LBL;x.fillText(t,tx,ty);x.fillStyle=f;};
+  x.font='7.5'+FONT;for(const [px,py,l,r] of s2.dots){x.beginPath();x.arc(px,py,r||5,0,7);x.fill();if(l)say(l,px+8,py+3);}
   x.strokeStyle=BLUE;x.fillStyle=BLUE;x.lineWidth=1.5;
-  for(const [px,py,l,dx] of s2.spots){x.beginPath();x.arc(px,py,9,0,7);x.stroke();x.beginPath();x.arc(px,py,2.6,0,7);x.fill();if(l)x.fillText(l,px+(dx==null?10:dx),py-11);}
-  x.lineWidth=1.2;x.setLineDash([3,2]);for(const [ox,oy,rx,ry,l] of s2.ovals||[]){x.beginPath();x.ellipse(ox,oy,rx,ry,0,0,7);x.stroke();if(l)x.fillText(l,ox-38,oy+21);}x.setLineDash([]);
+  for(const [px,py,l,dx] of s2.spots){x.beginPath();x.arc(px,py,9,0,7);x.stroke();x.beginPath();x.arc(px,py,2.6,0,7);x.fill();if(l)say(l,px+(dx==null?10:dx),py-11);}
+  x.lineWidth=1.2;x.setLineDash([3,2]);for(const [ox,oy,rx,ry,l] of s2.ovals||[]){x.beginPath();x.ellipse(ox,oy,rx,ry,0,0,7);x.stroke();if(l)say(l,ox-46,oy+21);}x.setLineDash([]);
   x.fillStyle=grey(170);x.font='8'+FONT;for(const b of s2.boxes)if(b[5])x.fillText(b[5],b[1]+4,b[2]+b[4]-5);
   return c;}
 // 6. A small PDF writer: one full-page picture per page
