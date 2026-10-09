@@ -798,7 +798,6 @@ window.WTXT={
   'sheet.neckHand': 'hand on the neck',
   'sheet.strumSpot': 'strumming hand lands here',         // on the instrument: don't draw hands there
   'sheet.neckSpot': 'neck hand lands here',
-  'sheet.strap': 'strap clips on here',
   'sheet.instBox': '{name} only · one closed outline, colour it in',
   'sheet.keysBox': 'keyboard only · hands go in the arm boxes',
   'sheet.keysRight': 'right hand lands here',
@@ -2875,7 +2874,7 @@ const SHEETS2=(function(){
       pivots:{head:J0.neck,body:[306,416],legL:J0.hipL,legR:J0.hipR,grip:[463,493],inst:strap,hand:W1},
       hand:{wrist:W1,from:mid(J0.shL,W1)},guitar:{strum,strap,neck,grip:[463,493]},
       hints:[HEAD,BODY,bar(J0.shL,W1),bar(J0.shR,W2),...legs.hints,MITT,PICK,...FING,...shape],
-      dots:[[...mid(J0.shL,W1),'elbow'],[...mid(J0.shR,W2),'elbow'],...legs.dots,[strap[0],strap[1],TXT('sheet.strap'),4]],
+      dots:[[...mid(J0.shL,W1),'elbow'],[...mid(J0.shR,W2),'elbow'],...legs.dots/* Oct 9: no strap dot (no strap feature yet); the strap point still hangs the instrument */],
       spots:[[...W2,''],[...strum,TXT('sheet.strumSpot')],[...neck,TXT('sheet.neckSpot')],[463,493,'']]};}
   const GUITAR=[['path','M166.5 694 c0 -26 18 -42 42 -42 c18 0 26 10 36 14 c8 3 14 -6 30 -6 c20 0 30 14 30 34 c0 20 -10 34 -30 34 c-16 0 -22 -9 -30 -6 c-10 4 -18 14 -36 14 c-24 0 -42 -16 -42 -42 z'],
     ['rect',302.5,687,107,14],['path','M409.5 683 h32 l4 7 v8 l-4 7 h-32 z']];
@@ -3038,11 +3037,12 @@ function renderPage2(id,code){const PG=SCAN_CONFIG.page,P=SS.dpi/72,c=document.c
     if(open){x.moveTo(0,0);x.lineTo(5,26);x.quadraticCurveTo(7,41,-8,45);x.lineTo(-23,45);x.quadraticCurveTo(-36,41,-33,26);x.lineTo(-28,0);}
     else{x.moveTo(-28,0);x.quadraticCurveTo(-14,-6,0,0);x.lineTo(5,26);x.quadraticCurveTo(7,41,-8,45);x.lineTo(-23,45);x.quadraticCurveTo(-36,41,-33,26);x.closePath();}
     x.restore();x.strokeStyle=grey(120);x.lineWidth=1.6;x.stroke();};
-  mit(486,56,.62,false);mit(538,56,.62,true);x.strokeStyle='#3a9a4a';x.lineWidth=2;x.beginPath();x.moveTo(462,90);x.lineTo(466,95);x.lineTo(474,85);x.stroke();
-  x.strokeStyle='#c0392b';x.beginPath();x.moveTo(514,86);x.lineTo(522,94);x.moveTo(522,86);x.lineTo(514,94);x.stroke();
+  mit(486,56,.62,false);mit(538,56,.62,true);x.strokeStyle=grey(70);x.lineWidth=2.2;   // Oct 9: the whole sheet is greys, so a black-and-white print shows everything
+  x.beginPath();x.moveTo(462,90);x.lineTo(466,95);x.lineTo(474,85);x.stroke();
+  x.strokeStyle=grey(70);x.beginPath();x.moveTo(514,86);x.lineTo(522,94);x.moveTo(522,86);x.lineTo(514,94);x.stroke();
   /* Oct 9 (newcomer test: how the pieces join wasn't obvious): a small picture beside the title. Two separate pieces whose ends
      reach into the same dashed circle -> on stage they are one player, joined there. */
-  {const RED='rgb(238,140,120)',G1='#e4e4e4',G2=grey(120);x.save();x.translate(318,49);x.scale(.8,.8);x.translate(-328,-42);   // kept clear of the code strip (y < 42) and the head box (y > 96)
+  {const RED=grey(140),G1='#e4e4e4',G2=grey(120);x.save();x.translate(318,49);x.scale(.8,.8);x.translate(-328,-42);   // kept clear of the code strip (y < 42) and the head box (y > 96)
   x.lineWidth=1.3;x.strokeStyle=G2;x.fillStyle=G1;
    x.beginPath();x.ellipse(338,52,9,10,0,0,7);x.fill();x.stroke();                                   // head piece
    x.beginPath();x.moveTo(328,70);x.lineTo(348,70);x.lineTo(345,88);x.lineTo(331,88);x.closePath();x.fill();x.stroke();   // body piece
@@ -3065,7 +3065,9 @@ function renderPage2(id,code){const PG=SCAN_CONFIG.page,P=SS.dpi/72,c=document.c
   // the boxes: the only hard lines
   x.strokeStyle=grey(150);x.lineWidth=1.2;for(const b of s2.boxes)x.strokeRect(b[1],b[2],b[3],b[4]);
   // joint circles, end dots, hand spots (light, so they drop out of scans; the scanner also knows where they are)
-  const RED='rgb(238,140,120)',BLUE='rgb(130,170,230)';
+  /* Oct 9: greys only (most people print black and white). Joints = dashed circles, elbow and foot ends = filled dots,
+     where a hand lands = a ring with a dot: told apart by shape, not colour. All light enough for the scanner to ignore. */
+  const RED=grey(140),BLUE=grey(140);
   x.strokeStyle=RED;x.lineWidth=1.3;x.setLineDash([4,3]);for(const [jx,jy] of Object.values(s2.J)){x.beginPath();x.arc(jx,jy,18,0,7);x.stroke();}x.setLineDash([]);
   x.fillStyle=RED;for(const [jx,jy] of Object.values(s2.J)){x.beginPath();x.arc(jx,jy,2.6,0,7);x.fill();}
   /* Oct 9: the words beside dots, spots and the mouth oval are printed grey (light enough for the scanner to ignore); in colour,
