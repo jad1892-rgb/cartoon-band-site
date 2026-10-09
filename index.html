@@ -125,6 +125,14 @@ body:not(.dev) .pv.empty{display:none}
 #bandCurtain span{opacity:.85}
 #bandCurtain.on,html.opening #bandCurtain{opacity:1;pointer-events:auto}
 html.opening #bandCurtain.up{opacity:0;transition-duration:.7s}
+
+/* Oct 9: "Saved ✓" shows for a moment after each change (memory/saved-sign.js); the backup row in Edit band */
+#savedSign{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:9000;pointer-events:none;
+  background:rgba(255,255,255,.94);color:#222;font:600 14px/1 system-ui,sans-serif;padding:8px 14px;border-radius:999px;
+  box-shadow:0 2px 10px rgba(0,0,0,.25);transition:opacity .4s}
+#savedSign.out{opacity:0}
+#wsBackup{flex-wrap:wrap;align-items:center}
+#wsBackup .hint{flex:1 1 100%;margin:4px 0 0;font-size:13px}
 </style>
 <style id="howto-css">
 /* PATCH08: "How it works" popup, the "?" button and the social row on the start menu */
@@ -457,6 +465,7 @@ body.in-app #ws{padding-top:112px}
 <div class="bar devonly" id="optBar"></div>
 <section class="panel" id="wsBand"><h2 data-t="edit.yourBand">Your band</h2>
 <div class="bar" id="wsStage"><label class="wsf" data-t-lead="edit.bandName">Band name <input id="wsName" maxlength="30" placeholder="(none)" data-t-ph="edit.bandNameEmpty" autocomplete="off"></label><label class="wsf" data-t-lead="edit.scene">Scene <select id="wsScene"><option value="theatre" data-t="scene.theatre">Theatre</option><option value="club" data-t="scene.club">Club</option><option value="festival" data-t="scene.festival">Festival</option></select></label></div>
+<div class="bar" id="wsBackup"><p class="hint" data-t="edit.backupNote">Your band saves itself on this phone.</p><button class="alt" id="goSaveBand" data-t="menu.saveBand">Back up my band</button><button class="alt" id="goOpenBand" data-t="menu.openBand">Open a backup</button><input type="file" id="bandFileIn" hidden=""></div>
 </section>
 <h2 class="wsh" data-t="edit.players">Players</h2>
 <div class="bar" id="wsDraw">
@@ -494,7 +503,7 @@ body.in-app #ws{padding-top:112px}
 <div id="stage" hidden=""><canvas id="stageCv"></canvas>
   <div id="stCtl" class="stctl"><button id="stPlay" aria-label="Play or pause">▶</button><div class="stmid"><div id="stSong" data-t="song.demoBeat">Demo beat</div><div class="strow"><input id="stPos" type="range" min="0" max="1000" value="0" aria-label="Position in the song"><span id="stTime"></span></div></div><label class="btn alt" id="stSongBtn" data-t-lead="stage.songButton">🎵 Song<input id="stFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""></label></div><div id="startCard" hidden=""><div class="stcard"><button id="goHelp" class="alt" aria-label="How it works">?</button>
 <button id="goSong" data-t="menu.pickSong">Pick song</button><button id="goDemo" data-t="menu.playDemo">Play demo</button>
-<div class="strowb"><button class="alt" id="goEdit" data-t="menu.editBand">Edit band</button><button class="alt" id="goListen" data-t="menu.listenLive">Listen live</button></div><div class="strowb"><button class="alt" id="goSaveBand" data-t="menu.saveBand">Save my band</button><button class="alt" id="goOpenBand" data-t="menu.openBand">Open my band</button><input type="file" id="bandFileIn" hidden=""></div><div class="strowb" id="homeRow" hidden=""><button class="alt" id="goHome" data-t="menu.addHome">Add to home screen</button></div><div id="stFollow" aria-hidden="true"></div><div id="stSocial" aria-label="Follow us"></div></div></div><div id="homeBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="homeT"><div class="hbcard"><h3 id="homeT" data-t="home.title">Put the band on your home screen</h3><p data-t="home.intro">It opens like an app, full screen, and your band stays safe on this device.</p><ol></ol><p class="hbnote" hidden="" data-t-html="home.startsFresh">Already drawn players? The home-screen band starts fresh. First tap <b>Menu → Save my band</b> here, then <b>Open my band</b> from the new icon.</p><button id="homeOk" data-t="home.gotIt">Got it</button></div></div><div id="howBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="howT"><div class="howcard"><button id="howX" aria-label="Close"></button><div class="howhead" aria-hidden="true"></div><div class="howpic" aria-hidden="true"></div><h3 id="howT"></h3><p id="howP"></p><div class="howdots" aria-hidden="true"><i></i><i></i><i></i></div><div class="howrow"><button class="alt" id="howBack" data-t="help.back">Back</button><button id="howNext" data-t="help.next">Next</button></div></div></div><input id="startFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""><div id="stNameBox" hidden=""><input id="stNameIn" maxlength="30" placeholder="Band name (empty = none)" autocomplete="off"><button id="stNameOk">OK</button></div><button id="recDot" hidden="" aria-label="Stop recording"><b class="rtxt">● REC</b> <span>0:00</span><i class="recbar"><b></b></i></button><div id="recPick" hidden="" role="menu" aria-label="Record"><div class="rptitle" data-t="rec.menuTitle">Record</div><button role="menuitem" data-rec="15" data-t="rec.clip15">15 s clip</button><button role="menuitem" data-rec="30" data-t="rec.clip30">30 s clip</button><button role="menuitem" data-rec="song" data-t="rec.wholeSong">Whole song</button><div class="rpnote" data-t="rec.menuNote">Keeps going while you move the players</div></div><div id="recBox" hidden=""><div class="rbcard"><video id="recVid" playsinline="" controls="" loop=""></video><div class="rbrow"><button id="recShare" hidden="" data-t="clip.share">Share</button><button id="recSave" data-t="clip.save">Save</button><button class="alt" id="recDel" data-t="clip.delete">Delete</button></div><div id="recInfo"></div></div></div><div id="stTip" hidden="" data-t="tip.sideways">Turn your phone sideways for a bigger band ↻</div><div class="stbar"><button class="alt" id="stName" style="display:none">✏️ Name</button><button class="alt" id="stScene" style="display:none">🎭 Scene</button><button class="alt" id="stReset" style="display:none">↺ Positions</button><button class="alt" id="stRec" aria-haspopup="true" data-t="stage.record">● Record</button><button class="alt" id="stFull" data-t="stage.fullScreen">⛶ Full screen</button><button id="stExit" data-t="stage.menu">☰ Menu</button></div></div>
+<div class="strowb"><button class="alt" id="goEdit" data-t="menu.editBand">Edit band</button><button class="alt" id="goListen" data-t="menu.listenLive">Listen live</button></div><div class="strowb" id="homeRow" hidden=""><button class="alt" id="goHome" data-t="menu.addHome">Add to home screen</button></div><div id="stFollow" aria-hidden="true"></div><div id="stSocial" aria-label="Follow us"></div></div></div><div id="homeBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="homeT"><div class="hbcard"><h3 id="homeT" data-t="home.title">Put the band on your home screen</h3><p data-t="home.intro">It opens like an app, full screen, and your band stays safe on this device.</p><ol></ol><p class="hbnote" hidden="" data-t-html="home.startsFresh">Already drawn players? The home-screen band starts fresh. First tap <b>Edit band → Back up my band</b> here, then <b>Open a backup</b> from the new icon.</p><button id="homeOk" data-t="home.gotIt">Got it</button></div></div><div id="howBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="howT"><div class="howcard"><button id="howX" aria-label="Close"></button><div class="howhead" aria-hidden="true"></div><div class="howpic" aria-hidden="true"></div><h3 id="howT"></h3><p id="howP"></p><div class="howdots" aria-hidden="true"><i></i><i></i><i></i></div><div class="howrow"><button class="alt" id="howBack" data-t="help.back">Back</button><button id="howNext" data-t="help.next">Next</button></div></div></div><input id="startFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""><div id="stNameBox" hidden=""><input id="stNameIn" maxlength="30" placeholder="Band name (empty = none)" autocomplete="off"><button id="stNameOk">OK</button></div><button id="recDot" hidden="" aria-label="Stop recording"><b class="rtxt">● REC</b> <span>0:00</span><i class="recbar"><b></b></i></button><div id="recPick" hidden="" role="menu" aria-label="Record"><div class="rptitle" data-t="rec.menuTitle">Record</div><button role="menuitem" data-rec="15" data-t="rec.clip15">15 s clip</button><button role="menuitem" data-rec="30" data-t="rec.clip30">30 s clip</button><button role="menuitem" data-rec="song" data-t="rec.wholeSong">Whole song</button><div class="rpnote" data-t="rec.menuNote">Keeps going while you move the players</div></div><div id="recBox" hidden=""><div class="rbcard"><video id="recVid" playsinline="" controls="" loop=""></video><div class="rbrow"><button id="recShare" hidden="" data-t="clip.share">Share</button><button id="recSave" data-t="clip.save">Save</button><button class="alt" id="recDel" data-t="clip.delete">Delete</button></div><div id="recInfo"></div></div></div><div id="stTip" hidden="" data-t="tip.sideways">Turn your phone sideways for a bigger band ↻</div><div class="stbar"><button class="alt" id="stName" style="display:none">✏️ Name</button><button class="alt" id="stScene" style="display:none">🎭 Scene</button><button class="alt" id="stReset" style="display:none">↺ Positions</button><button class="alt" id="stRec" aria-haspopup="true" data-t="stage.record">● Record</button><button class="alt" id="stFull" data-t="stage.fullScreen">⛶ Full screen</button><button id="stExit" data-t="stage.menu">☰ Menu</button></div></div>
 <audio id="player" controls="" style="width:100%;margin-top:10px;display:none"></audio>
 <div id="bufUI" style="display:none;gap:8px;align-items:center;margin-top:10px"><button id="bPlay" class="alt">⏸ Pause</button><input id="bSeek" type="range" min="0" max="1000" value="0" style="flex:1"><span id="bTime" class="hint" style="font-size:12px"></span></div>
 
@@ -665,8 +674,8 @@ window.WTXT={
   'menu.playDemo': 'Play demo',
   'menu.editBand': 'Edit band',
   'menu.listenLive': 'Listen live',
-  'menu.saveBand': 'Save my band',
-  'menu.openBand': 'Open my band',
+  'menu.saveBand': 'Back up my band',               // Oct 9: in Edit band (was Save my band in the menu)
+  'menu.openBand': 'Open a backup',
   'menu.addHome': 'Add to home screen',
   'menu.addHomeComputer': 'Install the band',            // the same button on a computer
 
@@ -718,15 +727,17 @@ window.WTXT={
   'help.back': 'Back',
   'help.next': 'Next',
 
-  // ---- Save my band / Open my band
+  // ---- Saving (Oct 9: the band saves itself; Back up my band / Open a backup are in Edit band)
   'band.defaultName': 'My band',
   'band.fileName': '{name} (Blank Band).json',
   'band.stillLoading': 'One moment: your drawings are still loading',
   'band.notSaved': 'Not saved',
-  'band.saved': 'Band saved 💾 Open it on any phone or computer with Open my band',
-  'band.saveReminder': 'Your band lives on this device. Menu → Save my band keeps a copy',
+  'band.saved': 'Backup made 💾 On the other phone: Edit band → Open a backup',
+  'band.making': 'Making the backup…',
+  'band.savedSign': 'Saved ✓',                           // Oct 9: shows by itself for a moment after each change to the band
+  'band.saveReminder': 'Your band saves itself on this phone ✓',
   'band.openConfirm': 'Open "{name}"?\nIt replaces the band on this device. Save yours first if you want to keep it.',
-  'band.notABand': 'That isn\'t a saved Blank Band ({why})',
+  'band.notABand': 'That isn\'t a Blank Band backup ({why})',
   'band.whyUnreadable': 'couldn\'t read it',
   'band.whyEmpty': 'it is empty (still downloading from iCloud?)',
   'band.whyNotBand': 'not band data',
@@ -744,7 +755,7 @@ window.WTXT={
   'home.otherStep1': 'Open your browser’s menu (<b>⋮</b> or <b>⋯</b>).',                                                          // (bold ok)
   'home.otherStep2': 'Choose <b>Add to Home screen</b> or <b>Install</b>.',                                                         // (bold ok)
   'home.otherStep3': 'Open the band from its new icon.',
-  'home.startsFresh': 'Already drawn players? The home-screen band starts fresh. First tap <b>Menu → Save my band</b> here, then <b>Open my band</b> from the new icon.',   // (bold ok)
+  'home.startsFresh': 'Already drawn players? The home-screen band starts fresh. First tap <b>Edit band → Back up my band</b> here, then <b>Open a backup</b> from the new icon.',   // (bold ok)
   'home.gotIt': 'Got it',
   'home.reminder': 'Keep your band safe: Menu → Add to home screen',
   'home.noSound': 'No sound? This {device} blocks sound for home-screen apps (an Apple bug). Update it, or open the band in Safari.',
@@ -756,6 +767,7 @@ window.WTXT={
   'edit.bandName': 'Band name',
   'edit.bandNameEmpty': '(none)',                        // grey hint in the empty band name box
   'edit.scene': 'Scene',
+  'edit.backupNote': 'Your band saves itself on this phone. A backup moves it to another phone or keeps a spare copy.',
   'edit.players': 'Players',
   'edit.print': '🖨 Print drawing sheets',
   'edit.upload': '📷 Upload a drawn sheet',
@@ -2418,7 +2430,8 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
  document.getElementById('show').addEventListener('click',sync);}
 
 
-/* Oct 7: keep your band, step 2 — "Save my band" / "Open my band" (start menu; typed labels until the design batch).
+/* Oct 7: keep your band, step 2 — "Save my band" / "Open my band". Oct 9: renamed Back up my band / Open a backup and moved
+   into Edit band (the band saves itself on the phone; the file is only for moving it or keeping a spare).
    Save my band writes one small file the user keeps (Files, AirDrop, email): their OWN drawings with their nudges, band
    name, scene and stage positions. Pieces they didn't draw aren't in it: like a new band file (step 1), opening it lays
    this file's default band under the user's own pieces, so a saved band also opens on a newer website.
@@ -2430,13 +2443,53 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
  const tip=(t,ms)=>{const tp=document.getElementById('stTip');if(!tp)return;if(!tp.dataset.rest)tp.dataset.rest=tp.textContent;
    tp.textContent=t;tp.hidden=false;clearTimeout(tp._b);tp._b=setTimeout(()=>{tp.hidden=true;tp.textContent=tp.dataset.rest;},ms||4500);};
  const ownKeys=()=>members.flatMap(m=>SETS[m.id].map(k=>m.id+'.'+k)).filter(key=>{const u=S.art[key];return typeof u==='string'&&u.startsWith('@s:');});
- function bandData(){const art={},adj={};
-   for(const key of ownKeys()){const d=artURL(S.art[key]);if(d){art[key]=d;if(S.adj[key])adj[key]=S.adj[key];}}
+ /* Oct 9 (newcomer test: "took a long time, wasn't obvious it was saving to a file"). The backup is now about 4x smaller:
+    each drawing is stored with 16 shades per colour (looks the same on stage) and nothing hidden under see-through parts.
+    It is made ahead of time, a moment after each change, so the button answers at once. On phones and tablets it opens
+    the share sheet (Save to Files, AirDrop, Messages…), which says plainly that a file is being made; elsewhere it downloads. */
+ let crcT=null;const crc=(b,s,e)=>{if(!crcT){crcT=new Int32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;crcT[n]=c;}}
+   let c=-1;for(let i=s;i<e;i++)c=crcT[(c^b[i])&255]^(c>>>8);return (c^-1)>>>0;};
+ /* a plain PNG made here (the browser's own PNG maker packs these about half as well): no row filter, zlib from CompressionStream */
+ async function png(px,w,h){const raw=new Uint8Array(h*(w*4+1));for(let y=0;y<h;y++)raw.set(px.subarray(y*w*4,(y+1)*w*4),y*(w*4+1)+1);
+   const z=new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer());
+   const chunk=(t,d)=>{const o=new Uint8Array(12+d.length),v=new DataView(o.buffer);v.setUint32(0,d.length);for(let i=0;i<4;i++)o[4+i]=t.charCodeAt(i);
+     o.set(d,8);v.setUint32(8+d.length,crc(o,4,8+d.length));return o;};
+   const hd=new Uint8Array(13),hv=new DataView(hd.buffer);hv.setUint32(0,w);hv.setUint32(4,h);hd[8]=8;hd[9]=6;
+   const blob=new Blob([new Uint8Array([137,80,78,71,13,10,26,10]),chunk('IHDR',hd),chunk('IDAT',z),chunk('IEND',new Uint8Array(0))]);
+   return await new Promise(r=>{const f=new FileReader();f.onload=()=>r(String(f.result).replace(/^data:[^;]*;/,'data:image/png;'));f.onerror=()=>r(null);f.readAsDataURL(blob);});}
+ const compact=u=>new Promise(res=>{const im=new Image();
+   im.onload=async()=>{try{const w=im.naturalWidth,h=im.naturalHeight,c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
+     x.drawImage(im,0,0);const d=x.getImageData(0,0,w,h),p=d.data;
+     for(let i=0;i<p.length;i+=4){const al=p[i+3];if(al<8){p[i]=p[i+1]=p[i+2]=p[i+3]=0;continue;}
+       p[i+3]=al>=248?255:Math.round(al/17)*17;p[i]=Math.round(p[i]/17)*17;p[i+1]=Math.round(p[i+1]/17)*17;p[i+2]=Math.round(p[i+2]/17)*17;}
+     let o=null;if(typeof CompressionStream==='function'){try{o=await png(p,w,h);}catch(e){o=null;}}
+     if(!o){x.putImageData(d,0,0);o=c.toDataURL('image/png');}
+     res(o&&o.length<u.length?o:u);}catch(e){res(u);}};
+   im.onerror=()=>res(u);im.src=u;});
+ const small=new Map();   // drawing -> its smaller copy, so each drawing is shrunk once
+ const sig=()=>JSON.stringify([ownKeys().map(k=>[k,S.art[k],S.adj[k]]),S.bandName,S.scene,S.stage]);
+ async function bandData(){const art={},adj={};
+   for(const key of ownKeys()){const d=artURL(S.art[key]);if(!d)continue;
+     if(!small.has(d))small.set(d,await compact(d));art[key]=small.get(d);if(S.adj[key])adj[key]=S.adj[key];}
    return {app:'cartoon-band',kind:'my-band',version:1,saved:new Date().toISOString(),bandName:S.bandName,scene:S.scene,stage:S.stage||{},art,adj};}
+ let made=null,making=null;   // made = {sig, blob}
+ const make=()=>{const g=sig();if(made&&made.sig===g)return Promise.resolve(made);if(making&&making.sig===g)return making.p;
+   const p=bandData().then(d=>{made={sig:g,blob:new Blob([JSON.stringify(d)],{type:'application/json'})};making=null;return made;});
+   making={sig:g,p};return p;};
+ window.BANDBACKUP={make,size:async()=>(await make()).blob.size};   // the test kit reads the size
+ let soon=0;window.addEventListener('band-saved',()=>{clearTimeout(soon);soon=setTimeout(()=>{if(ownKeys().length&&!(S.libInDb&&!ARTDB.ok))make();},2000);});
+ {const ge=document.getElementById('goEdit');if(ge)ge.addEventListener('click',()=>setTimeout(()=>{if(ownKeys().length&&!(S.libInDb&&!ARTDB.ok))make();},600));}   // opening Edit band: get the backup ready
+ const touch=matchMedia('(pointer:coarse)').matches;
  sv.onclick=async()=>{if(window.STARTUI)STARTUI.close();
    if(S.libInDb&&!ARTDB.ok){tip(TXT('band.stillLoading'));return;}
    const nm=(((typeof bandName==='function')&&bandName())||S.bandName||STAGE_SET.bandName||TXT('band.defaultName')).replace(/[\\/:*?"<>|]+/g,'').trim()||TXT('band.defaultName');
-   const r=await window.saveFile(TXT('band.fileName',{name:nm}),new Blob([JSON.stringify(bandData())],{type:'application/json'}));
+   const fname=TXT('band.fileName',{name:nm});
+   const ready=made&&made.sig===sig();if(!ready)tip(TXT('band.making'),20000);
+   const {blob}=await make();let r='';
+   if(touch&&!(window.claude&&window.claude.use)&&navigator.share&&navigator.canShare){try{const f=new File([blob],fname,{type:'application/json'});
+     if(navigator.canShare({files:[f]})){await navigator.share({files:[f]});r='saved';}}
+     catch(e){if(e&&e.name==='AbortError')r='declined';}}   // NotAllowedError (the tap was too long ago): download instead
+   if(!r)r=await window.saveFile(fname,blob);
    if(r==='declined'){tip(TXT('band.notSaved'));return;}
    S.bandSaved=Date.now();save();tip(TXT('band.saved'));};
  op.onclick=()=>{fin.value='';fin.click();};
@@ -2492,6 +2545,24 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
  // one-time tip: the user has drawings of their own and has never saved a copy
  setInterval(()=>{const cl=document.body.classList;if(S.saveTip||S.bandSaved||!cl.contains('show')||cl.contains('starting')||!ownKeys().length)return;
    S.saveTip=1;save();tip(TXT('band.saveReminder'),7000);},3000);}
+/* Oct 9 (newcomer test: she expected the band to save itself, like any phone app, and couldn't tell that it did).
+   It always has: every change is kept on this device straight away (browser-memory.js save()). Now it says so: a small
+   "Saved ✓" shows for a moment after each change to the band itself (drawings, nudges, name, scene, stage positions),
+   not after sound sliders or the band's own housekeeping. Also tells the backup (band-backup.js) to get a fresh copy ready. */
+{const sig=()=>{try{return JSON.stringify([S.art,S.adj,S.bandName,S.scene,S.stage]);}catch(e){return '';}};
+ let last=null,t=0,hide=0;const born=Date.now();
+ const el=document.createElement('div');el.id='savedSign';el.hidden=true;el.setAttribute('role','status');
+ el.textContent=TXT('band.savedSign');document.body.appendChild(el);
+ const show=()=>{el.hidden=false;el.classList.remove('out');clearTimeout(hide);
+   hide=setTimeout(()=>{el.classList.add('out');hide=setTimeout(()=>{el.hidden=true;},400);},1600);};
+ const plain=save;
+ save=function(){const r=plain.apply(this,arguments);
+   const g=sig();if(last===null){last=g;return r;}if(g===last)return r;last=g;
+   clearTimeout(t);t=setTimeout(()=>{
+     if(Date.now()-born>3000&&!document.documentElement.classList.contains('opening'))show();
+     window.dispatchEvent(new Event('band-saved'));},700);
+   return r;};
+ setTimeout(()=>{if(last===null)last=sig();},0);}
 /* Oct 7: keep your band, step 3 — "Add to home screen" (the band as an app icon on the phone).
    Why: Safari clears a website's saved things (the user's drawings) after about 7 days of not being visited, unless the
    site is on the home screen. Installed, the band also opens full screen, without the browser's address bar.
