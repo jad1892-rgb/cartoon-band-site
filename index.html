@@ -703,6 +703,7 @@ window.WTXT={
   'songs.title': 'Pick a song',
   'songs.paperBoy': 'Paper boy',
   'songs.loop': 'loop',
+  'songs.paperBoyBy': 'THE PAPER BOYS',                 // who plays Paper boy (the band's own songs say who plays them in src/songs/library.js)
   'songs.fromPhone': '📁 A song on this phone',
   'songs.live': '🎤 Music from another speaker',
   'songs.close': 'Close',
@@ -754,7 +755,7 @@ window.WTXT={
   'band.making': 'Making the backup…',
   'band.savedSign': 'Saved ✓',                           // Oct 9: shows by itself for a moment after each change to the band
   'band.saveReminder': 'Your band saves itself on this phone ✓',
-  'band.openConfirm': 'Open "{name}"?\nIt replaces the band on this device. Save yours first if you want to keep it.',
+  'band.openConfirm': 'Open "{name}"?\nIt replaces the band on this device. Back yours up first if you want to keep it.',
   'band.notABand': 'That isn\'t a Blank Band backup ({why})',
   'band.whyUnreadable': 'couldn\'t read it',
   'band.whyEmpty': 'it is empty (still downloading from iCloud?)',
@@ -1548,15 +1549,6 @@ function update(m,t,fs){const P=(k)=>Math.pow(k,fs);
 // The hand sits 85% of the way down the picture; the hinge is at 10%.
 function reach(S,H,D){const dx=H.x-S.x,dy=H.y-S.y,len=.75*D,dist=Math.hypot(dx,dy);
   return {a:Math.atan2(-dx,dy),st:Math.max(.7,Math.min(1.4,dist/len))};}
-// Two-part arm (shoulder S, upper arm l1, forearm l2) whose hand lands on T: the elbow bends to make it fit.
-// Of the two ways an elbow can bend, pick the one pointing away from the body's centre line (cx). Too far away = stretch a little.
-function ik(S,T,l1,l2,cx){const dx=T.x-S.x,dy=T.y-S.y,d=Math.hypot(dx,dy)||1e-6;let st=1;
-  if(d>(l1+l2)*.995){st=Math.min(1.35,d/((l1+l2)*.995));l1*=st;l2*=st;}
-  const dc=Math.min(Math.max(d,Math.abs(l1-l2)+.01),(l1+l2)*.995),base=Math.atan2(-dx,dy),
-    al=Math.acos(Math.max(-1,Math.min(1,(l1*l1+dc*dc-l2*l2)/(2*l1*dc))));let best=null;
-  for(const sg of [1,-1]){const R1=base+sg*al,ex=S.x-Math.sin(R1)*l1,ey=S.y+Math.cos(R1)*l1,sc=Math.abs(ex-cx)+ey*.01;
-    if(!best||sc>best.sc)best={R1,R2:Math.atan2(-(T.x-ex),T.y-ey),sc};}
-  return {R1:best.R1,R2:best.R2,st};}
 // An arm bent at the elbow by b (radians), turned at the shoulder S so its hand points at T, and stretched a little (0.7-1.4x) to land on it.
 function bentReach(S,T,l1,l2,b){const hx=-l2*Math.sin(b),hy=l1+l2*Math.cos(b),R1=Math.atan2(-(T.x-S.x),T.y-S.y)-Math.atan2(-hx,hy),
   st=Math.max(.7,Math.min(1.4,Math.hypot(T.x-S.x,T.y-S.y)/(Math.hypot(hx,hy)||1)));return {R1,R2:R1+b,st};}
@@ -2509,7 +2501,7 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
  const row=(name,sub,go)=>{const b=document.createElement('button');b.className='alt spitem';b.innerHTML='<b></b><small></small>';
    b.querySelector('b').textContent=name;b.querySelector('small').textContent=sub;
    b.onclick=()=>{if(window.unlockAudio)unlockAudio();close();go();};list.appendChild(b);return b;};
- row(TXT('songs.paperBoy'),TXT('songs.loop')+' · THE PAPER BOYS',()=>{if(window.playDemo)playDemo();}).dataset.song='paper-boy';
+ row(TXT('songs.paperBoy'),TXT('songs.loop')+' · '+TXT('songs.paperBoyBy'),()=>{if(window.playDemo)playDemo();}).dataset.song='paper-boy';
  for(const s of window.SONGS||[])row(s.name,s.by,()=>window.playSong(s)).dataset.song=s.id;
  document.getElementById('spFile').addEventListener('click',()=>{window.__picking=Date.now();if(window.unlockAudio)unlockAudio();});
  fin.onchange=e=>{window.__picking=Date.now()-55000;close();if(window.__onFile)window.__onFile(e);};
