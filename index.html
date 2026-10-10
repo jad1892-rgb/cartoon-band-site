@@ -824,6 +824,7 @@ window.WTXT={
   'sheet.mouthSpot': 'leave empty: the mouth goes here',
 
   // ---- Upload a drawn sheet
+  'upload.darkPhoto': 'Tip: this photo is quite dark. Daylight or a bright lamp gives the cleanest lines.',   // Oct 9
   'upload.title': '📷 Upload a drawn sheet',
   'upload.help': 'Photograph your finished sheet from straight above, flat, in good light, with all four black corner squares in view. Each drawing is found for you: untick any you don\'t want, then press <b>Use these drawings</b>.',   // (bold ok)
   'upload.choosePhoto': 'Choose photo',
@@ -969,7 +970,7 @@ const L={ctx:null,an:null,data:new Uint8Array(1024),mode:null,tb:new Float32Arra
   playBuf(off){if(!this.buf)return;this.stopBuf();if(off==null)off=this.boff||0;if(off>=this.buf.duration-.05)off=0;
     const s=this.ctx.createBufferSource();s.buffer=this.buf;s.connect(this.bus);
     if(this.loop){s.loop=true;s.loopStart=this.loop.start;s.loopEnd=this.loop.end;}   // the demo track repeats forever
-    s.onended=()=>{if(this.bs===s){this.bs=null;this.boff=this.buf.duration;}};
+    s.onended=()=>{if(this.bs===s){this.bs=null;this.boff=this.buf.duration;try{window.dispatchEvent(new Event('band:ended'));}catch(e){}}};   // Oct 9: tell the song list (ears/sources.js)
     s.start(0,off);this.bs=s;this.bt0=this.ctx.currentTime-off;this.ctx.resume();},
   stopBuf(){if(this.bs){const s=this.bs;this.bs=null;s.onended=null;try{s.stop();}catch(e){}}},
   pauseBuf(){if(this.bs){this.boff=this.bufPos();this.stopBuf();}},
@@ -1864,6 +1865,14 @@ document.getElementById('fileLbl').addEventListener('click',()=>{L.init().catch(
      await L.decode(await r.arrayBuffer());L.songKey=s.id;L.songName=s.name;L.playBuf(0);if(L.ctx.state!=='running')window.needTap(true);}
    catch(err){L.songKey=null;msg(TXT('songs.cantPlay',{name:s.name}));const tp=document.getElementById('stTip');
      if(tp){tp.textContent=TXT('songs.cantPlay',{name:s.name});tp.hidden=false;clearTimeout(tp._t);tp._t=setTimeout(()=>{tp.hidden=true;},5000);}}};
+ /* Oct 9 (remote test 2: one of our songs ran out about 40 s after his drawing appeared and the band stood still: "nothing
+    happens"). When one of the band's own songs finishes, the next one in the song list starts (after the last, the first
+    again). Not during a recording: a whole-song recording ends with its song (sharing/record.js waits for the end). */
+ const nextSong=()=>{const all=window.SONGS||[],i=all.findIndex(s=>s.id===L.songKey);if(i<0||L.loop)return;
+   if(window.RECORDER&&RECORDER.state&&RECORDER.state()&&RECORDER.state().on)return;window.playSong(all[(i+1)%all.length]);};
+ const afterEnd=()=>setTimeout(()=>{const done=L.via==='element'?p.ended:!L.bs;if(done)nextSong();},1500);
+ p.addEventListener('ended',()=>{if(L.via==='element')afterEnd();});
+ window.addEventListener('band:ended',()=>{if(L.via==='buffer')afterEnd();});
  window.needTap=on=>{window.__needTap=on;if(window.STAGE&&STAGE.tapHint)STAGE.tapHint(on);};
  document.addEventListener('pointerdown',e=>{if(L.ctx&&L.ctx.state!=='running')L.ctx.resume().catch(()=>{});
    if(!window.__needTap)return;window.needTap(false);if(e.target&&e.target.id==='stPlay')return;   // the play button does it itself
@@ -2276,7 +2285,7 @@ function shadow(cx,fy,k,w){const rx=Math.max(42,Math.min(72,w/2+20))*k,ry=rx*.17
   const g=x.createRadialGradient(0,0,0,0,0,rx);g.addColorStop(0,'rgba(0,0,0,.6)');g.addColorStop(.6,'rgba(0,0,0,.42)');g.addColorStop(1,'rgba(0,0,0,0)');
   x.save();x.translate(cx,fy);x.scale(1,ry/rx);x.fillStyle=g;x.beginPath();x.arc(0,0,rx,0,7);x.fill();x.restore();}
 function draw(t){if(!W||!H||el.clientWidth!==W||el.clientHeight!==H)size();if(!W||!H)return;   /* Oct 7 (designer's iPhone, home-screen app): after turning the phone sideways and back, the resize signal came before the new size, so the stage kept the sideways picture stretched into the upright screen; now every frame checks the stage's real size */   // the stage has no size yet (page still opening): skip this frame
-  x.setTransform(dpr,0,0,dpr,0,0);backdrop();
+  x.setTransform(dpr,0,0,dpr,0,0);const cam=camApply(performance.now());backdrop();   // Oct 9: zoom towards a spotlit player (stage/spotlight.js)
   {const pu=beatPulse();if(pu>.01&&STAGE_SET.lights){const g=geo(),w=x.createRadialGradient(W/2,g.back*.55,0,W/2,g.back*.55,W*.6);   // step 4.1: a warm wash on the curtain on each beat
     w.addColorStop(0,`rgba(255,235,200,${.10*pu})`);w.addColorStop(1,'rgba(255,235,200,0)');x.save();x.globalCompositeOperation='lighter';x.fillStyle=w;x.fillRect(0,0,W,g.back+1);x.restore();}}
   const order=members.slice().sort((a,b)=>P[a.id].y-P[b.id].y);                      // back of the stage drawn first
@@ -2284,6 +2293,7 @@ function draw(t){if(!W||!H||el.clientWidth!==W||el.clientHeight!==H)size();if(!W
   for(const m of order){const q=place(P[m.id]),ft=feetOf(m),fy=FL[m.id]!=null?FL[m.id]:q.sy;   /* PATCH07: feet on the floor line, shadow under them */
     shadow(q.sx+(ft.cx-80)*q.k,fy,q.k,ft.w);
     x.save();x.translate(q.sx-80*q.k,fy-ft.y*q.k);x.scale(q.k,q.k);drawLayers(x,m,t);x.restore();
+    if(cam&&m===order[order.length-1])camLight(cam);   // Oct 9: the spotlight, over the whole band once everyone is drawn
     if((m===hover||(drag&&drag.m===m))&&!(window.RECORDER&&RECORDER.state&&RECORDER.state()&&RECORDER.state().on)){const ty=q.sy-140*q.k;   /* PATCH12: no labels in videos */
       x.font='600 14px system-ui,sans-serif';const w=x.measureText(m.name).width+18;
       x.fillStyle='rgba(0,0,0,.6)';x.beginPath();x.roundRect?x.roundRect(q.sx-w/2,ty-26,w,22,11):x.rect(q.sx-w/2,ty-26,w,22);x.fill();
@@ -2330,6 +2340,37 @@ window.addEventListener('resize',()=>{if(!el.hidden)size();});
 {const fb=document.getElementById('stFull');if(!document.documentElement.requestFullscreen)fb.style.display='none';   // iPhone Safari has no full screen for pages
  fb.onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen().catch(()=>{});}catch(e){}};}
 
+/* Oct 9 (remote test 2 and the designer: "difficult to see what people made when it loads against the default band
+   members"). The stage zooms in on one player under a spotlight, then eases back to the whole band:
+   - by itself, the first time the show opens after new drawings were put on a player (SPOTLIGHT.next(id), workshop/scanner.js);
+   - when you tap a player (a tap, not a drag).
+   It eases in (0.7 s), holds (2.6 s) and eases back (0.8 s); tapping the stage while it is zoomed ends it early. The whole
+   stage canvas is zoomed (backdrop, lights, players), so a recording made at that moment shows it too. The buttons and the
+   song bar are not on the canvas and stay where they are. Used by draw() in stage/shadows.js. */
+const CAM={m:null,t0:0,out:0,pending:null,IN:700,HOLD:2600,OUT:800};
+const camEase=v=>v<=0?0:v>=1?1:v*v*(3-2*v);
+function camStart(m){if(!m)return;CAM.m=m;CAM.t0=performance.now();CAM.out=0;}
+function camLeave(){if(CAM.m&&!CAM.out)CAM.out=performance.now();}
+function camAmount(now){if(!CAM.m)return 0;
+  if(!CAM.out&&now-CAM.t0>CAM.IN+CAM.HOLD)CAM.out=now;
+  const o=CAM.out?(now-CAM.out)/CAM.OUT:0;if(o>=1){CAM.m=null;CAM.out=0;return 0;}
+  return camEase((now-CAM.t0)/CAM.IN)*(1-camEase(o));}
+// where the focused player is and how far to zoom: his body fills about two thirds of the stage's height
+function camTarget(){const m=CAM.m,q=place(P[m.id]),Z=Math.max(1.3,Math.min(3,.66*H/(150*q.k)));return {cx:q.sx,cy:q.sy-62*q.k,Z,r:95*q.k};}
+// called by draw() right after it resets the canvas: zoom the picture towards the player
+function camApply(now){const e=camAmount(now);if(!e)return 0;const T=camTarget(),z=1+(T.Z-1)*e,
+  cx=W/2+(T.cx-W/2)*e,cy=H/2+(T.cy-H/2)*e;x.setTransform(dpr*z,0,0,dpr*z,dpr*(W/2-cx*z),dpr*(H/2-cy*z));return e;}
+// called by draw() after the players: dim everything outside a soft circle of light around him
+function camLight(e){if(!e||!CAM.m)return;const T=camTarget(),g=x.createRadialGradient(T.cx,T.cy,T.r*.75,T.cx,T.cy,T.r*1.9);
+  g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,`rgba(0,0,0,${.55*e})`);x.save();x.fillStyle=g;x.fillRect(-W,-H,W*3,H*3);x.restore();}
+// a tap on a player (not a drag) shows him big; any tap while zoomed ends the zoom (and doesn't pick up a player)
+{let down=null;
+ cv.addEventListener('pointerdown',e=>{if(CAM.m){camLeave();e.stopImmediatePropagation();e.preventDefault();down=null;return;}
+   const p=pt(e);down={x:p.x,y:p.y,t:performance.now(),m:hit(p.x,p.y)};},true);
+ cv.addEventListener('pointerup',e=>{const d=down;down=null;if(!d||!d.m)return;const p=pt(e);
+   if(Math.hypot(p.x-d.x,p.y-d.y)<8&&performance.now()-d.t<350)camStart(d.m);});}
+window.SPOTLIGHT={next:id=>{CAM.pending=id;},show:id=>camStart(members.find(m=>m.id===id)),on:()=>!!CAM.m,
+  state:()=>({who:CAM.m&&CAM.m.id,since:CAM.m?Math.round(performance.now()-CAM.t0):null,leaving:!!CAM.out,pending:CAM.pending})};   // state: for the test kit
 /* PATCH12: saveFile(name, blob): inside the Claude app's artifact view the app saves it (its 'downloads' capability; the iPhone app
    shows the share sheet), everywhere else a normal download. Resolves 'saved', 'declined' or 'download'. */
 window.saveFile=async(name,blob)=>{
@@ -2455,7 +2496,9 @@ return {isOpen:()=>!el.hidden,draw,wake,   /* PATCH13 */
   
   show(){spots();el.hidden=false;size();wake();
     // (full screen is requested by showMode for every device that allows it)
-    const tip=document.getElementById('stTip');if(tip){tip.hidden=!tall();clearTimeout(tip._t);tip._t=setTimeout(()=>tip.hidden=true,5000);}},
+    const tip=document.getElementById('stTip');if(tip){tip.hidden=!tall();clearTimeout(tip._t);tip._t=setTimeout(()=>tip.hidden=true,5000);}
+    // Oct 9: new drawings were just put on a player: show him big under a spotlight (stage/spotlight.js)
+    if(CAM.pending){const id=CAM.pending;CAM.pending=null;setTimeout(()=>{if(!el.hidden)camStart(members.find(m=>m.id===id));},600);}},
   hide(){el.hidden=true;drag=hover=null;const nb=document.getElementById('stNameBox');if(nb)nb.hidden=true;},
   spots:()=>P,placeOf:id=>place(P[id]),feet:id=>{const m=members.find(m=>m.id===id);return m?feetOf(m):null;},
   tapHint(on){const tip=document.getElementById('stTip');if(!tip)return;clearTimeout(tip._t);   // step 5.2 fix: phone blocked the song's start
@@ -3530,7 +3573,7 @@ function v2marks(s){const o=[];for(const j of Object.values(s.J))o.push([j[0],j[
    piece's length, from its first line to its last wherever a line meets the drawing at least twice. So a tube, a torso with
    an open bottom or a shaded leg is solid; a single stroke (a stick leg) stays a line. Instruments, hands and stands keep
    the closed-outline rule (a drum stand's legs must not become a white triangle). */
-const SOLIDFILL=/^(legL|legR|body|head)$/;
+const SOLIDFILL=/^(legL|legR|body|head|arm|arm2|armV|fore|armL|armR)$/;   // Oct 9 (remote test 2: arms drawn as two open lines came out see-through): arms too, except the drummer's (sticks)
 function solidFill(outside,pen,cmask,N,Wp,Hp,band){
   let x0=Wp,x1=-1,y0=Hp,y1=-1;
   for(let j=band;j<Hp-band;j++)for(let i=band;i<Wp-band;i++){const p=j*N+i;if(pen[p]|cmask[p]){if(i<x0)x0=i;if(i>x1)x1=i;if(j<y0)y0=j;if(j>y1)y1=j;}}
@@ -3546,6 +3589,48 @@ function solidFill(outside,pen,cmask,N,Wp,Hp,band){
     if(lastStart-a<MIN)continue;
     for(let v=a;v<lastStart;v++){const p=rows?u*N+v:v*N+u;if(outside[p]){outside[p]=0;n++;}}}
   return n;}
+/* Oct 9 (remote test 2: drawn with a thin pen and photographed in dim light, the singer came out faint and broken next to
+   the default band: "it loaded worse than the original"). People use whatever pen they have, so lines are made to hold up:
+   1. joinFaint: a line that fades in and out (thin pen, pencil, a dim or blurry photo) is joined up through the slightly
+      paler pixels right next to it, so it doesn't come out as dashes;
+   2. thicken: every line is made at least LINE_MIN thick, about a felt-tip marker, so home drawings sit with the designer's
+      players on stage; lines already that thick stay as drawn;
+   3. (in extract2's drawing loop) black and grey ink is drawn solid near-black, not the grey the photo saw; coloured lines
+      keep their colour. */
+const LINE_MIN=12;   // pixels at V2R (2.5 pixels per point): about 1.7 mm on paper, like the designer's own players
+function joinFaint(pen,nm,N,Wp,Hp,ok,lim,reach){
+  const near=dilate(pen,N,reach),st=new Int32Array(N*N);let sp=0;
+  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;if(pen[p])st[sp++]=p;}
+  while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=Wp||yy>=Hp)continue;const q=yy*N+xx;
+      if(!pen[q]&&near[q]&&nm[q]<lim&&ok(xx,yy)){pen[q]=1;st[sp++]=q;}}}}
+// distance to the nearest pixel that is (in=true) or isn't (in=false) ink, and which ink pixel that is: two sweeps of a 3x3 mask
+function inkDistance(pen,N,Wp,Hp,toInk){const d=new Float32Array(N*N).fill(1e9),seed=new Int32Array(N*N).fill(-1),R2=Math.SQRT2;
+  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;if(toInk?pen[p]:!pen[p]){d[p]=0;seed[p]=p;}}
+  const step=(p,q,w)=>{if(d[q]+w<d[p]){d[p]=d[q]+w;seed[p]=seed[q];}};
+  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;if(i>0)step(p,p-1,1);if(j>0){step(p,p-N,1);if(i>0)step(p,p-N-1,R2);if(i<Wp-1)step(p,p-N+1,R2);}}
+  for(let j=Hp-1;j>=0;j--)for(let i=Wp-1;i>=0;i--){const p=j*N+i;if(i<Wp-1)step(p,p+1,1);if(j<Hp-1){step(p,p+N,1);if(i<Wp-1)step(p,p+N+1,R2);if(i>0)step(p,p+N-1,R2);}}
+  return {d,seed};}
+// typical line thickness in pixels: twice the median distance to the paper along the middle of the lines
+function lineWidth(pen,N,Wp,Hp){const {d}=inkDistance(pen,N,Wp,Hp,false),v=[];
+  for(let j=1;j<Hp-1;j++)for(let i=1;i<Wp-1;i++){const p=j*N+i;if(!pen[p])continue;const c=d[p];
+    if(c>=d[p-1]&&c>=d[p+1]&&c>=d[p-N]&&c>=d[p+N])v.push(c);}
+  if(v.length<20)return 0;v.sort((a,b)=>a-b);return 2*v[v.length>>1];}
+// make lines at least LINE_MIN thick; returns the distance to the drawn ink (for smooth edges) and the nearest drawn ink pixel (for its colour)
+function thicken(pen,N,Wp,Hp,ok){const w=lineWidth(pen,N,Wp,Hp);if(!w||w>=LINE_MIN)return null;
+  const r=(LINE_MIN-w)/2,{d,seed}=inkDistance(pen,N,Wp,Hp,true);
+  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;if(!pen[p]&&d[p]<=r&&ok(i,j))pen[p]=1;}
+  return {r,d,seed,w};}
+/* Oct 9 (remote test 2: a white bar across the top of the head and body). When a line is drawn right along the box edge,
+   the edge closed at a joint and that line make a thin enclosed strip, which was filled white. A filled patch that
+   touches the box edge and is nowhere more than a few pixels wide is a strip like that, not part of the drawing. */
+function dropSlivers(outside,pen,cmask,N,Wp,Hp,band){const F=new Uint8Array(N*N);
+  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;F[p]=(!outside[p]&&!pen[p]&&!cmask[p])?1:0;}
+  const {d}=inkDistance(F,N,Wp,Hp,false),seen=new Uint8Array(N*N),st=new Int32Array(N*N),E=band+4;
+  for(let s=0;s<N*N;s++){if(!F[s]||seen[s])continue;let sp=0,mx=0,edge=false;const list=[];st[sp++]=s;seen[s]=1;
+    while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;list.push(p);if(d[p]>mx)mx=d[p];if(x<E||y<E||x>=Wp-E||y>=Hp-E)edge=true;
+      for(const q of [p-1,p+1,p-N,p+N]){const qx=q%N,qy=(q/N)|0;if(qx<0||qy<0||qx>=Wp||qy>=Hp||Math.abs(qx-x)+Math.abs(qy-y)!==1)continue;if(F[q]&&!seen[q]){seen[q]=1;st[sp++]=q;}}}
+    if(edge&&mx<4.5)for(const p of list)outside[p]=1;}}
 function extract2(box,ink){
   const [key,bx,by,bw,bh]=box,R=V2R,Wp=Math.round(bw*R),Hp=Math.round(bh*R),N=Math.max(320,Math.ceil(Math.max(Wp,Hp)/64)*64),{Y,RGB,W,H}=S2.img,h=S2.h,col=ink.keepColour&&RGB,
     g=new Float32Array(N*N),cr=RGB&&[new Float32Array(N*N),new Float32Array(N*N),new Float32Array(N*N)],t3=[0,0,0];
@@ -3555,13 +3640,16 @@ function extract2(box,ink){
   let cn=null,chroma=null;
   if(col){cn=cr.map((ch,c)=>{const m=pe[c+1],o=new Float32Array(N*N);for(let p=0;p<N*N;p++)o[p]=Math.min(1.1,ch[p]/m[p]);return o;});
     chroma=new Float32Array(N*N);for(let p=0;p<N*N;p++){const r=cn[0][p],gg=cn[1][p],b=cn[2][p];chroma[p]=Math.max(r,gg,b)-Math.min(r,gg,b);}}
-  const SP=SHEETS2[key.split('.')[0]],OV=SP.ovals||[],band=Math.ceil(CFG.frameBand*R),MK=v2marks(SP),pen=new Uint8Array(N*N),cmask=new Uint8Array(N*N),inR=(i,j)=>i>=band&&j>=band&&i<Wp-band&&j<Hp-band;
+  const SP=SHEETS2[key.split('.')[0]],OV=SP.ovals||[],band=Math.ceil(CFG.frameBand*R),MK=v2marks(SP),pen=new Uint8Array(N*N),cmask=new Uint8Array(N*N),isMark=new Uint8Array(N*N),inR=(i,j)=>i>=band&&j>=band&&i<Wp-band&&j<Hp-band;
   for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){if(!inR(i,j))continue;const p=j*N+i,x=bx+(i+.5)/R,y=by+(j+.5)/R;let mark=false;
     for(const [mx,my,rr,dr] of MK){const d=Math.hypot(x-mx,y-my);if(d<dr||(rr&&Math.abs(d-rr)<2.4)){mark=true;break;}}
     for(const [ox,oy,rx,ry] of OV){const q=((x-ox)/rx)**2+((y-oy)/ry)**2;if(q>.55&&q<1.7)mark=true;}
-    pen[p]=nm[p]<(mark?Math.min(.25,ink.threshold):ink.threshold)?1:0;if(col&&!mark&&chroma[p]>ink.colourMin)cmask[p]=1;}
+    if(mark)isMark[p]=1;pen[p]=nm[p]<(mark?Math.min(.25,ink.threshold):ink.threshold)?1:0;if(col&&!mark&&chroma[p]>ink.colourMin)cmask[p]=1;}
+  const free=(i,j)=>inR(i,j)&&!isMark[j*N+i];
+  joinFaint(pen,nm,N,Wp,Hp,free,ink.threshold+.1,2);   // Oct 9: join up faint, broken lines (see thicken above)
   dropSpecks(pen,N,ink.minSpeck);if(col)dropSpecks(cmask,N,ink.minSpeck);
   let cnt=0;for(let i=0;i<pen.length;i++)cnt+=pen[i]|cmask[i];
+  const TK=thicken(pen,N,Wp,Hp,free);   // Oct 9: every line at least LINE_MIN thick
   let outside=null;
   if(ink.fillShapes){const wall=new Uint8Array(N*N);for(let p=0;p<N*N;p++)wall[p]=pen[p]|cmask[p];
     // the box edge next to a joint counts as a wall, so a piece left open there (a hand open at the wrist) still closes
@@ -3580,16 +3668,20 @@ function extract2(box,ink){
     const push=p=>{if(!sealed[p]&&!outside[p]){outside[p]=1;st[sp++]=p;}};
     for(let i=band;i<Wp-band;i++){push(band*N+i);push((Hp-band-1)*N+i);}for(let j=band;j<Hp-band;j++){push(j*N+band);push(j*N+Wp-band-1);}
     while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;if(x>0)push(p-1);if(x<N-1)push(p+1);if(y>0)push(p-N);if(y<N-1)push(p+N);}
-    if(SOLIDFILL.test(key.split('.')[1]))solidFill(outside,pen,cmask,N,Wp,Hp,band);}
+    if(SOLIDFILL.test(key.split('.')[1]))solidFill(outside,pen,cmask,N,Wp,Hp,band);
+    dropSlivers(outside,pen,cmask,N,Wp,Hp,band);}
   const near=dilate(pen,N,2),nearC=col?dilate(cmask,N,1):null,cv=document.createElement('canvas');cv.width=Wp;cv.height=Hp;
   const cx=cv.getContext('2d'),img=cx.createImageData(Wp,Hp),o=img.data,boost=ink.colourBoost||1,c3=[0,0,0];
   const bold=(p,out)=>{const r=cn[0][p],gg=cn[1][p],b=cn[2][p],L=(r+gg+b)/3;out[0]=clamp((L+(r-L)*boost)*255,0,255);
     out[1]=clamp((L+(gg-L)*boost)*255,0,255);out[2]=clamp((L+(b-L)*boost)*255,0,255);return out;};
   for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i,q=(j*Wp+i)*4;if(!inR(i,j)){o[q+3]=0;continue;}
-    const inside=outside&&!outside[p],a=near[p]?clamp((ink.threshold+.13-nm[p])/.2,0,1):0;
+    const inside=outside&&!outside[p],a=TK?(TK.d[p]<=TK.r?1:clamp(TK.r+.5-TK.d[p],0,1)):near[p]?clamp((ink.threshold+.13-nm[p])/.2,0,1):0;
     let Rr=255,G=255,Bc=255,A=inside?255:0;
     if(col){const ac=nearC[p]?clamp((chroma[p]-ink.colourMin)/.1,0,1):0,m=Math.max(a,ac);
-      if(m>0){bold(p,c3);if(inside){Rr=255*(1-m)+c3[0]*m;G=255*(1-m)+c3[1]*m;Bc=255*(1-m)+c3[2]*m;}else{Rr=c3[0];G=c3[1];Bc=c3[2];A=m*255;}}}
+      // Oct 9: ink takes the colour of the drawn line it belongs to; black or grey ink is drawn solid near-black
+      const s=(a>=ac&&TK&&TK.seed[p]>=0)?TK.seed[p]:p;
+      if(m>0){if(a>=ac&&chroma[s]<=ink.colourMin){c3[0]=28;c3[1]=28;c3[2]=32;}else bold(s,c3);
+        if(inside){Rr=255*(1-m)+c3[0]*m;G=255*(1-m)+c3[1]*m;Bc=255*(1-m)+c3[2]*m;}else{Rr=c3[0];G=c3[1];Bc=c3[2];A=m*255;}}}
     else if(a>0){if(inside){Rr=255*(1-a)+28*a;G=255*(1-a)+28*a;Bc=255*(1-a)+32*a;A=255;}else{Rr=28;G=28;Bc=32;A=a*255;}}
     o[q]=Rr;o[q+1]=G;o[q+2]=Bc;o[q+3]=A;}
   cx.putImageData(img,0,0);
@@ -3757,6 +3849,8 @@ function drawPage(sh){
   for(let y=0;y<h;y++)for(let x=0;x<w;x++){const [u,v]=proj(S2.h,x,y),g=samp(Y,W,H,u,v),q=(y*w+x)*4;im.data[q]=im.data[q+1]=im.data[q+2]=g;im.data[q+3]=255;}
   c.putImageData(im,0,0);c.strokeStyle='#e8553d';c.lineWidth=2;for(const b of sh.boxes)c.strokeRect(b[1],b[2],b[3],b[4]==null?b[3]:b[4]);
 }
+// Oct 9 (remote test 2: photographed in dim light): the pieces still come out, but say that more light gives cleaner lines
+const darkTip=m=>{if(m&&m.paper<140&&S2.results&&S2.results.some(r=>!r.empty))say($('scanMsg').textContent+' '+TXT('upload.darkPhoto'));};
 async function run(file){
   try{
     $('scanApply').disabled=true;$('scanWho').hidden=true;say(TXT('upload.opening'));await tick();
@@ -3769,7 +3863,7 @@ async function run(file){
     const strip=readStrip(m,img);
     const cut=TXT('upload.cornerCut');
     if(strip){S2.marks=m;S2.h=strip.h;const {key,note}=sheetFromCode(strip);sel.value=key;S2.hFor=key;await process();
-      if(note)say($('scanMsg').textContent+' '+note);if(m.guessed)say($('scanMsg').textContent+' '+cut+TXT('upload.cornerGuessed'));return;}
+      if(note)say($('scanMsg').textContent+' '+note);darkTip(m);if(m.guessed)say($('scanMsg').textContent+' '+cut+TXT('upload.cornerGuessed'));return;}
     if(m.guessed){say(cut+" Step back a little so all four black squares are in the photo, then try again.",true);S2.img=null;return;}   // Oct 4: don't guess the sheet from a photo we can't line up
     // which sheet? try the QR code if this browser can read it, otherwise use the menu
     if('BarcodeDetector' in window){try{const r=await new BarcodeDetector({formats:['qr_code']}).detect(img.bmp);
@@ -3783,7 +3877,7 @@ async function run(file){
       SHEET_SET.ids.forEach(id=>{const b=document.createElement('button');b.className='alt';b.textContent=SHEETMAKER.names[id];
         b.onclick=()=>{w.hidden=true;sel.value=(CFG.sheets['v2_'+id]?'v2_':'live_')+id;process().catch(e=>say(TXT('upload.problem')+e.message,true));};w.appendChild(b);});if(window.UIART)UIART.mapDress(w);
       w.hidden=false;return;}
-    await process();
+    await process();darkTip(m);
   }catch(e){console.error(e);say(TXT('upload.wentWrong')+e.message,true);}
 }
 let timer=0;const later=()=>{clearTimeout(timer);timer=setTimeout(()=>{if(S2.img&&sel.value)process().catch(e=>say(TXT('upload.problem')+e.message,true));},250);};
@@ -3799,7 +3893,8 @@ $('scanApply').onclick=()=>{
       if(!list.length){say(TXT('upload.nothingTicked'));return;}
       const before=v2apply(list),mid=list[0].key.split('.')[0],n=list.length;
       $('scan').hidden=true;$('scanParts').innerHTML='';$('scanApply').disabled=true;say(TXT('upload.start'));
-      if(window.wsNote)wsNote(TXT('upload.newInPlace',{player:SHEETMAKER.names[mid],n,s:n===1?'':'s'}),before,mid);}catch(e){console.error(e);say(TXT('upload.couldNotApply')+e.message,true);}return;}
+      if(window.wsNote)wsNote(TXT('upload.newInPlace',{player:SHEETMAKER.names[mid],n,s:n===1?'':'s'}),before,mid);
+      if(window.SPOTLIGHT)SPOTLIGHT.next(mid);   /* Oct 9: back on the show, he is shown big first */}catch(e){console.error(e);say(TXT('upload.couldNotApply')+e.message,true);}return;}
   try{let n=0;const before=[],who=new Set();
     $('scanParts').querySelectorAll('input[data-key]').forEach(cb=>{if(!cb.checked)return;const r=S2.results.find(x=>x.key===cb.dataset.key);
       if(r&&ARTSET[r.key]){before.push([r.key,(typeof S!=='undefined'&&S.art)?S.art[r.key]:undefined]);ARTSET[r.key](r.url);n++;who.add(r.key.split('.')[0]);}});
@@ -3809,6 +3904,7 @@ $('scanApply').onclick=()=>{
     const ids=[...who],nm=ids.map(id=>(members.find(m=>m.id===id)||{name:id}).name).join(' and ');
     $('scan').hidden=true;$('scanParts').innerHTML='';$('scanApply').disabled=true;say(TXT('upload.start'));
     if(window.wsNote)wsNote(`${nm}: ${n} new drawing${n===1?'':'s'} in place.`,before,ids[0]);
+    if(window.SPOTLIGHT)SPOTLIGHT.next(ids[0]);
   }catch(e){say(TXT('upload.couldNotApply')+e.message,true);}};
 $('scanBtn').onclick=()=>{const p=$('scan');p.hidden=!p.hidden;if(!p.hidden)p.scrollIntoView({block:'nearest'});};
 $('scanClose').onclick=()=>{$('scan').hidden=true;};
