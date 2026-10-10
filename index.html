@@ -498,7 +498,8 @@ body.in-app #ws{padding-top:112px}
   <div id="scanWho" class="row" hidden=""></div>
   <div class="row"><label class="inl">Line darkness: <b id="thrV"></b><input id="scanThr" type="range" min="0.2" max="0.7" step="0.01" style="width:150px"></label>
     <label class="inl"><input id="scanFill" type="checkbox"> Fill closed shapes</label>
-    <label class="inl"><input id="scanColour" type="checkbox"> Keep colours</label></div>
+    <label class="inl"><input id="scanColour" type="checkbox"> Keep colours</label>
+    <label class="inl" title="A bold border around the outside of each drawing, so it stands out on stage. Off: your lines exactly as drawn."><input id="scanBold" type="checkbox" checked=""> Bold outlines</label></div>
   <div id="scanParts"></div>
   <div class="row"><label class="devonly" style="margin-right:10px;font-size:13px" title="On: a new upload only swaps the drawings; your position, size, angle and elbow stay. Off: place everything from the drawing again."><input type="checkbox" id="scanKeep" checked=""> Keep my placement</label><button id="scanApply" disabled="" data-t="upload.useDrawings">✓ Use these drawings</button><button class="alt" id="scanClose" data-t="upload.close">Close</button></div>
   <details class="devonly"><summary class="hint">How the page was read</summary><canvas id="scanPage" width="10" height="10"></canvas></details>
@@ -3593,14 +3594,18 @@ function solidFill(outside,pen,cmask,N,Wp,Hp,band){
    the default band: "it loaded worse than the original"). People use whatever pen they have, so lines are made to hold up:
    1. joinFaint: a line that fades in and out (thin pen, pencil, a dim or blurry photo) is joined up through the slightly
       paler pixels right next to it, so it doesn't come out as dashes;
-   2. thicken: the OUTLINE (every line joined to the edge of the piece) is made at least LINE_MIN thick, about a felt-tip
-      marker, so home drawings sit with the designer's players on stage; lines INSIDE the piece (eyes, mouth, writing,
-      shading) keep the thickness they were drawn with, down to LINE_IN, a fine-liner, so they don't vanish when the
-      piece is shrunk on stage (designer, Oct 9: "people will still want detail to show up as drawn"). Lines already
-      thicker than these stay as drawn;
+   2. strokes: the OUTLINE gets a bold border on the OUTSIDE of the piece, so the shape reads on stage next to the
+      designer's players: a closed shape's outline grows outward until it is LINE_MIN thick; a single open stroke (a stick
+      arm, a hair spike) grows on both sides to LINE_MIN. Nothing is added on the inside of a shape, so lines inside it
+      (eyes, writing, guitar strings, fingers) stay as drawn however close they are to the edge; they only get LINE_IN,
+      enough not to vanish when the piece is shrunk on stage. Lines already thicker stay as drawn. The "Bold outlines"
+      tick box on the upload screen turns the border off (lines exactly as drawn, still joined up and solid black).
+      (Oct 9-10 history: first every line was thickened, which blurred detail; then lines were sorted by whether they were
+      joined to the outline, but guitar strings joined to the headstock merged into a black bar. Designer: "people will
+      still want detail to show up as drawn".)
    3. (in extract2's drawing loop) black and grey ink is drawn solid near-black, not the grey the photo saw; coloured lines
       keep their colour. */
-const LINE_MIN=12,LINE_IN=4;   // pixels at V2R (2.5 pixels per point): outline about 1.7 mm on paper, like the designer's own players; inside lines at least about 0.6 mm
+const LINE_MIN=12,LINE_IN=3,EDGE=2.5;   // pixels at V2R (2.5 pixels per point): outline about 1.7 mm on paper, like the designer's own players; inside lines at least about 0.4 mm
 function joinFaint(pen,nm,N,Wp,Hp,ok,lim,reach){
   const near=dilate(pen,N,reach),st=new Int32Array(N*N);let sp=0;
   for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;if(pen[p])st[sp++]=p;}
@@ -3619,31 +3624,25 @@ function lineWidth(pen,N,Wp,Hp){const {d}=inkDistance(pen,N,Wp,Hp,false),v=[];
   for(let j=1;j<Hp-1;j++)for(let i=1;i<Wp-1;i++){const p=j*N+i;if(!pen[p])continue;const c=d[p];
     if(c>=d[p-1]&&c>=d[p+1]&&c>=d[p-N]&&c>=d[p+N])v.push(c);}
   if(v.length<20)return 0;v.sort((a,b)=>a-b);return 2*v[v.length>>1];}
-// make lines at least LINE_MIN thick; returns the distance to the drawn ink (for smooth edges) and the nearest drawn ink pixel (for its colour)
-// (the pen mask is thickened all over first, so outlines close for the fill; edgeLines then thins the inside lines back)
-function thicken(pen,N,Wp,Hp,ok){const w=lineWidth(pen,N,Wp,Hp);if(!w||w>=LINE_MIN)return null;
-  const r=(LINE_MIN-w)/2,{d,seed}=inkDistance(pen,N,Wp,Hp,true),orig=pen.slice();
-  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;if(!pen[p]&&d[p]<=r&&ok(i,j))pen[p]=1;}
-  return {r,rIn:r,d,seed,w,orig,edge:null};}
-// once the fill is known: a drawn line (with everything joined to it) is outline if it reaches the outside of the piece; the
-// rest are inside lines, which only get thickened up to LINE_IN. Without a fill, every line counts as outline.
-function edgeLines(TK,outside,N,Wp,Hp,gap){if(!TK||!outside)return;const O=TK.orig,{d}=inkDistance(outside,N,Wp,Hp,true),
-  edge=new Uint8Array(N*N),seen=new Uint8Array(N*N),st=new Int32Array(N*N),reach=TK.r+gap+2,inner=new Uint8Array(N*N);
-  for(let s=0;s<N*N;s++){if(!O[s]||seen[s])continue;let sp=0,isEdge=false;const list=[];st[sp++]=s;seen[s]=1;
-    while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;list.push(p);if(d[p]<=reach)isEdge=true;
-      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=Wp||yy>=Hp)continue;const q=yy*N+xx;if(O[q]&&!seen[q]){seen[q]=1;st[sp++]=q;}}}
-    for(const p of list){if(isEdge)edge[p]=1;else inner[p]=1;}}
-  const wi=lineWidth(inner,N,Wp,Hp)||TK.w;TK.edge=edge;TK.rIn=Math.max(0,(LINE_IN-wi)/2);}
-/* Oct 9 (remote test 2: a white bar across the top of the head and body). When a line is drawn right along the box edge,
-   the edge closed at a joint and that line make a thin enclosed strip, which was filled white. A filled patch that
-   touches the box edge and is nowhere more than a few pixels wide is a strip like that, not part of the drawing. */
-function dropSlivers(outside,pen,cmask,N,Wp,Hp,band){const F=new Uint8Array(N*N);
-  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;F[p]=(!outside[p]&&!pen[p]&&!cmask[p])?1:0;}
-  const {d}=inkDistance(F,N,Wp,Hp,false),seen=new Uint8Array(N*N),st=new Int32Array(N*N),E=band+4;
-  for(let s=0;s<N*N;s++){if(!F[s]||seen[s])continue;let sp=0,mx=0,edge=false;const list=[];st[sp++]=s;seen[s]=1;
-    while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;list.push(p);if(d[p]>mx)mx=d[p];if(x<E||y<E||x>=Wp-E||y>=Hp-E)edge=true;
-      for(const q of [p-1,p+1,p-N,p+N]){const qx=q%N,qy=(q/N)|0;if(qx<0||qy<0||qx>=Wp||qy>=Hp||Math.abs(qx-x)+Math.abs(qy-y)!==1)continue;if(F[q]&&!seen[q]){seen[q]=1;st[sp++]=q;}}}
-    if(edge&&mx<4.5)for(const p of list)outside[p]=1;}}
+// how far each pixel is from the drawn ink and which ink pixel that is (for its colour), and how much to add (see 2. above).
+// out[p]: the outside of the piece (null = no fill: everything around the lines is outside).
+function strokes(pen,outside,N,Wp,Hp,bold,gap){const {d,seed}=inkDistance(pen,N,Wp,Hp,true);
+  // the outside of the piece, plus the thin ring just outside its outline that the fill leaves out (it closes small gaps
+  // by treating lines as a little thicker): lines grow into this, never into the filled inside
+  const dO=outside?inkDistance(outside,N,Wp,Hp,true).d:null,out=p=>!outside||outside[p]===1||(!pen[p]&&dO[p]<=gap+1.5);
+  // how thick the line is where each ink pixel sits: twice the deepest distance into the ink within a few pixels of it
+  const dIn=inkDistance(pen,N,Wp,Hp,false).d,R=Math.ceil(LINE_MIN/2),tmp=new Float32Array(N*N),th=new Float32Array(N*N);
+  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){let m=0;for(let k=Math.max(0,i-R);k<=Math.min(Wp-1,i+R);k++){const q=j*N+k;if(pen[q]&&dIn[q]>m)m=dIn[q];}tmp[j*N+i]=m;}
+  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){let m=0;for(let k=Math.max(0,j-R);k<=Math.min(Hp-1,j+R);k++){const v=tmp[k*N+i];if(v>m)m=v;}th[j*N+i]=2*m;}
+  const rIn=s=>Math.max(0,(LINE_IN-th[s])/2);
+  if(!bold)return {d,seed,out,rIn,rOf:rIn};
+  const fill=new Uint8Array(N*N);for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;if(!pen[p]&&!out(p))fill[p]=1;}
+  const dF=inkDistance(fill,N,Wp,Hp,true).d;
+  // grown into the outside: nothing if the line is already marker-thick; otherwise a full border if the line has the
+  // filled inside behind it, half on each side if it doesn't (an open stroke)
+  return {d,seed,out,rIn,rOf:s=>{const w=th[s];if(w>=LINE_MIN*.7)return 0;const g=LINE_MIN-w;return dF[s]<=w+gap+3?g:g/2;}};}
+/* (Oct 10: a "dropSlivers" step from Oct 9 is gone: it was meant to remove thin white strips along a box edge, but what
+   it actually removed was the thin white paper edge around a drawing's outline, the cut-out look the designer's players have.) */
 function extract2(box,ink){
   const [key,bx,by,bw,bh]=box,R=V2R,Wp=Math.round(bw*R),Hp=Math.round(bh*R),N=Math.max(320,Math.ceil(Math.max(Wp,Hp)/64)*64),{Y,RGB,W,H}=S2.img,h=S2.h,col=ink.keepColour&&RGB,
     g=new Float32Array(N*N),cr=RGB&&[new Float32Array(N*N),new Float32Array(N*N),new Float32Array(N*N)],t3=[0,0,0];
@@ -3659,10 +3658,9 @@ function extract2(box,ink){
     for(const [ox,oy,rx,ry] of OV){const q=((x-ox)/rx)**2+((y-oy)/ry)**2;if(q>.55&&q<1.7)mark=true;}
     if(mark)isMark[p]=1;pen[p]=nm[p]<(mark?Math.min(.25,ink.threshold):ink.threshold)?1:0;if(col&&!mark&&chroma[p]>ink.colourMin)cmask[p]=1;}
   const free=(i,j)=>inR(i,j)&&!isMark[j*N+i];
-  joinFaint(pen,nm,N,Wp,Hp,free,ink.threshold+.1,2);   // Oct 9: join up faint, broken lines (see thicken above)
+  joinFaint(pen,nm,N,Wp,Hp,free,ink.threshold+.1,2);   // Oct 9: join up faint, broken lines (see 1. above)
   dropSpecks(pen,N,ink.minSpeck);if(col)dropSpecks(cmask,N,ink.minSpeck);
   let cnt=0;for(let i=0;i<pen.length;i++)cnt+=pen[i]|cmask[i];
-  const TK=thicken(pen,N,Wp,Hp,free);   // Oct 9: every line at least LINE_MIN thick
   let outside=null;
   if(ink.fillShapes){const wall=new Uint8Array(N*N);for(let p=0;p<N*N;p++)wall[p]=pen[p]|cmask[p];
     // the box edge next to a joint counts as a wall, so a piece left open there (a hand open at the wrist) still closes
@@ -3682,19 +3680,20 @@ function extract2(box,ink){
     for(let i=band;i<Wp-band;i++){push(band*N+i);push((Hp-band-1)*N+i);}for(let j=band;j<Hp-band;j++){push(j*N+band);push(j*N+Wp-band-1);}
     while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;if(x>0)push(p-1);if(x<N-1)push(p+1);if(y>0)push(p-N);if(y<N-1)push(p+N);}
     if(SOLIDFILL.test(key.split('.')[1]))solidFill(outside,pen,cmask,N,Wp,Hp,band);
-    dropSlivers(outside,pen,cmask,N,Wp,Hp,band);
-    edgeLines(TK,outside,N,Wp,Hp,ink.sealGap);}   // Oct 9: thick outline, inside lines as drawn
+}
+  const TK=strokes(pen,outside,N,Wp,Hp,ink.bold!==false,ink.sealGap);   // Oct 9-10: bold border outside, inside lines as drawn
   const near=dilate(pen,N,2),nearC=col?dilate(cmask,N,1):null,cv=document.createElement('canvas');cv.width=Wp;cv.height=Hp;
   const cx=cv.getContext('2d'),img=cx.createImageData(Wp,Hp),o=img.data,boost=ink.colourBoost||1,c3=[0,0,0];
   const bold=(p,out)=>{const r=cn[0][p],gg=cn[1][p],b=cn[2][p],L=(r+gg+b)/3;out[0]=clamp((L+(r-L)*boost)*255,0,255);
     out[1]=clamp((L+(gg-L)*boost)*255,0,255);out[2]=clamp((L+(b-L)*boost)*255,0,255);return out;};
   for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i,q=(j*Wp+i)*4;if(!inR(i,j)){o[q+3]=0;continue;}
-    const rr=TK?(TK.edge&&TK.seed[p]>=0&&!TK.edge[TK.seed[p]]?TK.rIn:TK.r):0,   // Oct 9: how much this pixel's nearest line is thickened
-      inside=outside&&!outside[p],a=TK?(TK.d[p]<=rr?1:clamp(rr+.5-TK.d[p],0,1)):near[p]?clamp((ink.threshold+.13-nm[p])/.2,0,1):0;
+    // Oct 9-10: how far this pixel's nearest line reaches (2. above); a thin white paper edge (EDGE) around the outline, like a cut-out
+    const s0=TK.seed[p],ou=TK.out(p),rr=s0<0?-1:pen[p]?0:ou?TK.rOf(s0):TK.rIn(s0),
+      inside=(outside&&!ou)||(rr>=0&&TK.d[p]<=rr+EDGE),a=rr<0?0:pen[p]?1:TK.d[p]<=rr?1:clamp(rr+.5-TK.d[p],0,1);
     let Rr=255,G=255,Bc=255,A=inside?255:0;
     if(col){const ac=nearC[p]?clamp((chroma[p]-ink.colourMin)/.1,0,1):0,m=Math.max(a,ac);
       // Oct 9: ink takes the colour of the drawn line it belongs to; black or grey ink is drawn solid near-black
-      const s=(a>=ac&&TK&&TK.seed[p]>=0)?TK.seed[p]:p;
+      const s=(a>=ac&&TK.seed[p]>=0)?TK.seed[p]:p;
       if(m>0){if(a>=ac&&chroma[s]<=ink.colourMin){c3[0]=28;c3[1]=28;c3[2]=32;}else bold(s,c3);
         if(inside){Rr=255*(1-m)+c3[0]*m;G=255*(1-m)+c3[1]*m;Bc=255*(1-m)+c3[2]*m;}else{Rr=c3[0];G=c3[1];Bc=c3[2];A=m*255;}}}
     else if(a>0){if(inside){Rr=255*(1-a)+28*a;G=255*(1-a)+28*a;Bc=255*(1-a)+32*a;A=255;}else{Rr=28;G=28;Bc=32;A=a*255;}}
@@ -3841,7 +3840,7 @@ function sheetFromCode(st){if(CFG.sheets['v2_'+st.mid])return {key:'v2_'+st.mid,
   let o=sel.querySelector(`option[value="${key}"]`);if(!o){o=document.createElement('option');o.value=key;sel.appendChild(o);}o.textContent=CFG.sheets[key].label;
   return {key,note};}
 sel.innerHTML='<option value="">Which sheet is this?</option>'+Object.entries(CFG.sheets).map(([id,s])=>`<option value="${id}">${s.label}</option>`).join('');
-const inkNow=()=>({...CFG.ink,threshold:+$('scanThr').value,fillShapes:$('scanFill').checked,keepColour:$('scanColour').checked});
+const inkNow=()=>({...CFG.ink,threshold:+$('scanThr').value,fillShapes:$('scanFill').checked,keepColour:$('scanColour').checked,bold:$('scanBold').checked});
 $('scanThr').value=CFG.ink.threshold;$('scanFill').checked=CFG.ink.fillShapes;$('scanColour').checked=CFG.ink.keepColour;$('thrV').textContent=CFG.ink.threshold;
 
 function pieceName(key){const [m,k]=key.split('.');return (typeof SLOTS!=='undefined'&&SLOTS[k]?SLOTS[k][0]:k);}
@@ -3900,7 +3899,7 @@ $('scanFile').onchange=e=>{const f=e.target.files[0];if(f)run(f);e.target.value=
 $('scanCam').onchange=e=>{const f=e.target.files[0];if(f)run(f);e.target.value='';};
 sel.onchange=()=>{if(S2.img)process().catch(e=>say(TXT('upload.problem')+e.message,true));};
 $('scanThr').oninput=()=>{$('thrV').textContent=$('scanThr').value;later();};
-$('scanFill').onchange=later;$('scanColour').onchange=later;
+$('scanFill').onchange=later;$('scanColour').onchange=later;$('scanBold').onchange=later;   // Oct 10: Bold outlines
 var KEEP_PLACE=true;$('scanKeep').onchange=e=>{KEEP_PLACE=e.target.checked;};   // PATCH01
 $('scanApply').onclick=()=>{
   const shv=CFG.sheets[sel.value];
