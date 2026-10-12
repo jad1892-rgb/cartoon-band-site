@@ -851,7 +851,9 @@ window.WTXT={
   'print.made': 'Made {n} sheet{s} ({mb} MB). Print at 100% / "actual size". If nothing downloaded, this page may be blocking downloads; open the band directly in your browser.',
   // printed on every drawing sheet
   'sheet.drawBig': 'Draw big · use a marker · no tiny details · stay inside the boxes',
-  'sheet.closeShapes': 'Close every outline or colour it in, like the ✓ hand on the right.',
+  'sheet.closeShapes': 'Hands and instruments: close or colour in, like the ✓ hand.',   // Oct 12: head, body, arms and legs fill even when left open where they join (scanner solidFill)
+  'sheet.openOk': 'Head, body, arms and legs can stay open where they join. Hands and instruments: close the outline or colour them in.',
+  'sheet.examplesTitle': 'Examples: one for each player',
   'sheet.joinHint': 'pieces join at the dashed circles',
   'sheet.strumHand': 'strumming hand',                    // guitar and bass: the small hand boxes
   'sheet.neckHand': 'hand on the neck',
@@ -3285,17 +3287,33 @@ function pdfFrom(pages){const PG=SCAN_CONFIG.page,enc=new TextEncoder(),parts=[]
   const xref=len,n=3+3*N;add(`xref\n0 ${n}\n0000000000 65535 f \n`);for(let i=1;i<n;i++)add(String(offs[i]).padStart(10,'0')+' 00000 n \n');
   add(`trailer\n<< /Size ${n} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
   return new Blob(parts,{type:'application/pdf'});}
-async function makePDF(ids,say,opt){const pages=[];S.sheetLog=S.sheetLog||{};
+async function makePDF(ids,say,opt){const pages=[],exs=[];S.sheetLog=S.sheetLog||{};
+  const addPage=async c=>{const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));pages.push({bytes:new Uint8Array(await blob.arrayBuffer()),w:c.width,h:c.height});};
   for(const id of ids){say(TXT('print.layingOut',{player:NAMES[id]}));await new Promise(r=>setTimeout(r,20));
-    if(SHEET2.ids.includes(id)){const c=renderPage2(id,SHEET2.code),blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));pages.push({bytes:new Uint8Array(await blob.arrayBuffer()),w:c.width,h:c.height});   // new sheet
-      const art=opt&&opt.example?await exampleArt(id):null;   // Oct 12: and a filled-in example right after it
-      if(art){const e=renderPage2(id,SHEET2.code,{pieces:art}),eb=await new Promise(r=>e.toBlob(r,'image/jpeg',.9));pages.push({bytes:new Uint8Array(await eb.arrayBuffer()),w:e.width,h:e.height});}
+    if(SHEET2.ids.includes(id)){await addPage(renderPage2(id,SHEET2.code));   // new sheet
+      const art=opt&&opt.example?await exampleArt(id):null;if(art)exs.push([id,art]);
       continue;}
     const L=layoutFor(id);if(!L)throw new Error("the "+NAMES[id]+" pieces don't fit on one page (try making some smaller)");
     const code=codeFor(id,L.boxes);S.sheetLog[code]={mid:id,boxes:L.boxes,made:new Date().toISOString().slice(0,10)};   // so the scanner knows this sheet later
-    const c=renderPage(id,L,code),blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));
-    pages.push({bytes:new Uint8Array(await blob.arrayBuffer()),w:c.width,h:c.height});}
+    await addPage(renderPage(id,L,code));}
+  // Oct 12: the filled-in example(s) at the end: one player full size; several players together on one page (designer)
+  if(exs.length===1)await addPage(renderPage2(exs[0][0],SHEET2.code,{pieces:exs[0][1]}));
+  else if(exs.length)await addPage(renderExamples(exs));
   save();return pdfFrom(pages);}
+// several players' example pages shrunk onto one page: three across, the rest centred below, each with its name
+function renderExamples(exs){const PG=SCAN_CONFIG.page,P=SS.dpi/72,c=document.createElement('canvas');c.width=Math.round(PG.w*P);c.height=Math.round(PG.h*P);
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.scale(P,P);
+  x.fillStyle='#000';x.font='bold 20'+FONT;x.fillText(TXT('sheet.examplesTitle'),40,52);
+  x.fillStyle='#c0392b';x.font='bold 11'+FONT;x.fillText(TXT('sheet.exampleNote'),40,70);
+  x.fillStyle=grey(110);x.font='9'+FONT;x.fillText(TXT('sheet.openOk'),40,84);
+  const CROP=[92,95,456,650],cols=3,gap=10,cw=(PG.w-80-gap*(cols-1))/cols,ch=cw*CROP[3]/CROP[2],rows=Math.ceil(exs.length/cols);
+  exs.forEach(([id,art],i)=>{const r=Math.floor(i/cols),inRow=Math.min(cols,exs.length-r*cols),col=i%cols,
+      x0=(PG.w-(inRow*cw+(inRow-1)*gap))/2+col*(cw+gap),y0=100+r*(ch+28);
+    const pg=renderPage2(id,SHEET2.code,{pieces:art});
+    x.drawImage(pg,CROP[0]*P,CROP[1]*P,CROP[2]*P,CROP[3]*P,x0,y0,cw,ch);
+    x.strokeStyle=grey(200);x.lineWidth=.8;x.strokeRect(x0,y0,cw,ch);
+    x.fillStyle='#000';x.font='bold 12'+FONT;x.textAlign='center';x.fillText(NAMES[id],x0+cw/2,y0+ch+15);x.textAlign='left';});
+  return c;}
 return {layoutFor,decode,bitsFor,names:NAMES,makePDF,renderPage,renderPage2,exampleArt};
 })();
 
