@@ -197,6 +197,29 @@ html.opening #bandCurtain.up{opacity:0;transition-duration:.7s}
   body:not(.dev) #wsStage{flex-direction:row;flex-wrap:wrap}body:not(.dev) #wsStage .wsf{width:auto;flex:1 1 260px}
   body:not(.dev) #wsDraw{flex-direction:row}body:not(.dev) #wsDraw>button{width:auto;flex:1 1 0}}
 </style>
+<style id="edit-tour-css">/* Oct 12 (remote test 3 + designer): the Edit band tour. A dimmed page with a light around the button for each step,
+   an arrow from the card to it, and a small card saying what to do. Layout only: the designer's drawn arrow, frame and
+   words replace the typed ones in the design batch (--ui-tour-arrow, --ui-tour-card if ever added to ui-map.json). */
+#tourBox{position:fixed;inset:0;z-index:20;pointer-events:auto}
+#tourBox[hidden]{display:none}
+#tourHole{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(20,16,28,.62);outline:3px solid #fff;outline-offset:3px;
+  transition:left .35s ease,top .35s ease,width .35s ease,height .35s ease;pointer-events:none}
+#tourHole.none{left:50%!important;top:40%!important;width:0!important;height:0!important;outline:none}
+#tourArrow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+#tourArrow path{fill:none;stroke:#fff;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+#tourCard{position:fixed;width:min(320px,calc(100vw - 32px));box-sizing:border-box;background:var(--card);color:var(--ink);
+  border:2px solid var(--ink);border-radius:16px;padding:14px 16px 12px;box-shadow:0 6px 24px rgba(0,0,0,.35);
+  transition:left .35s ease,top .35s ease}
+#tourCard .tstep{font:700 12px system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
+#tourCard h3{margin:2px 0 4px;font:800 20px system-ui,sans-serif}
+#tourCard p{margin:0 0 10px;font:15px/1.4 system-ui,sans-serif}
+#tourCard .trow{display:flex;align-items:center;gap:8px}
+#tourCard .trow .sp{flex:1}
+#tourCard button{padding:8px 14px}
+#tourCard .tskip{background:none;border:none;color:var(--mut);padding:8px 4px;text-decoration:underline}
+#tourCard .tdots{display:flex;gap:5px}#tourCard .tdots i{width:7px;height:7px;border-radius:50%;background:var(--line)}#tourCard .tdots i.on{background:var(--ink)}
+#wsTour{margin-left:8px;width:36px;height:36px;padding:0;border-radius:50%;font:800 17px system-ui,sans-serif}
+</style>
 <style id="ui-pics">/* Oct 8: the hand-drawn interface, packed from src/art/ui/ by build.py */
 :root{
 --ui-add-to-home-screen:url(data:image/webp;base64,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);
@@ -746,6 +769,20 @@ window.WTXT={
   'help.text3': 'Go full screen, turn the music up and watch your band play.',
   'help.back': 'Back',
   'help.next': 'Next',
+
+  // ---- Edit band tour (Oct 12: opens the first time Edit band is opened; the "?" next to Back to the show opens it again)
+  'tour.step': 'Step {n} of {of}',
+  'tour.title1': 'Print a sheet',
+  'tour.text1': 'Pick a player and print their sheet. Black and white printing is fine.',
+  'tour.title2': 'Draw your player',
+  'tour.text2': 'Draw each body part in its own box with a marker or felt-tips. Colour it in if you like.',
+  'tour.title3': 'Take a photo',
+  'tour.text3': 'Press Upload a drawn sheet, then take a photo from straight above with all four black corner squares in view.',
+  'tour.title4': 'Watch them play',
+  'tour.text4': 'Press Back to the show. Your new player is shown big on stage.',
+  'tour.done': 'Got it',
+  'tour.skip': 'Skip',
+  'tour.again': 'How Edit band works',
 
   // ---- Saving (Oct 9: the band saves itself; Back up my band / Open a backup are in Edit band)
   'band.defaultName': 'My band',
@@ -1932,7 +1969,7 @@ const SCAN_CONFIG = {
     sealGap: 3,                        // pixels: tiny gaps in a line are ignored when deciding what is "inside"
     emptyBelow: 0.0015,                // a box with less ink than this (fraction of the box) counts as empty and is skipped
     keepColour: true,                  // keep crayon / marker colours (there is also a tick box on screen)
-    colourMin: 0.16,                   // 0 to 1. How colourful a mark must be to count. Higher = pale colours are ignored
+    colourMin: 0.08,                   // 0 to 1. How colourful a mark must be to count. Higher = pale colours are ignored (Oct 12: was 0.16; highlighter pale blue and pink came out white or with holes, remote test 3)
     colourBoost: 1.25                  // makes scanned colours a little bolder (1 = as photographed)
   },
   // One entry per printed page. Each box is: ['member.piece', left, top, size]
@@ -3658,6 +3695,18 @@ function extract2(box,ink){
     for(const [ox,oy,rx,ry] of OV){const q=((x-ox)/rx)**2+((y-oy)/ry)**2;if(q>.55&&q<1.7)mark=true;}
     if(mark)isMark[p]=1;pen[p]=nm[p]<(mark?Math.min(.25,ink.threshold):ink.threshold)?1:0;if(col&&!mark&&chroma[p]>ink.colourMin)cmask[p]=1;}
   const free=(i,j)=>inR(i,j)&&!isMark[j*N+i];
+  /* Oct 12 (remote test 3: white rings on a coloured skirt at the hips, white blocks at the neck): the printed marks
+     (dashed joint circles, dots) are left out of the drawing, so where someone coloured over one it came out as a white
+     ring. Now a printed-mark pixel that sits in a coloured area (most of the paper around it within 7 px is coloured)
+     takes the colour of the nearest coloured pixel. Marks on bare paper still drop out. */
+  const csrc=new Int32Array(N*N).fill(-1);
+  if(col){const R7=7,W1=Wp+1,ic=new Int32Array(W1*(Hp+1)),iu=new Int32Array(W1*(Hp+1));
+    for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i,f=inR(i,j)&&!isMark[p]?1:0,k=(j+1)*W1+i+1;
+      ic[k]=(cmask[p]&&f)+ic[k-1]+ic[k-W1]-ic[k-W1-1];iu[k]=f+iu[k-1]+iu[k-W1]-iu[k-W1-1];}
+    const box=(A,i,j)=>{const x0=Math.max(0,i-R7),y0=Math.max(0,j-R7),x1=Math.min(Wp,i+R7+1),y1=Math.min(Hp,j+R7+1);return A[y1*W1+x1]-A[y0*W1+x1]-A[y1*W1+x0]+A[y0*W1+x0];};
+    const {seed}=inkDistance(cmask,N,Wp,Hp,true);
+    for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;if(!isMark[p]||!inR(i,j)||seed[p]<0)continue;
+      const u=box(iu,i,j);if(u>8&&box(ic,i,j)>.5*u){cmask[p]=1;csrc[p]=seed[p];}}}
   joinFaint(pen,nm,N,Wp,Hp,free,ink.threshold+.1,2);   // Oct 9: join up faint, broken lines (see 1. above)
   dropSpecks(pen,N,ink.minSpeck);if(col)dropSpecks(cmask,N,ink.minSpeck);
   let cnt=0;for(let i=0;i<pen.length;i++)cnt+=pen[i]|cmask[i];
@@ -3691,9 +3740,10 @@ function extract2(box,ink){
     const s0=TK.seed[p],ou=TK.out(p),rr=s0<0?-1:pen[p]?0:ou?TK.rOf(s0):TK.rIn(s0),
       inside=(outside&&!ou)||(rr>=0&&TK.d[p]<=rr+EDGE),a=rr<0?0:pen[p]?1:TK.d[p]<=rr?1:clamp(rr+.5-TK.d[p],0,1);
     let Rr=255,G=255,Bc=255,A=inside?255:0;
-    if(col){const ac=nearC[p]?clamp((chroma[p]-ink.colourMin)/.1,0,1):0,m=Math.max(a,ac);
+    if(col){const ac=csrc[p]>=0?1:nearC[p]?clamp((chroma[p]-ink.colourMin)/.04,0,1):0,m=Math.max(a,ac);   // Oct 12: a colour that counts shows at full strength (pale colours used to fade to white)
       // Oct 9: ink takes the colour of the drawn line it belongs to; black or grey ink is drawn solid near-black
-      const s=(a>=ac&&TK.seed[p]>=0)?TK.seed[p]:p;
+      // (Oct 12: a printed mark coloured over takes the colour around it, csrc above)
+      const s=(a>=ac&&TK.seed[p]>=0)?TK.seed[p]:csrc[p]>=0?csrc[p]:p;
       if(m>0){if(a>=ac&&chroma[s]<=ink.colourMin){c3[0]=28;c3[1]=28;c3[2]=32;}else bold(s,c3);
         if(inside){Rr=255*(1-m)+c3[0]*m;G=255*(1-m)+c3[1]*m;Bc=255*(1-m)+c3[2]*m;}else{Rr=c3[0];G=c3[1];Bc=c3[2];A=m*255;}}}
     else if(a>0){if(inside){Rr=255*(1-a)+28*a;G=255*(1-a)+28*a;Bc=255*(1-a)+32*a;A=255;}else{Rr=28;G=28;Bc=32;A=a*255;}}
@@ -3927,5 +3977,63 @@ $('scanCheck').textContent=bad.length?'Setup problems: '+bad.join('; '):'Setup c
 if(bad.length){console.warn('Scanner setup problems',bad);$('scanCheck').style.color='#c0392b';}
 window.__scan={readStrip,S2,process,extract,CFG,getHeicConverter,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
 })();
+/* Oct 12 (remote test 3: "the steps were not obvious at first"; designer: a quick tutorial like the main screen's, with
+   arrows pointing at the right spots). A short tour of Edit band: the page dims, a light frames the button for each step,
+   an arrow points at it from a small card. Opens by itself the first time Edit band is opened from the menu (not when the
+   page is opened straight on Edit band, e.g. #edit, so tests and links aren't covered), and again from the "?" next to
+   Back to the show. Esc, Skip or a tap on the dim area closes it. Words in core/words.js (tour.*); styles in
+   styles/edit-tour.css. Steps with no button (drawing happens on paper) show the card in the middle. */
+window.EDITTOUR=(function(){
+  const KEY='bandEditTourSeen',$=id=>document.getElementById(id);
+  const STEPS=[{el:'sheetsBtn',t:'tour.title1',p:'tour.text1'},{el:null,t:'tour.title2',p:'tour.text2'},
+    {el:'scanBtn',t:'tour.title3',p:'tour.text3'},{el:'show',t:'tour.title4',p:'tour.text4'}];
+  const box=document.createElement('div');box.id='tourBox';box.hidden=true;box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');
+  box.innerHTML='<div id="tourHole"></div><svg id="tourArrow" aria-hidden="true"><path/><path/></svg>'+
+    '<div id="tourCard"><div class="tstep"></div><h3></h3><p></p><div class="trow"><div class="tdots"></div><span class="sp"></span>'+
+    '<button class="tskip"></button><button class="alt tback"></button><button class="tnext"></button></div></div>';
+  document.body.appendChild(box);
+  const hole=$('tourHole'),svg=$('tourArrow'),[shaft,head]=svg.querySelectorAll('path'),card=$('tourCard'),
+    stepT=card.querySelector('.tstep'),h=card.querySelector('h3'),p=card.querySelector('p'),dots=card.querySelector('.tdots'),
+    skip=card.querySelector('.tskip'),back=card.querySelector('.tback'),next=card.querySelector('.tnext');
+  STEPS.forEach(()=>dots.appendChild(document.createElement('i')));
+  skip.textContent=TXT('tour.skip');back.textContent=TXT('help.back');
+  let n=0,before=null;
+  const seen=()=>{try{return localStorage.getItem(KEY)==='1';}catch(e){return false;}};
+  const mark=()=>{try{localStorage.setItem(KEY,'1');}catch(e){}};
+  function place(){if(box.hidden)return;const st=STEPS[n],tg=st.el&&$(st.el),W=innerWidth,H=innerHeight,cw=card.offsetWidth,ch=card.offsetHeight,M=16;
+    shaft.setAttribute('d','');head.setAttribute('d','');
+    if(!tg||!tg.offsetParent){hole.classList.add('none');card.style.left=(W-cw)/2+'px';card.style.top=Math.max(M,(H-ch)/2)+'px';return;}
+    hole.classList.remove('none');const r=tg.getBoundingClientRect(),pad=6;
+    Object.assign(hole.style,{left:r.left-pad+'px',top:r.top-pad+'px',width:r.width+2*pad+'px',height:r.height+2*pad+'px'});
+    // the card goes below the button if there is room, otherwise above; the arrow runs from the card to the button
+    const gap=56,below=r.bottom+gap+ch+M<=H||r.top-gap-ch<M,cx=Math.min(W-cw-M,Math.max(M,r.left+r.width/2-cw/2)),
+      cy=below?Math.min(H-ch-M,r.bottom+gap):Math.max(M,r.top-gap-ch);
+    card.style.left=cx+'px';card.style.top=cy+'px';
+    const tx=r.left+r.width/2,ty=below?r.bottom+pad+6:r.top-pad-6,sx=Math.min(cx+cw-24,Math.max(cx+24,tx+(tx<W/2?40:-40))),sy=below?cy-4:cy+ch+4;
+    if(Math.abs(sy-ty)<14)return;
+    const mx=(sx+tx)/2+(below?-1:1)*18,my=(sy+ty)/2;   // a slight curve, like a hand-drawn arrow
+    shaft.setAttribute('d',`M${sx},${sy} Q${mx},${my} ${tx},${ty}`);
+    const a=Math.atan2(ty-my,tx-mx),L=13;
+    head.setAttribute('d',`M${tx-L*Math.cos(a-.5)},${ty-L*Math.sin(a-.5)} L${tx},${ty} L${tx-L*Math.cos(a+.5)},${ty-L*Math.sin(a+.5)}`);}
+  function show(i){n=Math.max(0,Math.min(STEPS.length-1,i));const st=STEPS[n],tg=st.el&&$(st.el);
+    stepT.textContent=TXT('tour.step',{n:n+1,of:STEPS.length});h.textContent=TXT(st.t);p.textContent=TXT(st.p);
+    [...dots.children].forEach((d,j)=>d.classList.toggle('on',j===n));back.hidden=n===0;
+    next.textContent=n===STEPS.length-1?TXT('tour.done'):TXT('help.next');
+    if(tg&&tg.offsetParent)tg.scrollIntoView({block:'center',behavior:'instant'});
+    requestAnimationFrame(()=>requestAnimationFrame(place));setTimeout(()=>next.focus({preventScroll:true}),0);}
+  function open(){before=document.activeElement;box.hidden=false;mark();show(0);}
+  function close(){box.hidden=true;mark();if(before&&before.focus&&document.contains(before))try{before.focus({preventScroll:true});}catch(e){}}
+  next.onclick=()=>n===STEPS.length-1?close():show(n+1);back.onclick=()=>show(n-1);skip.onclick=close;
+  box.addEventListener('click',e=>{if(!card.contains(e.target))close();});
+  addEventListener('resize',place);addEventListener('scroll',place,true);
+  addEventListener('keydown',e=>{if(box.hidden)return;
+    if(e.key==='Escape'){e.stopImmediatePropagation();e.preventDefault();close();}
+    else if(e.key==='ArrowRight'){e.preventDefault();next.click();}else if(e.key==='ArrowLeft'&&n>0){e.preventDefault();show(n-1);}},true);
+  // the "?" next to Back to the show
+  {const sh=$('show');if(sh){const q=document.createElement('button');q.id='wsTour';q.className='alt';q.textContent='?';
+    q.title=q.ariaLabel=TXT('tour.again');q.onclick=open;sh.after(q);}}
+  // first time Edit band is opened from the menu
+  {const ge=$('goEdit');if(ge)ge.addEventListener('click',()=>{if(!seen())setTimeout(()=>{if(!document.body.classList.contains('show'))open();},350);});}
+  return {open,close,isOpen:()=>!box.hidden,step:()=>n,seen};})();
 </script>
 </body></html>
