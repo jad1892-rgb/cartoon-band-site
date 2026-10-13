@@ -3593,6 +3593,22 @@ function solveH(P,Q){ // homography taking template points P to photo points Q
 const proj=(h,x,y)=>{const d=h[6]*x+h[7]*y+1;return [(h[0]*x+h[1]*y+h[2])/d,(h[3]*x+h[4]*y+h[5])/d];};
 function samp(Y,W,H,u,v){u=clamp(u,0,W-1.001);v=clamp(v,0,H-1.001);const x=u|0,y=v|0,fx=u-x,fy=v-y,i=y*W+x;
   return Y[i]*(1-fx)*(1-fy)+Y[i+1]*fx*(1-fy)+Y[i+W]*(1-fx)*fy+Y[i+W+1]*fx*fy;}
+/* Oct 13 (blurry / low-contrast photos): the four corner squares are printed solid black, so they show what "black" and
+   "sharp" look like in THIS photo. black = how dark the squares came out next to the paper around them (0 = truly black,
+   about .15-.3 in a good photo); soft = how many points their edges are smeared over (about .5 in a sharp photo).
+   extract2 uses these to read faded or soft photos as if they were a good one. */
+function calibrate(h,img){const {Y,W,H}=img,s=(x,y)=>{const [u,v]=proj(h,x,y);return samp(Y,W,H,u,v);},med=a=>{a.sort((p,q)=>p-q);return a[a.length>>1];};
+  const blk=[],soft=[];
+  for(const [cx,cy] of CFG.marks.centres){const ins=[],out=[];
+    for(let a=-7;a<=7;a+=1.75)for(let b=-7;b<=7;b+=1.75)ins.push(s(cx+a,cy+b));
+    for(let k=0;k<32;k++){const t=k/32*2*Math.PI,r=19;out.push(s(cx+r*Math.cos(t),cy+r*Math.sin(t)));}
+    const B=med(ins),P=med(out);if(!(P>0))continue;blk.push(B/P);
+    // edge profiles across each side, along three lines: distance between the 20 % and 80 % points of the step
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])for(const o of [-5,0,5]){const prof=[];
+      for(let d=6;d<=18;d+=.25){const x=cx+dx*d+(dy?o:0),y=cy+dy*d+(dx?o:0);prof.push((s(x,y)-B)/(P-B));}
+      const at=lv=>{for(let i=1;i<prof.length;i++)if(prof[i]>=lv&&prof[i-1]<lv)return i-1+(lv-prof[i-1])/(prof[i]-prof[i-1]);return NaN;};
+      const w=(at(.8)-at(.2))*.25;if(w>0&&w<6)soft.push(w);}}
+  return {black:blk.length?med(blk):.2,soft:soft.length>3?med(soft):.5};}
 // How strongly do the printed box outlines show up if the page is read this way? (used to pick the right way up)
 function outlineScore(h,boxes,img,paper){
   let tot=0,cnt=0;
@@ -3747,6 +3763,17 @@ function solidFill(outside,pen,cmask,N,Wp,Hp,band){
   for(let k=0;k+1<wide.length;k++){const a=wide[k],b=wide[k+1];if(b-a<2||b-a>BR)continue;
     for(let u=a+1;u<b;u++){const f=(u-a)/(b-a),s0=Math.round(sm[a][0]+(sm[b][0]-sm[a][0])*f),e0=Math.round(sm[a][1]+(sm[b][1]-sm[a][1])*f);
       if(!sm[u]||sm[u][1]-sm[u][0]<(e0-s0)*.6)sm[u]=sm[u]?[Math.min(sm[u][0],s0),Math.max(sm[u][1],e0)]:[s0,e0];}}
+  /* Oct 13 (soft photo of the designer's Bass: a brown bar across the shoulders): one side of the outline missing for a
+     short stretch, so those lines start at an inside line (the scarf) instead. If a side jumps inward by a lot (15 % of the
+     width, at least 12 px) and jumps back to about where it was within 15 % of the piece's length, the stretch takes the
+     straight line between the two ends. A real narrowing (a waist) is gradual, so it stays. */
+  {const NM=Math.max(4,Math.round((L[1]-L[0])*.15));
+   for(const sd of [0,1]){const inw=(a,b)=>sd?a-b:b-a;   // how far b sits inward of a on this side
+     for(let u=L[0]+1;u<=L[1];u++){if(!sm[u]||!sm[u-1])continue;const J=Math.max(12,(sm[u-1][1]-sm[u-1][0])*.15);if(inw(sm[u-1][sd],sm[u][sd])<=J)continue;
+       let v=-1;for(let w=u+1;w<=Math.min(L[1],u+NM);w++){if(!sm[w]||!sm[w-1])break;if(inw(sm[w][sd],sm[w-1][sd])>J&&Math.abs(sm[w][sd]-sm[u-1][sd])<=J){v=w;break;}}
+       if(v<0)continue;const a=sm[u-1][sd],b=sm[v][sd];
+       for(let w=u;w<v;w++){const f=(w-u+1)/(v-u+1),x=Math.round(a+(b-a)*f);sm[w]=sd?[sm[w][0],Math.max(sm[w][1],x)]:[Math.min(sm[w][0],x),sm[w][1]];}
+       u=v;}}}
   /* Oct 13: a piece that runs out of its box (an arm whose shoulder end reaches past the box edge) has only one line near
      that end. If the last filled line reaches the box edge, the fill carries on past it, from the one remaining line out to
      the edge, as long as that line continues smoothly (within 12 px) and for at most 40 % of the piece's length. */
@@ -3844,6 +3871,36 @@ function strokes(pen,outside,N,Wp,Hp,bold,gap){const {d,seed}=inkDistance(pen,N,
   return {d,seed,out,rIn,rOf:s=>{const w=th[s];if(w>=LINE_MIN*.7)return 0;const g=LINE_MIN-w;return dF[s]<=w+gap+3?g:g/2;}};}
 /* (Oct 10: a "dropSlivers" step from Oct 9 is gone: it was meant to remove thin white strips along a box edge, but what
    it actually removed was the thin white paper edge around a drawing's outline, the cut-out look the designer's players have.) */
+/* Oct 13 (blurry / low-contrast photos; board: Broken/Now). The pen used to be "darker than 0.42 of the paper", so a
+   faded photo (grey pen on grey paper) found nothing and a soft photo kept only crumbs of thin lines. Now the black corner
+   squares (calibrate) say how this photo shows black and how smeared its edges are, and:
+   1. faded: the darkness is stretched so the corner squares read as black again (a good photo is left as it is);
+   2. soft: the picture is sharpened by about as much as the corners are smeared, and the cut-off is raised a little;
+   3. whenever 1 or 2 happened, the looser part of the cut-off only counts where the photo is also clearly darker than what
+      the sheet itself prints there (printedLayer), so the grey labels, box lines and figure can't sneak in through it. */
+function soften(nm,N,Wp,Hp,C){const R=V2R,k=C.black>.15?Math.min(2.5,.9/(1-C.black)):1,sx=C.soft>.9?C.soft:0;
+  if(k===1&&!sx)return {on:false,raise:0};
+  if(k!==1)for(let p=0;p<N*N;p++)nm[p]=Math.max(0,1-(1-nm[p])*k);
+  let raise=0;
+  if(sx){const sg=sx/1.68*R,a=Math.min(2.5,(sx-.75)*2),bl=gauss(nm,N,Wp,Hp,sg);   // unsharp mask, about the size of the smear
+    for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;nm[p]=Math.max(0,Math.min(1.2,nm[p]+a*(nm[p]-bl[p])));}
+    raise=Math.min(.15,.12*(sx-.75));}
+  return {on:true,raise};}
+function gauss(a,N,Wp,Hp,sg){const r=Math.ceil(sg*2.5),w=[];let t=0;for(let d=-r;d<=r;d++){const v=Math.exp(-d*d/(2*sg*sg));w.push(v);t+=v;}w.forEach((v,i)=>w[i]=v/t);
+  const tmp=new Float32Array(N*N),o=new Float32Array(N*N),cl=(v,n)=>v<0?0:v>=n?n-1:v;
+  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){let s=0;for(let d=-r;d<=r;d++)s+=w[d+r]*a[j*N+cl(i+d,Wp)];tmp[j*N+i]=s;}
+  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){let s=0;for(let d=-r;d<=r;d++)s+=w[d+r]*tmp[cl(j+d,Hp)*N+i];o[j*N+i]=s;}return o;}
+// what the printed sheet looks like over one box (1 = paper, 0 = black), the darkest print within ~2 points, as this photo would show it
+const PRINTED={};
+function printedLayer(id,bx,by,Wp,Hp,N,C){
+  if(!PRINTED[id]){try{const cv=SHEETMAKER.renderPage2(id,0),d=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data,g=new Float32Array(cv.width*cv.height);
+      for(let q=0;q<g.length;q++)g[q]=d[q*4+1]/255;PRINTED[id]={g,w:cv.width,h:cv.height,P:cv.width/CFG.page.w};}catch(e){PRINTED[id]={g:null};}}
+  const T=PRINTED[id],o=new Float32Array(N*N).fill(1);if(!T.g)return o;
+  const R=V2R,rr=Math.ceil((2+C.soft)*T.P),dk=1-Math.min(.9,C.black>.15?.1:C.black);
+  for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const X=Math.round((bx+(i+.5)/R)*T.P),Y=Math.round((by+(j+.5)/R)*T.P);let m=1;
+    for(let dy=-rr;dy<=rr;dy+=2)for(let dx=-rr;dx<=rr;dx+=2){const x=X+dx,y=Y+dy;if(x>=0&&y>=0&&x<T.w&&y<T.h){const v=T.g[y*T.w+x];if(v<m)m=v;}}
+    o[j*N+i]=1-(1-m)*dk;}
+  return o;}
 function extract2(box,ink){
   const [key,bx,by,bw,bh]=box,R=V2R,Wp=Math.round(bw*R),Hp=Math.round(bh*R),N=Math.max(320,Math.ceil(Math.max(Wp,Hp)/64)*64),{Y,RGB,W,H}=S2.img,h=S2.h,col=ink.keepColour&&RGB,
     g=new Float32Array(N*N),cr=RGB&&[new Float32Array(N*N),new Float32Array(N*N),new Float32Array(N*N)],t3=[0,0,0];
@@ -3853,11 +3910,12 @@ function extract2(box,ink){
   let cn=null,chroma=null;
   if(col){cn=cr.map((ch,c)=>{const m=pe[c+1],o=new Float32Array(N*N);for(let p=0;p<N*N;p++)o[p]=Math.min(1.1,ch[p]/m[p]);return o;});
     chroma=new Float32Array(N*N);for(let p=0;p<N*N;p++){const r=cn[0][p],gg=cn[1][p],b=cn[2][p];chroma[p]=Math.max(r,gg,b)-Math.min(r,gg,b);}}
+  const C=S2.cal||{black:.1,soft:.5},adj=soften(nm,N,Wp,Hp,C),thr=ink.threshold+adj.raise,tp=adj.on?printedLayer(key.split('.')[0],bx,by,Wp,Hp,N,C):null;
   const SP=SHEETS2[key.split('.')[0]],OV=SP.ovals||[],band=Math.ceil(CFG.frameBand*R),MK=v2marks(SP),pen=new Uint8Array(N*N),cmask=new Uint8Array(N*N),isMark=new Uint8Array(N*N),inR=(i,j)=>i>=band&&j>=band&&i<Wp-band&&j<Hp-band;
   for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){if(!inR(i,j))continue;const p=j*N+i,x=bx+(i+.5)/R,y=by+(j+.5)/R;let mark=false;
     for(const [mx,my,rr,dr] of MK){const d=Math.hypot(x-mx,y-my);if(d<dr||(rr&&Math.abs(d-rr)<2.4)){mark=true;break;}}
     for(const [ox,oy,rx,ry,,kind] of OV){if(kind==='line'){if(Math.abs(y-oy)<2.6&&Math.abs(x-ox)<rx+2.6)mark=true;continue;}const q=((x-ox)/rx)**2+((y-oy)/ry)**2;if(q>.55&&q<1.7)mark=true;}   // Oct 12: the mouth spot is a dotted line now
-    if(mark)isMark[p]=1;pen[p]=nm[p]<(mark?Math.min(.25,ink.threshold):ink.threshold)?1:0;if(col&&chroma[p]>(mark?Math.max(ink.colourMin,.12):ink.colourMin))cmask[p]=1;}   // Oct 12: colour drawn over a printed mark counts (the marks are printed grey), so a mouth drawn on the mouth spot survives
+    if(mark)isMark[p]=1;pen[p]=nm[p]<(mark?Math.min(.25,ink.threshold):tp?Math.max(ink.threshold,Math.min(thr,tp[p]-.1)):thr)?1:0;if(col&&chroma[p]>(mark?Math.max(ink.colourMin,.12):ink.colourMin))cmask[p]=1;}   // Oct 12: colour drawn over a printed mark counts (the marks are printed grey), so a mouth drawn on the mouth spot survives
   const free=(i,j)=>inR(i,j)&&!isMark[j*N+i];
   /* Oct 12 (remote test 3: white rings on a coloured skirt at the hips, white blocks at the neck): the printed marks
      (dashed joint circles, dots) are left out of the drawing, so where someone coloured over one it came out as a white
@@ -3871,7 +3929,7 @@ function extract2(box,ink){
     const {seed}=inkDistance(cmask,N,Wp,Hp,true);
     for(let j=0;j<Hp;j++)for(let i=0;i<Wp;i++){const p=j*N+i;if(!isMark[p]||cmask[p]||!inR(i,j)||seed[p]<0)continue;
       const u=box(iu,i,j);if(u>8&&box(ic,i,j)>.5*u){cmask[p]=1;csrc[p]=seed[p];}}}
-  joinFaint(pen,nm,N,Wp,Hp,free,ink.threshold+.1,2);   // Oct 9: join up faint, broken lines (see 1. above)
+  joinFaint(pen,nm,N,Wp,Hp,tp?(i,j)=>free(i,j)&&(nm[j*N+i]<ink.threshold+.1||nm[j*N+i]<tp[j*N+i]-.1):free,thr+.1,2);   // Oct 9: join up faint, broken lines (see 1. above)
   dropSpecks(pen,N,ink.minSpeck);if(col)dropSpecks(cmask,N,ink.minSpeck);
   let cnt=0;for(let i=0;i<pen.length;i++)cnt+=pen[i]|cmask[i];
   let outside=null;
@@ -4086,9 +4144,11 @@ const firstFixed=()=>Object.values(CFG.sheets).find(s=>s.boxes&&!s.live);
 // Read the row of small squares printed along the top of sheets made by this page. It tells us which way up the page is,
 // which player it is, and its code (we remember each printed code's boxes).
 function readStrip(m,img){const st=SHEET_SET.strip,tpl=CFG.marks.centres.map(([x,y])=>[x,y]);
+  let cut=.5;   // Oct 13: on a faded photo the black code squares come out grey, so the cut sits halfway between the corner squares' grey and the paper
+  {const q=m.corners.map(p=>[p.x,p.y]);cut=Math.max(.5,(1+calibrate(solveH(tpl,q),img).black)/2);}
   for(let r=0;r<4;r++){const q=[0,1,2,3].map(i=>{const p=m.corners[(i+r)%4];return [p.x,p.y];}),h=solveH(tpl,q),bits=[];
     for(let i=0;i<st.n;i++){let v=0;const cx=st.x0+i*st.step;for(const [ox,oy] of [[0,0],[-2,-2],[2,-2],[-2,2],[2,2]]){const [u,w]=proj(h,cx+ox,st.y+oy);v+=samp(img.Y,img.W,img.H,u,w);}
-      bits.push(v/5<m.paper*.5?1:0);}
+      bits.push(v/5<m.paper*cut?1:0);}
     const dec=SHEETMAKER.decode(bits);if(dec)return Object.assign({h},dec);}
   return null;}
 function sheetFromCode(st){if(CFG.sheets['v2_'+st.mid])return {key:'v2_'+st.mid,note:''};   // Oct 4: a player with a new sheet is always read with it (old layouts removed)
@@ -4107,6 +4167,7 @@ async function process(){
   const sh=ensureBoxes(CFG.sheets[sel.value]);if(!S2.img||!sh||!sh.boxes){return;}
   if(S2.hFor!==sel.value&&S2.marks){S2.h=orient(S2.marks.corners,S2.marks.paper,S2.img,sh.boxes).h;S2.hFor=sel.value;}  // sheets differ, so re-check which way up
   say(TXT('upload.cutting'));await tick();
+  S2.cal=calibrate(S2.h,S2.img);   // Oct 13: how this photo shows the printed black (see soften)
   const ink=inkNow(),box=$('scanParts');box.innerHTML='';S2.results=[];
   for(const b of sh.boxes){const r=sh.v2?extract2(b,ink):extract(b,ink);S2.results.push(r);await tick();
     const d=document.createElement('div');d.className='pv'+(r.empty?' empty':'');
@@ -4191,7 +4252,7 @@ $('scanClose').onclick=()=>{$('scan').hidden=true;};
 const bad=checkConfig();
 $('scanCheck').textContent=bad.length?'Setup problems: '+bad.join('; '):'Setup check: all sheet settings match the player.';
 if(bad.length){console.warn('Scanner setup problems',bad);$('scanCheck').style.color='#c0392b';}
-window.__scan={colourShare,readStrip,S2,process,extract,CFG,getHeicConverter,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
+window.__scan={calibrate,colourShare,readStrip,S2,process,extract,CFG,getHeicConverter,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
 })();
 /* Oct 12 (remote test 3: "the steps were not obvious at first"; designer: a quick tutorial like the main screen's, with
    arrows pointing at the right spots). A short tour of Edit band: the page dims, a light frames the button for each step,
