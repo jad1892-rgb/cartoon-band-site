@@ -3358,7 +3358,7 @@ return {layoutFor,decode,bitsFor,names:NAMES,makePDF,renderPage,renderPage2,exam
   $('shClose').onclick=()=>{$('sheetsP').hidden=true;};
   $('shMake').onclick=async()=>{const b=$('shMake');b.disabled=true;
     try{const w=$('shWho').value,ids=w==='all'?SHEET_SET.ids:[w],pdf=await SHEETMAKER.makePDF(ids,say,{example:!$('shEx')||$('shEx').checked});
-      window.saveFile('band-drawing-sheets.pdf',pdf);   /* PATCH12: works from the phone link too */
+      window.saveFile('oddbop-drawing-sheets.pdf',pdf);   /* Oct 13 (designer): was band-drawing-sheets.pdf */   /* PATCH12: works from the phone link too */
       say(TXT('print.made',{n:ids.length,s:ids.length>1?'s':'',mb:(pdf.size/1048576).toFixed(1)}));}
     catch(e){say("Couldn't make the sheets: "+e.message);}finally{b.disabled=false;}};
 })();
@@ -3758,7 +3758,21 @@ function solidFill(outside,pen,cmask,N,Wp,Hp,band){
         if(first<0)break;
         if(toHi){if(Math.abs(first-cur[0])>12)break;let a=first;while(a<=hi&&(ink[rows?u*N+a:a*N+u]|cmask[rows?u*N+a:a*N+u]))a++;cur=[a,hi];}
         else{if(Math.abs(last-cur[1])>12)break;let b=last;while(b>=lo&&(ink[rows?u*N+b:b*N+u]|cmask[rows?u*N+b:b*N+u]))b--;cur=[lo,b+1];}
-        if(cur[1]-cur[0]>=MIN&&!sm[u])sm[u]=cur;}}}}
+        if(cur[1]-cur[0]>=MIN&&!sm[u])sm[u]=cur;}}
+    /* Oct 13 (designer's Bass, second arm: near its end one line ran over the printed hand ring, which the scanner leaves
+       out): past the last filled line, where only ONE side carries on, the tube keeps its width (the middle of its last 8
+       lines) along that side, while that side continues smoothly (within 12 px), for at most a quarter of the piece. */
+    const keys2=[];for(let u=L[0];u<=L[1];u++)if(sm[u])keys2.push(u);
+    if(keys2.length>=8){const MAXT=Math.round((L[1]-L[0])*.25);
+      for(const dir of [-1,1]){const ends=dir<0?keys2.slice(0,8):keys2.slice(-8),u0=dir<0?keys2[0]:keys2[keys2.length-1];
+        const w=med(ends.map(u=>sm[u][1]-sm[u][0]));let cur=sm[u0];if(cur[0]<=lo+4||cur[1]>=hi-4)continue;   // the box edge case is handled above
+        for(let u=u0+dir,k=0;k<MAXT&&u>=band&&u<(rows?Hp:Wp)-band;u+=dir,k++){const runs=[];let inR=false;
+          for(let v=lo;v<=hi;v++){const p=rows?u*N+v:v*N+u,on=ink[p]|cmask[p];if(on&&!inR)runs.push([v,v]);if(on)runs[runs.length-1][1]=v;inR=on;}
+          if(runs.length!==1)break;const [r0,r1]=runs[0];
+          if(Math.abs(r0-cur[0])<=12&&Math.abs(r0-cur[0])<Math.abs(r1-cur[1]))cur=[r1+1,Math.min(hi,r1+1+w)];       // the left side carries on
+          else if(Math.abs(r1-cur[1])<=12)cur=[Math.max(lo,r0-w),r0];                                            // the right side carries on
+          else break;
+          if(!sm[u])sm[u]=cur;}}}}}
   for(let u=L[0];u<=L[1];u++){if(!sm[u])continue;span[u]=sm[u];
     for(let v=sm[u][0];v<sm[u][1];v++){const p=rows?u*N+v:v*N+u;if(outside[p]){outside[p]=0;n++;}}}
   /* Oct 13 (designer's Bass on the new sheet: white bands across the body and arms): where the pen line ran along the
@@ -3771,6 +3785,11 @@ function solidFill(outside,pen,cmask,N,Wp,Hp,band){
       for(let w=prev+1;w<u;w++){const f=(w-prev)/(u-prev),a=Math.round(a0+(a1-a0)*f),b=Math.round(b0+(b1-b0)*f);
         for(let v=a;v<b;v++){const p=rows?w*N+v:v*N+w;if(outside[p]){outside[p]=0;n++;}}}}
     prev=u;}
+  /* Oct 13 (designer's Bass: a hairline across the body where two lines didn't quite meet): across the other direction,
+     a gap of at most 2.5 % of the piece's length (6 pixels or more) with fill on both sides is filled too. */
+  const SLV=Math.max(7,Math.round((L[1]-L[0])*.025))+1;
+  for(let v=A[0];v<=A[1];v++){let lastIn=-99;
+    for(let u=L[0];u<=L[1];u++){const p=rows?u*N+v:v*N+u;if(!outside[p]||ink[p]){if(lastIn>=0&&u-lastIn>1&&u-lastIn<=SLV)for(let w=lastIn+1;w<u;w++){const q=rows?w*N+v:v*N+w;if(outside[q]){outside[q]=0;n++;}}lastIn=u;}}}
   return n;}
 /* Oct 9 (remote test 2: drawn with a thin pen and photographed in dim light, the singer came out faint and broken next to
    the default band: "it loaded worse than the original"). People use whatever pen they have, so lines are made to hold up:
