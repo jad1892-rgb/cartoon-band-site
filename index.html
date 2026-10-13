@@ -741,6 +741,7 @@ window.WTXT={
   'tip.cantHear': 'Can\'t hear any music: turn it up, or move closer 🔊',
   'tip.allowMic': 'Allow the microphone to listen live',
   'tip.noMic': 'No microphone here: try Pick song',
+  'tip.noFullScreen': 'This browser won\'t go full screen. Try Safari or Chrome, or Add to home screen',
   'tip.scene': 'Scene: {scene}',
 
   // ---- Recording
@@ -1843,7 +1844,8 @@ window.wsNote=(text,before,id)=>{const box=document.getElementById('wsNote'),u=d
   clearTimeout(box.t);box.t=setTimeout(()=>box.hidden=true,20000);};
 document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible'&&document.body.classList.contains('show')&&!wl){try{wl=await navigator.wakeLock.request('screen');}catch(e){}}});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('show')){if(window.STARTUI)STARTUI.close();showMode(false);}});
-document.addEventListener('fullscreenchange',()=>{const b=document.getElementById('stFull');if(b)b.textContent=document.fullscreenElement?TXT('stage.exitFullScreen'):TXT('stage.fullScreen');});   // Oct 4: full screen only on request (stage button); leaving it stays on the stage
+{const fsLabel=()=>{const b=document.getElementById('stFull');if(b)b.textContent=(document.fullscreenElement||document.webkitFullscreenElement)?TXT('stage.exitFullScreen'):TXT('stage.fullScreen');};
+ document.addEventListener('fullscreenchange',fsLabel);document.addEventListener('webkitfullscreenchange',fsLabel);}   // Oct 4: full screen only on request (stage button); leaving it stays on the stage
 
 // ===== 4. INPUT BUTTONS =====
 document.getElementById('mic').onclick=async()=>{try{await L.mic();msg('Listening to the mic. Play a song nearby (speaker volume up, headphones off).');}
@@ -2393,8 +2395,17 @@ const drop=()=>{if(!drag)return;S.stage=S.stage||{};const p=P[drag.m.id];S.stage
 cv.addEventListener('pointerup',drop);cv.addEventListener('pointercancel',drop);
 cv.addEventListener('pointerleave',()=>{if(!drag)hover=null;});
 window.addEventListener('resize',()=>{if(!el.hidden)size();});
-{const fb=document.getElementById('stFull');if(!document.documentElement.requestFullscreen)fb.style.display='none';   // iPhone Safari has no full screen for pages
- fb.onclick=()=>{try{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen().catch(()=>{});}catch(e){}};}
+/* Full screen. Oct 13 (designer's tablet: "doesn't do anything when I press full screen" in Firefox): on an iPad every
+   browser is Safari underneath, and some (Firefox) refuse full screen for pages. The refusal used to be swallowed, so the
+   button did nothing. Now it also tries the older webkit form, and if the page still isn't full screen a moment later, a
+   tip says so and points to Safari/Chrome or Add to home screen (which opens full screen by itself). */
+{const fb=document.getElementById('stFull'),de=document.documentElement,req=de.requestFullscreen||de.webkitRequestFullscreen,
+   ex=document.exitFullscreen||document.webkitExitFullscreen,isFs=()=>!!(document.fullscreenElement||document.webkitFullscreenElement);
+ if(!req)fb.style.display='none';   // iPhone Safari has no full screen for pages
+ const refused=()=>{const tp=document.getElementById('stTip');if(!tp)return;clearTimeout(tp._t);if(!tp.dataset.fsRest)tp.dataset.fsRest=tp.textContent;
+   tp.textContent=TXT('tip.noFullScreen');tp.hidden=false;tp._t=setTimeout(()=>{tp.hidden=true;tp.textContent=tp.dataset.fsRest;delete tp.dataset.fsRest;},6000);};
+ fb.onclick=()=>{try{if(isFs()){ex&&ex.call(document);return;}
+   const r=req.call(de);if(r&&r.catch)r.catch(()=>{});setTimeout(()=>{if(!isFs())refused();},700);}catch(e){refused();}};}
 
 /* Oct 9 (remote test 2 and the designer: "difficult to see what people made when it loads against the default band
    members"). The stage zooms in on one player under a spotlight, then eases back to the whole band:
