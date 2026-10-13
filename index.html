@@ -893,6 +893,7 @@ window.WTXT={
   'upload.boxesOff': 'Found the corner squares but the box outlines don\'t line up. Check you photographed the whole page, flat and in focus.',
   'upload.cantOpen': 'Couldn\'t open this photo ({type}, {mb} MB): {error}. ',
   'upload.problem': 'Problem: ',
+  'upload.colourTip': 'Tip: colour your next drawing in. Colour really pops on stage!',
   'upload.newInPlace': '{player}: {n} new drawing{s} in place.',
   'upload.applied': 'Applied {n} piece{s} to the band.',
   'upload.nothingTicked': 'Nothing was ticked, so nothing changed.',
@@ -4091,13 +4092,20 @@ sel.onchange=()=>{if(S2.img)process().catch(e=>say(TXT('upload.problem')+e.messa
 $('scanThr').oninput=()=>{$('thrV').textContent=$('scanThr').value;later();};
 $('scanFill').onchange=later;$('scanColour').onchange=later;$('scanBold').onchange=later;   // Oct 10: Bold outlines
 var KEEP_PLACE=true;$('scanKeep').onchange=e=>{KEEP_PLACE=e.target.checked;};   // PATCH01
+/* Oct 13 (designer's own test: an uncoloured Bass looked plain next to a fully coloured Guitar): how much of the new drawings
+   is colour (not black, grey or white). Under 8 %, the note after "Use these drawings" adds a gentle tip to colour in next time.
+   Drawings are never changed for this: inside detail stays as drawn. */
+function colourShare(list){let ink=0,col=0;
+  for(const r of list){const c=r&&r.cv;if(!c||!c.width||!c.height)continue;let d;try{d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;}catch(e){continue;}
+    for(let i=0;i<d.length;i+=16){if(d[i+3]<128)continue;ink++;const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);if(mx-mn>50&&mx>60)col++;}}
+  return ink?col/ink:0;}
 $('scanApply').onclick=()=>{
   const shv=CFG.sheets[sel.value];
   if(shv&&shv.v2){try{const list=[];$('scanParts').querySelectorAll('input[data-key]').forEach(cb=>{if(!cb.checked)return;const r=S2.results.find(x=>x.key===cb.dataset.key);if(r)list.push(r);});
       if(!list.length){say(TXT('upload.nothingTicked'));return;}
       const before=v2apply(list),mid=list[0].key.split('.')[0],n=list.length;
       $('scan').hidden=true;$('scanParts').innerHTML='';$('scanApply').disabled=true;say(TXT('upload.start'));
-      if(window.wsNote)wsNote(TXT('upload.newInPlace',{player:SHEETMAKER.names[mid],n,s:n===1?'':'s'}),before,mid);
+      if(window.wsNote)wsNote(TXT('upload.newInPlace',{player:SHEETMAKER.names[mid],n,s:n===1?'':'s'})+(colourShare(list)<.08?' '+TXT('upload.colourTip'):''),before,mid);
       if(window.SPOTLIGHT)SPOTLIGHT.next(mid);   /* Oct 9: back on the show, he is shown big first */}catch(e){console.error(e);say(TXT('upload.couldNotApply')+e.message,true);}return;}
   try{let n=0;const before=[],who=new Set();
     $('scanParts').querySelectorAll('input[data-key]').forEach(cb=>{if(!cb.checked)return;const r=S2.results.find(x=>x.key===cb.dataset.key);
@@ -4115,7 +4123,7 @@ $('scanClose').onclick=()=>{$('scan').hidden=true;};
 const bad=checkConfig();
 $('scanCheck').textContent=bad.length?'Setup problems: '+bad.join('; '):'Setup check: all sheet settings match the player.';
 if(bad.length){console.warn('Scanner setup problems',bad);$('scanCheck').style.color='#c0392b';}
-window.__scan={readStrip,S2,process,extract,CFG,getHeicConverter,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
+window.__scan={colourShare,readStrip,S2,process,extract,CFG,getHeicConverter,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
 })();
 /* Oct 12 (remote test 3: "the steps were not obvious at first"; designer: a quick tutorial like the main screen's, with
    arrows pointing at the right spots). A short tour of Edit band: the page dims, a light frames the button for each step,
