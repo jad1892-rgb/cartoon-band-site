@@ -1,5 +1,5 @@
-// Cartoon Band offline helper (made by tools/make-site.py, build 905d85d). Newest page when online; the last one seen offline.
-const V = 'cartoon-band-905d85d', CORE = ['./', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+// Cartoon Band offline helper (made by tools/make-site.py, build 6f16612). Newest page when online; the last one seen offline.
+const V = 'cartoon-band-6f16612', CORE = ['./', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {

@@ -2148,7 +2148,16 @@ const el=document.getElementById('stage'),cv=document.getElementById('stageCv'),
 const cl=v=>v<0?0:v>1?1:v;
 let W=0,H=0,dpr=1,P={},drag=null,hover=null,idleT=0;
 function spots(){S.stage=S.stage||{};members.forEach(m=>P[m.id]=Object.assign({x:.5,y:.5},STAGE_SET.spots[m.id],S.stage[m.id]));}
-function size(){dpr=Math.min(2,window.devicePixelRatio||1);W=el.clientWidth;H=el.clientHeight;cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);}
+/* Oct 13 (designer's tablet: "Full screen on listen live was blank screen. Drained my battery"). iPad Safari blanks a
+   page's canvases once their total memory passes its limit, and old canvases are only freed later. Going full screen fires
+   a burst of size changes, and each one used to rebuild the big Club pictures. Now: the stage's own canvas is capped at
+   about 4.5 million pixels, the cached pictures wait until the size has settled (SETTLE ms; until then the old ones are
+   stretched), and replaced canvases are emptied at once (width 0 frees them). */
+const SETTLE=300,MAXPX=4.5e6;let sizeT=0;
+const freeCv=(...cs)=>cs.forEach(c=>{if(c&&c.width!==undefined){c.width=0;c.height=0;}});
+function size(){W=el.clientWidth;H=el.clientHeight;dpr=Math.min(2,window.devicePixelRatio||1,Math.sqrt(MAXPX/Math.max(1,W*H)));
+  cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);sizeT=performance.now();}
+const settling=()=>performance.now()-sizeT<SETTLE;
 // stage geometry: the floor is a trapezoid, narrow at the back, full width at the front
 // Step 4.3: on an upright phone (tall, narrow screen) the floor starts higher and the players are sized by the width, so they fill the screen.
 const tall=()=>H>W*1.15;
@@ -2172,14 +2181,16 @@ function floorAt(col,plank){const g=geo(),L0=W/2-g.wb/2,R0=W/2+g.wb/2,L1=W/2-g.w
 // lines where its strokes overlap inside each letter, which looked glitched). Built once per name/size, then reused.
 let NEON=null;
 function neon(txt,fs){if(!(fs>=4)||!txt)return null;const key=txt+'|'+Math.round(fs)+'|'+dpr;if(NEON&&NEON.key===key)return NEON;
+  if(NEON&&settling()&&NEON.key.split('|')[0]===txt)return NEON;   // Oct 13: no rebuild during a burst of size changes
   const font=`800 ${fs}px system-ui,sans-serif`,m=document.createElement('canvas').getContext('2d');m.font=font;
   const r=Math.max(1.5,fs*.045),pad=fs*.7,w=m.measureText(txt).width+pad*2,h=fs*1.9,k=dpr;
   const mk=()=>{const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w*k));c.height=Math.max(1,Math.ceil(h*k));const g=c.getContext('2d');g.scale(k,k);g.font=font;g.textAlign='center';g.textBaseline='middle';return [c,g];};
   const grow=(g,col,d)=>{g.fillStyle=col;for(let i=0;i<24;i++){const a=i/24*2*Math.PI;g.fillText(txt,w/2+Math.cos(a)*d,h/2+Math.sin(a)*d);}g.fillText(txt,w/2,h/2);};
   const ring=(col,d1,d0)=>{const [c,g]=mk();grow(g,col,d1);g.globalCompositeOperation='destination-out';if(d0>0)grow(g,'#000',d0);else g.fillText(txt,w/2,h/2);return c;};
-  const [tube,tg]=mk();tg.drawImage(ring('rgba(255,110,190,1)',r,0),0,0,w,h);tg.drawImage(ring('rgba(255,235,248,.95)',r*.62,r*.25),0,0,w,h);   // pink tube with a pale core
+  const put=(g,c)=>{g.drawImage(c,0,0,w,h);freeCv(c);};   // draw a scratch canvas in, then free it
+  const [tube,tg]=mk();put(tg,ring('rgba(255,110,190,1)',r,0));put(tg,ring('rgba(255,235,248,.95)',r*.62,r*.25));   // pink tube with a pale core
   const [glow,gg]=mk();gg.shadowColor='#ff3fa4';gg.shadowBlur=fs*.45*k;gg.drawImage(tube,0,0,w,h);gg.shadowBlur=fs*.2*k;gg.drawImage(tube,0,0,w,h);
-  NEON={key,tube,glow,w,h};return NEON;}
+  if(NEON)freeCv(NEON.tube,NEON.glow);NEON={key,tube,glow,w,h};return NEON;}
 /* Oct 8: the designer's paper Club (scene sheet "Club"): crumpled paper back wall, drawn string lights with coloured bulbs,
    folded paper stage front, a drawn light beam. Pictures in src/art/ui/ (scene-club-wall / -lights / -front / -beam); the
    colour, glow and night light are added here. Until a picture has loaded (or if it is missing) the old drawn-in-code
@@ -2195,6 +2206,7 @@ function tileAcross(c,img,y,h,flipOdd){const s=h/img.height,tw=img.width*s;let i
 const floorSet=()=>Object.assign({},(window.UIMAP&&UIMAP.scenes&&UIMAP.scenes.club&&UIMAP.scenes.club.floor)||{},window.CLUBFLOOR||{});
 function clubArt(g){const wall=art('scene-club-wall'),lt=art('scene-club-lights'),fr=art('scene-club-front'),F=floorSet(),ft=F.texture&&art(F.texture),fl=F.lines&&art(F.lines);
   const key=[W,H,dpr,!!wall,!!lt,!!fr,!!ft,!!fl,F.texture,F.colour,F.lineStrength].join('|');if(CLUBART.key===key)return CLUBART;
+  if(CLUBART.key&&settling())return CLUBART;   // Oct 13: the old pictures, stretched, until the size settles
   const mk=(w,h)=>{const c=document.createElement('canvas');c.width=Math.max(1,Math.ceil(w*dpr));c.height=Math.max(1,Math.ceil(h*dpr));c.ctx=c.getContext('2d');c.ctx.scale(dpr,dpr);c.__k=dpr;return c;};
   const o={key};
   if(wall){const c=mk(W,g.back+1),q=c.ctx;tileAcross(c,wall,0,g.back+1,true);   // mirrored copies meet without a seam
@@ -2210,8 +2222,8 @@ function clubArt(g){const wall=art('scene-club-wall'),lt=art('scene-club-lights'
     rq.globalAlpha=F.lineStrength!=null?+F.lineStrength:.75;rq.drawImage(fl,0,0,RW,RH);rq.globalAlpha=1;
     const D=g.front-g.back,c=mk(W,D+1),q=c.ctx,rows=Math.ceil(D*dpr);
     for(let i=0;i<rows;i++){const t=(i+.5)/rows,rw=g.wb+(g.wf-g.wb)*t;q.drawImage(r,0,t*RH,RW,Math.max(1,RH/rows),W/2-rw/2,i/dpr,rw,1.6/dpr);}
-    o.floor=c;}
-  CLUBART=o;return o;}
+    freeCv(r);o.floor=c;}
+  freeCv(CLUBART.wall,CLUBART.lights,CLUBART.front,CLUBART.floor);CLUBART=o;return o;}
 /* the bulbs on the drawn string: coloured blobs, found once from the picture (fractions of its width/height + colour) */
 function bulbsOf(img){try{const k=4,w=Math.ceil(img.width/k),h=Math.ceil(img.height/k),c=document.createElement('canvas');c.width=w;c.height=h;
     const q=c.getContext('2d');q.drawImage(img,0,0,w,h);const d=q.getImageData(0,0,w,h).data,seen=new Uint8Array(w*h),out=[];
