@@ -3712,16 +3712,65 @@ function solidFill(outside,pen,cmask,N,Wp,Hp,band){
   let x0=Wp,x1=-1,y0=Hp,y1=-1;
   for(let j=band;j<Hp-band;j++)for(let i=band;i<Wp-band;i++){const p=j*N+i;if(pen[p]|cmask[p]){if(i<x0)x0=i;if(i>x1)x1=i;if(j<y0)y0=j;if(j>y1)y1=j;}}
   if(x1<0)return 0;const rows=(y1-y0)>=(x1-x0)*.8,GAP=4,MIN=5;let n=0;   // tall drawing: fill across rows; wide: across columns
-  const L=rows?[y0,y1]:[x0,x1],A=rows?[x0,x1]:[y0,y1];
+  const L=rows?[y0,y1]:[x0,x1],A=rows?[x0,x1]:[y0,y1],span=[];
+  /* Oct 13 (designer's Bass: the body's sides were drawn right on the printed box lines, which the scanner leaves out):
+     where the drawing runs along a box edge for at least a fifth of its length, that edge counts as outline for the fill
+     (between the first and last place it touches). Only for filling; nothing is drawn there. */
+  const ink=pen.slice(),T=6,lim=rows?[band,Wp-band-1]:[band,Hp-band-1];
+  for(const side of [0,1]){const at=lim[side],touch=[];
+    for(let u=L[0];u<=L[1];u++){let t=false;for(let d=0;d<T&&!t;d++){const v=side?at-d:at+d,p=rows?u*N+v:v*N+u;if(pen[p]|cmask[p])t=true;}if(t)touch.push(u);}
+    if(touch.length>=(L[1]-L[0]+1)*.2){for(let u=touch[0];u<=touch[touch.length-1];u++){const p=rows?u*N+at:at*N+u;ink[p]=1;}
+      if(side===0)A[0]=Math.min(A[0],at);else A[1]=Math.max(A[1],at);}}
   for(let u=L[0];u<=L[1];u++){let runs=0,inRun=false,last=-99,first=-1,end=-1,lastStart=-1;
-    for(let v=A[0];v<=A[1];v++){const p=rows?u*N+v:v*N+u,k=pen[p]|cmask[p];
+    for(let v=A[0];v<=A[1];v++){const p=rows?u*N+v:v*N+u,k=ink[p]|cmask[p];
       if(k){if(!inRun){if(v-last>GAP){runs++;if(first<0)first=v;lastStart=v;}inRun=true;}last=v;if(first>=0&&end<0)end=v;}
       else{inRun=false;}}
     if(runs<2)continue;
     // fill from the end of the first line to the start of the last one
-    let a=first;while(a<=A[1]&&(pen[rows?u*N+a:a*N+u]|cmask[rows?u*N+a:a*N+u]))a++;
+    let a=first;while(a<=A[1]&&(ink[rows?u*N+a:a*N+u]|cmask[rows?u*N+a:a*N+u]))a++;
     if(lastStart-a<MIN)continue;
-    for(let v=a;v<lastStart;v++){const p=rows?u*N+v:v*N+u;if(outside[p]){outside[p]=0;n++;}}}
+    span[u]=[a,lastStart];}
+  /* Oct 13: a line whose fill stops short of its neighbours' (one side of the outline lost there, so an inside line such
+     as a scarf was taken for the edge) is widened to the middle value of the lines around it (8 either side). Only ever
+     widened, and only towards where the neighbours are, so a real narrowing (a waist, a neck) stays. */
+  const WIN=8,med=a=>{const b=a.slice().sort((x,y)=>x-y);return b[b.length>>1];};
+  const sm=[];for(let u=L[0];u<=L[1];u++){if(!span[u])continue;const st=[],en=[];
+    for(let w=u-WIN;w<=u+WIN;w++)if(span[w]){st.push(span[w][0]);en.push(span[w][1]);}
+    sm[u]=st.length>=5?[Math.min(span[u][0],med(st)),Math.max(span[u][1],med(en))]:span[u];}
+  /* Oct 13: the outline may leave the box for a stretch (the sheet allows going outside the grey, e.g. shoulders reaching
+     into the arm boxes). Lines there have no sides, only inside lines (a scarf), and came out as a band of nothing. A line
+     much narrower (under 60 %) than the straight-line blend of the nearest wide lines above and below it (75 % of the
+     widest) borrows that blend, as long as those wide lines are no more than half the piece's length apart. */
+  let maxW=0;for(let u=L[0];u<=L[1];u++)if(sm[u])maxW=Math.max(maxW,sm[u][1]-sm[u][0]);
+  const wide=[];for(let u=L[0];u<=L[1];u++)if(sm[u]&&sm[u][1]-sm[u][0]>=maxW*.75)wide.push(u);
+  const BR=Math.round((L[1]-L[0])*.5);
+  for(let k=0;k+1<wide.length;k++){const a=wide[k],b=wide[k+1];if(b-a<2||b-a>BR)continue;
+    for(let u=a+1;u<b;u++){const f=(u-a)/(b-a),s0=Math.round(sm[a][0]+(sm[b][0]-sm[a][0])*f),e0=Math.round(sm[a][1]+(sm[b][1]-sm[a][1])*f);
+      if(!sm[u]||sm[u][1]-sm[u][0]<(e0-s0)*.6)sm[u]=sm[u]?[Math.min(sm[u][0],s0),Math.max(sm[u][1],e0)]:[s0,e0];}}
+  /* Oct 13: a piece that runs out of its box (an arm whose shoulder end reaches past the box edge) has only one line near
+     that end. If the last filled line reaches the box edge, the fill carries on past it, from the one remaining line out to
+     the edge, as long as that line continues smoothly (within 12 px) and for at most 40 % of the piece's length. */
+  {const keys=[];for(let u=L[0];u<=L[1];u++)if(sm[u])keys.push(u);
+   if(keys.length){const lo=rows?band:band,hi=rows?Wp-band-1:Hp-band-1,MAXR=Math.round((L[1]-L[0])*.4);
+    for(const dir of [-1,1]){let u0=dir<0?keys[0]:keys[keys.length-1],cur=sm[u0];const toHi=cur[1]>=hi-4,toLo=cur[0]<=lo+4;if(toHi===toLo)continue;
+      for(let u=u0+dir,k=0;k<MAXR&&u>=band&&u<(rows?Hp:Wp)-band;u+=dir,k++){let first=-1,last=-1;
+        for(let v=lo;v<=hi;v++){const p=rows?u*N+v:v*N+u;if(ink[p]|cmask[p]){if(first<0)first=v;last=v;}}
+        if(first<0)break;
+        if(toHi){if(Math.abs(first-cur[0])>12)break;let a=first;while(a<=hi&&(ink[rows?u*N+a:a*N+u]|cmask[rows?u*N+a:a*N+u]))a++;cur=[a,hi];}
+        else{if(Math.abs(last-cur[1])>12)break;let b=last;while(b>=lo&&(ink[rows?u*N+b:b*N+u]|cmask[rows?u*N+b:b*N+u]))b--;cur=[lo,b+1];}
+        if(cur[1]-cur[0]>=MIN&&!sm[u])sm[u]=cur;}}}}
+  for(let u=L[0];u<=L[1];u++){if(!sm[u])continue;span[u]=sm[u];
+    for(let v=sm[u][0];v<sm[u][1];v++){const p=rows?u*N+v:v*N+u;if(outside[p]){outside[p]=0;n++;}}}
+  /* Oct 13 (designer's Bass on the new sheet: white bands across the body and arms): where the pen line ran along the
+     printed grey figure or the box edge, a few lines across lost one side of the outline and were skipped, leaving
+     stripes. A skipped line between two filled ones (no more than a third of the piece's length apart) now borrows
+     their fill, its ends taken in a straight line between theirs. */
+  const GAPMAX=Math.max(12,Math.round((L[1]-L[0])*.34));let prev=-1;
+  for(let u=L[0];u<=L[1];u++){if(!span[u])continue;
+    if(prev>=0&&u-prev>1&&u-prev<=GAPMAX){const [a0,b0]=span[prev],[a1,b1]=span[u];
+      for(let w=prev+1;w<u;w++){const f=(w-prev)/(u-prev),a=Math.round(a0+(a1-a0)*f),b=Math.round(b0+(b1-b0)*f);
+        for(let v=a;v<b;v++){const p=rows?w*N+v:v*N+w;if(outside[p]){outside[p]=0;n++;}}}}
+    prev=u;}
   return n;}
 /* Oct 9 (remote test 2: drawn with a thin pen and photographed in dim light, the singer came out faint and broken next to
    the default band: "it loaded worse than the original"). People use whatever pen they have, so lines are made to hold up:
