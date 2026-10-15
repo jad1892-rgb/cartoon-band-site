@@ -541,7 +541,7 @@ body.in-app #ws{padding-top:112px}
 </div>
 <div class="bar devonly" id="optBar"></div>
 <section class="panel" id="wsBand"><h2 data-t="edit.yourBand">Your band</h2>
-<div class="bar" id="wsStage"><label class="wsf" data-t-lead="edit.bandName">Band name <input id="wsName" maxlength="30" placeholder="(none)" data-t-ph="edit.bandNameEmpty" autocomplete="off"></label><label class="wsf" data-t-lead="edit.scene">Scene <select id="wsScene"><option value="theatre" data-t="scene.theatre">Theatre</option><option value="club" data-t="scene.club">Club</option><option value="festival" data-t="scene.festival">Festival</option></select></label></div>
+<div class="bar" id="wsStage"><label class="wsf" data-t-lead="edit.bandName">Band name <input id="wsName" maxlength="30" placeholder="(none)" data-t-ph="edit.bandNameEmpty" autocomplete="off"></label><label class="wsf devonly" data-t-lead="edit.scene">Scene <select id="wsScene"><option value="theatre" data-t="scene.theatre">Theatre</option><option value="club" data-t="scene.club">Club</option><option value="festival" data-t="scene.festival">Festival</option></select></label></div>
 <div class="bar" id="wsBackup"><p class="hint" data-t="edit.backupNote">Your band saves itself on this phone.</p><button class="alt" id="goSaveBand" data-t="menu.saveBand">Back up my band</button><button class="alt" id="goOpenBand" data-t="menu.openBand">Open a backup</button><input type="file" id="bandFileIn" hidden=""></div>
 </section>
 <h2 class="wsh" data-t="edit.players">Players</h2>
@@ -2219,7 +2219,9 @@ const SCENES=[['theatre',TXT('scene.theatre')],['club',TXT('scene.club')],['fest
 const bandName=()=>String((typeof S!=='undefined'&&S.bandName!=null)?S.bandName:(STAGE_SET.bandName||'')).trim().slice(0,30);   // step 4.5
 // text that fits a width: shrink the font until it does
 function fitFont(txt,maxW,size,weight,fam){fam=fam||'system-ui,sans-serif';x.font=`${weight} ${size}px ${fam}`;const w=x.measureText(txt).width;if(w>maxW){size*=maxW/w;x.font=`${weight} ${size}px ${fam}`;}return size;}
-const sceneName=()=>{const s=(typeof S!=='undefined'&&S.scene)||STAGE_SET.scene||'theatre';return SCENES.some(q=>q[0]===s)?s:'theatre';};
+/* Oct 14 (designer): the Club is the stand-out venue; Theatre and Festival wait in designer mode until they are as good.
+   Outside designer mode the stage is always the Club, whatever a band or backup has saved. */
+const sceneName=()=>{const s=!document.body.classList.contains('dev')?'club':(typeof S!=='undefined'&&S.scene)||STAGE_SET.scene||'theatre';return SCENES.some(q=>q[0]===s)?s:'theatre';};
 function backdrop(){const s=sceneName();if(s==='club')return club();if(s==='festival')return festival();theatre();}
 function floorAt(col,plank){const g=geo(),L0=W/2-g.wb/2,R0=W/2+g.wb/2,L1=W/2-g.wf/2,R1=W/2+g.wf/2;
   const fl=x.createLinearGradient(0,g.back,0,g.front);fl.addColorStop(0,'rgba(0,0,0,.45)');fl.addColorStop(1,'rgba(0,0,0,0)');
@@ -2420,7 +2422,8 @@ window.PAPERBOX=(function(){
   function draw(x,W,H,dpr){if(!on()){hide();return;}
     const now=performance.now(),z=sizes(W,H);
     // what should the curtain be doing?
-    const menu=window.STARTUI&&STARTUI.isOpen(),rs=window.RECORDER&&RECORDER.state&&RECORDER.state();
+    /* Oct 14 (designer): stays closed while the song list is open too, so it opens when a song is actually chosen */
+    const sb=document.getElementById('songBox'),menu=(window.STARTUI&&STARTUI.isOpen())||(sb&&!sb.hidden),rs=window.RECORDER&&RECORDER.state&&RECORDER.state();
     const ending=!!(rs&&rs.ending);
     if(wasRec&&!ending)reopenAt=now+600;wasRec=ending;                 // after the curtain call, open again shortly
     target=(menu||ending||now<reopenAt)?0:1;if(target!==lastTarget){lastTarget=target;lastStep=now+WAIT-STEP;}
