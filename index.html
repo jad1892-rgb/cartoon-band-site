@@ -1584,15 +1584,20 @@ members.forEach(m=>{
   })();
 });
 
-// Bass (step 2.6, Oct 3): how loud the bass is compared with the loud parts of the last few seconds.
-// The yardstick ("ref") jumps up quickly when the bass gets louder and relaxes over ~10 s, so one loud moment no longer
-// flattens the next half-minute. "Ignore steady sound" now blends in note attacks instead of cancelling a steady bass line.
+// Bass (step 2.6, Oct 3; rewritten Oct 16): how loud the low end is compared with its recent loud level.
+// Oct 16: measured against the designer's bass stems (7 songs), the Oct 3 maths barely noticed when the bass stopped
+// (level 0.63 with bass, 0.50 without). Cause: the ears give loudness in decibels, and dividing one decibel number by
+// another hardly changes (52 dB / 55 dB = 0.95). Now the bassist plays by HOW MANY DECIBELS the low end sits under its
+// recent loud level: at the loud level = full, 15 dB under = still (the size slider "sens" sets that range: 4.8 -> 15 dB).
+// The loud level (the low end averaged over 0.3 s) rises within ~0.5 s and sinks 0.5 dB a second. Result on the 7 songs:
+// gap between bass playing and bass stopped 0.12 -> 0.30; follows the bass line better (0.31 -> 0.42); a bit livelier while
+// the bass plays (0.63 -> 0.79). On 14 finished songs it rests 2-38 % of the time (was 2-31 %). "Steady" no longer applies to Bass.
 function bassLevel(m,e,t,P){const dt=Math.min(.25,Math.max(0,(t-(m.bt||t))/1000));m.bt=t;
-  if(m.ref==null||m.src!==L.srcN){m.ref=Math.max(e,.02);m.bslow=e;m.src=L.srcN;}
-  m.ref=e>m.ref?m.ref+(e-m.ref)*(1-Math.exp(-dt/.5)):m.ref*Math.exp(-dt/10);m.ref=Math.max(m.ref,.02);
-  m.bslow=m.bslow*P(.995)+e*(1-P(.995));
-  const lvl=Math.pow(Math.max(0,(e/m.ref-.5)/.5),1.5),pulse=Math.min(1,Math.max(0,e-m.bslow)/m.ref*3),st=m.v.steady;
-  const n=((1-.5*st)*lvl+.5*st*pulse)*Math.min(1.3,m.v.sens/4);return isFinite(n)?Math.min(1,n):0;}
+  {const x=e*70,D=Math.max(3,m.v.sens*3.125);   // e is 0..1 over the ears' 70 dB range
+    if(m.bref==null||m.src!==L.srcN){m.bref=x;m.bxs=x;m.src=L.srcN;}
+    m.bxs+=(x-m.bxs)*(1-Math.exp(-dt/.3));   // the yardstick follows the low end averaged over 0.3 s, so kick-drum peaks don't set it
+    m.bref=m.bxs>m.bref?m.bref+(m.bxs-m.bref)*(1-Math.exp(-dt/.5)):m.bref-.5*dt;
+    const n=Math.min(1,Math.max(0,1-(m.bref-x)/D));return isFinite(n)?n:0;}}
 // Guitar (step 2.4) and Keys (step 2.5), Oct 3: the same loudness math as before, with two changes.
 // 1) Drum hits are short while a strummed or played chord rings on, so the player listens to the middle value of the last 0.08 s:
 //    a snare or kick hit can no longer make him jump (and he trails the music by well under a tenth of a second).
@@ -1644,18 +1649,31 @@ function vocalsLevel(m,t){const dt=Math.min(.25,Math.max(0,(t-(m.vt||t))/1000));
   m.mouth=m.mo;m.open=m.vop;
   if(VD||SL!=null)return m.vop?Math.min(1,Math.max(.35,isFinite(sc)?sc:0)):0;   // PATCH18: while a line is sung he counts as singing (dance and glow)
   return isFinite(sc)&&m.vop?Math.min(1,sc):0;}
+// Drums present? (Oct 16) Checked against the designer's drum stems: when the drums drop out and the band plays on, the
+// drummer kept hitting 1.6-3.7 times a second (bass notes, brass and guitar attacks look like hits). What the drums add and
+// the rest of the band rarely does is constant flicker at the very top (hi-hats, cymbals, snare rattle, 6-12 kHz). So:
+// how much the top end flickers over the last half second, compared with the most it flickered recently (that yardstick
+// sinks over ~20 s). 0.65 and up = drums playing. Below that a drum hit has to jump up to 4x harder, so a loud lone kick
+// still lands. On the 7 songs: false hits when the drums stop 3.0 -> 1.1 a second, real hits caught unchanged.
+function drumsPresent(m,fs){const d=L.data,hz=(L.ctx?L.ctx.sampleRate:48000)/2048,a=Math.floor(6000/hz),b=Math.min(d.length,Math.floor(12000/hz));
+  if(!m.dpPrev||m.dpPrev.length!==b-a||m.dpSrc!==L.srcN){m.dpPrev=new Float32Array(b-a);for(let i=a;i<b;i++)m.dpPrev[i-a]=d[i];m.dpS=0;m.dpPk=.004;m.dpSrc=L.srcN;return 1;}
+  let f=0;for(let i=a;i<b;i++){const v=d[i],u=v-m.dpPrev[i-a];if(u>0)f+=u;m.dpPrev[i-a]=v;}f/=(b-a)*255;
+  if(f===0&&fs<1)return m.dpR==null?1:m.dpR;   // a fast screen drew before the ears heard anything new
+  const k=1-Math.pow(1-1/30,fs);m.dpS+=(f-m.dpS)*k;m.dpPk=Math.max(m.dpPk*Math.pow(.99917,fs),m.dpS,.004);
+  m.dpR=m.dpS/m.dpPk;return isFinite(m.dpR)?m.dpR:1;}
 // fs = how many 60fps frames have passed since the last draw (1 on a normal screen, 0.5 on a 120Hz screen)
 function update(m,t,fs){const P=(k)=>Math.pow(k,fs);
   if(m.id==='drums'){ // hit-driven: kick=low, snare=mids, hat=highs
     const B={k:[40,120],s:[1500,4000],h:[6000,12000]};let tot=0;
     const G=L.gate==null?1:L.gate;   // step 2.8: rest when the music isn't playing; no burst of hits when it starts
     const HB={k:1,s:2,h:4},hm=window.STEMS?STEMS.hits():null;   // Oct 9: one of our songs: the hits found in its drums track
+    const dp=hm!=null?1:drumsPresent(m,fs),thr=m.v.thr*(1+3*Math.min(1,Math.max(0,(.65-dp)/.25)));   // Oct 16: drums not playing (ears/player-levels.js drumsPresent): a hit must jump up to 4x harder
     for(const k in B){const se=window.STEMS?STEMS.d(k):null,e=(se!=null?se:L.energy(...B[k]))*m.v.sens;/* Oct 9: one of our songs: the drums track itself */tot=Math.max(tot,Math.min(1,e));   // step 2.2: no 100% cap before looking for hits (a band already near full, like the kick under a bass guitar, could never 'jump')
       m.p[k]*=P(.84);
       if(hm!=null){if(hm&HB[k]){m.p[k]=1;m.last[k]=t;}}
-      else if(G>.6&&e-m.avg[k]>m.v.thr&&t-m.last[k]>m.v.hold){m.p[k]=1;m.last[k]=t;}
+      else if(G>.6&&e-m.avg[k]>thr&&t-m.last[k]>m.v.hold){m.p[k]=1;m.last[k]=t;}
       m.avg[k]=G>.6?m.avg[k]*P(.96)+e*(1-P(.96)):e;}
-    m.env=tot*G;
+    m.env=tot*G*(.4+.6*Math.min(1,Math.max(0,(dp-.4)/.3)));   // Oct 16: drums gone quiet: he rests his sticks
   } else { // level-driven: loudness of this member's own range, auto-scaled
     const lo=Math.min(m.v.lo,m.v.hi-30),hi=Math.max(m.v.hi,m.v.lo+30);
     let e=L.energy(lo,hi);
