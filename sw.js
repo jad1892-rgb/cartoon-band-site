@@ -1,5 +1,5 @@
-// oddbop offline helper (made by tools/make-site.py, build 4ee1ea3). Newest page when online; the last one seen offline.
-const V = 'cartoon-band-4ee1ea3', CORE = ['./', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
+// oddbop offline helper (made by tools/make-site.py, build a829cef). Newest page when online; the last one seen offline.
+const V = 'cartoon-band-a829cef', CORE = ['./', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', e => {
