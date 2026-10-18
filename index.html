@@ -3175,7 +3175,8 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
    - New: the mouse pointer hides with the stage buttons (3 s after the last move: body.stIdle, set in dragging.js wake()).
    - New: F toggles full screen on the stage (Esc already leaves it); not while typing in a box or with Ctrl/Cmd/Alt. */
 (()=>{const st=document.createElement('style');st.id='party-css';
- st.textContent='@media (pointer:fine){body.stIdle #stage,body.stIdle #stage *{cursor:none!important}}';document.head.appendChild(st);
+ st.textContent='@media (pointer:fine){body.stIdle #stageCv{cursor:none!important}}';document.head.appendChild(st);   // Oct 18 fix: hide it on the band picture only. It used to hide over the whole stage, incl. the start menu and pop-up cards that sit on top of it (moving over those never woke it), so the pointer vanished on the menu
+
  const stage=document.getElementById('stage');
  document.addEventListener('keydown',e=>{if(e.key!=='f'&&e.key!=='F')return;if(e.ctrlKey||e.metaKey||e.altKey)return;
    const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)))return;
@@ -3329,9 +3330,9 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
  setInterval(unzoom,1000);}   // belt and braces: some zooms finish without a resize signal
 /* PATCH08: "How it works" popup (3 cards), the "?" on the menu, social links. Comes before UIART so its buttons get dressed too. */
 const SOCIAL=[   /* the designer's accounts: put the full address in url ('' = shown dimmed, "Coming soon") */
-  {id:'instagram',name:'Instagram',short:'IG',url:''},
-  {id:'tiktok',name:'TikTok',short:'TT',url:''},
-  {id:'youtube',name:'YouTube',short:'YT',url:''}];
+  {id:'instagram',name:'Instagram',short:'IG',url:'https://www.instagram.com/odd.bop/'},
+  {id:'tiktok',name:'TikTok',short:'TT',url:'https://www.tiktok.com/@oddbop6'},
+  {id:'youtube',name:'YouTube',short:'YT',url:'https://www.youtube.com/@odd-bop'}];
 window.HOWTO=(function(){const box=document.getElementById('howBox'),card=box.querySelector('.howcard'),pic=box.querySelector('.howpic'),
     T=document.getElementById('howT'),Pp=document.getElementById('howP'),nx=document.getElementById('howNext'),bk=document.getElementById('howBack'),dots=[...box.querySelectorAll('.howdots i')];
   const STEPS=[
