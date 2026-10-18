@@ -993,7 +993,7 @@ window.OPT=(function(){
   const LIST=[   // Oct 7: the first six try-outs (smoothBeat, softLights, halfLights, roomVocals, closerHint, talkCheck), quietMusic and
                   // afterRec (C) were signed off and are now normal behaviour. Add new ones here as ['key','Label','tip'] (a tick box) or
                   // ['key','Label','tip',[['value','Choice label'],...]] (a choice; the first is the normal behaviour); dropped ones are deleted.
-    ['moodLights','Mood lights','Oct 17: the stage lights follow the music (ears/music-facts.js): a warm or cool colour wash from how dark or bright it sounds, the bulbs twinkle faster when the music is busy, a flash when the music gets much louder (everyone comes in) and a soft dim when it drops away'],
+    ['moodLights','Mood lights','Oct 17: the stage lights follow the music (ears/music-facts.js): a warm or cool colour wash from how dark or bright it sounds, the bulbs shimmer a little, a bit faster when the music is busy (Oct 18: gentler; flash and dim taken out)'],
   ];
   let v={};try{v=JSON.parse(localStorage.getItem('bandOpt')||'{}')||{};}catch(e){}
   const m=location.hash.match(/opt=([\w,]+)/);if(m)m[1].split(',').forEach(k=>{const i=k.indexOf('_');if(i>0)v[k.slice(0,i)]=k.slice(i+1);else v[k]=true;});   // #opt=quietThing,afterRec_C
@@ -2440,9 +2440,9 @@ function club(){const g=geo(),pu=beatPulse(),bh=Math.max(10,H*.03),bw=bh*2.4,A=c
   const fade=x.createLinearGradient(0,0,0,g.back);fade.addColorStop(0,'rgba(0,0,0,.6)');fade.addColorStop(1,'rgba(0,0,0,.15)');x.fillStyle=fade;x.fillRect(0,0,W,g.back+1);}
   if(A.lights){const top=Math.max(H*.035,window.PAPERBOX?PAPERBOX.topInset(W,H)-A.lh*.15:0);   // Oct 14: below the paper theatre's framex.drawImage(A.lights,0,top,W,A.lh);   // the drawn string; each bulb glows in its own colour, twinkling on the beat
     x.save();x.globalCompositeOperation='lighter';const tw=A.lightsTw,r0=A.lh*.28;let i=0;
-    const md=moodOn(),bz=md?FACTS.busy:0,tn=performance.now()/1000;   // Oct 17 try-out "moodLights": each bulb twinkles on its own, faster and more when the music is busy
+    const md=moodOn(),bz=md?FACTS.busy:0,tn=performance.now()/1000;   // Oct 17 try-out "moodLights": each bulb shimmers a little on its own, a bit faster when the music is busy (Oct 18: gentler; the beat leads again)
     for(let t=0,xx=0;xx<W+tw;xx+=tw,t++)for(const [fx,fy,c] of A.bulbs){const bx=xx+(t%2?1-fx:fx)*tw,by=top+fy*A.lh,ii=i++,
-      on=md?.22+.25*(ii%2?pu:1-pu*.6)+.4*(.5+.5*Math.sin(tn*6.283*(.35+2.6*bz)*(1+.29*(ii%5))+ii*1.7))*(.35+.65*bz):.3+.45*(ii%2?pu:1-pu*.6);
+      on=md?.28+.38*(ii%2?pu:1-pu*.6)+.14*(.5+.5*Math.sin(tn*6.283*(.25+.9*bz)*(1+.29*(ii%5))+ii*1.7))*(.5+.5*bz):.3+.45*(ii%2?pu:1-pu*.6);
       if(bx<-r0||bx>W+r0)continue;const gl=x.createRadialGradient(bx,by,0,bx,by,r0);gl.addColorStop(0,`rgba(${c},${on})`);gl.addColorStop(1,`rgba(${c},0)`);
       x.fillStyle=gl;x.fillRect(bx-r0,by-r0,r0*2,r0*2);}
     x.restore();}else{
@@ -2506,14 +2506,18 @@ const beatPulse=()=>{if(typeof BV==='undefined')return 0;
 /* Oct 17 (try-out "moodLights"): the lights' own rig on the plain music facts (ears/music-facts.js). The ears only say how
    bright, how busy, and when there was a big change; what the lights do with that is decided here.
    - wash: the whole stage behind the band tinted warm amber (dark sound) .. pink .. cool blue (bright sound), faint;
-   - cue louder: a quick flash in the wash colour (0.6 s); cue quieter: the stage dims for ~2 s and comes back. */
+   - (Oct 17 a flash on a big louder change and a dim on a big drop; taken out Oct 18: distracting / inconsistent.) */
 const moodOn=()=>!!(window.OPT&&OPT.on('moodLights')&&window.FACTS);
 function moodColour(b){const W=[[255,150,60],[255,90,170],[110,175,255]],f=Math.min(1,Math.max(0,b))*2,i=Math.min(1,Math.floor(f)),u=f-i;
   return W[i].map((v,j)=>Math.round(v+(W[i+1][j]-v)*u)).join(',');}
-function moodWash(){const F=FACTS,now=performance.now(),play=typeof BV==='undefined'?1:BV.a,c=moodColour(F.bright),since=now-F.cue;
-  let a=(.05+.07*play);if(F.cueDir>0&&since<600)a+=.28*Math.exp(-since/220);
-  x.save();x.globalCompositeOperation='lighter';x.fillStyle=`rgba(${c},${a})`;x.fillRect(0,0,W,H);x.restore();
-  if(F.cueDir<0&&since<2500){x.save();x.fillStyle=`rgba(0,0,0,${.35*Math.sin(Math.PI*Math.min(1,since/2500))})`;x.fillRect(0,0,W,H);x.restore();}}
+let MW=null;   // the wash's own slow colour (eases a further ~4 s on top of the ears' brightness)
+function moodWash(){const F=FACTS,now=performance.now(),play=typeof BV==='undefined'?1:BV.a;
+  const dt=MW?Math.min(.25,(now-MW.t)/1000):0;if(!MW)MW={t:now,b:F.bright};MW.t=now;MW.b+=(F.bright-MW.b)*(1-Math.exp(-dt/4));const c=moodColour(MW.b);
+  // Oct 18 (designer: "a more gentle transition that just adds some general life but still reacts to the tempo"): the wash breathes
+  // in a slow, smooth swell over two beats on the lights' own soft clock (LV, frame-loop.js), no sharp edges, and only while music plays
+  const br=typeof LV!=='undefined'&&LV.P?.5-.5*Math.cos(Math.PI*2*((LV.k/2)%1)):.5;
+  const a=play*(.05+.05*br);   // Oct 18 (designer: flash "distracting", dim "inconsistent"): the lights no longer react to the big-change cue (FACTS.cue stays in the ears)
+  x.save();x.globalCompositeOperation='lighter';x.fillStyle=`rgba(${c},${a})`;x.fillRect(0,0,W,H);x.restore();}
 function lights(order){if(moodOn())moodWash();if(!STAGE_SET.lights)return;x.save();x.globalCompositeOperation='lighter';const pu=beatPulse();
   for(const m of order){const q=place(P[m.id]),c=C[m.id],e=Math.min(1,m.env||0),
       a=Math.min(.75,.06+.36*e+.12*pu+(m.id==='drums'&&m.p?.12*m.p.k:0)),wd=1+.1*pu;
