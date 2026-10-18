@@ -993,6 +993,7 @@ window.OPT=(function(){
   const LIST=[   // Oct 7: the first six try-outs (smoothBeat, softLights, halfLights, roomVocals, closerHint, talkCheck), quietMusic and
                   // afterRec (C) were signed off and are now normal behaviour. Add new ones here as ['key','Label','tip'] (a tick box) or
                   // ['key','Label','tip',[['value','Choice label'],...]] (a choice; the first is the normal behaviour); dropped ones are deleted.
+    ['singerCover','Singer disguises','Oct 18: when the detector is unsure, the singer brings the mic up in front of his mouth; when nobody has sung for a while he lowers it, leans toward the band and dances more (back at the mic just before the next line on a picked song)'],
     ['moodLights','Mood lights','Oct 17: the stage lights follow the music (ears/music-facts.js): a warm or cool colour wash from how dark or bright it sounds, the bulbs shimmer a little, a bit faster when the music is busy (Oct 18: gentler; flash and dim taken out)'],
   ];
   let v={};try{v=JSON.parse(localStorage.getItem('bandOpt')||'{}')||{};}catch(e){}
@@ -1392,7 +1393,12 @@ window.SCAN=(()=>{const FPS=60,N=2048;let job=null,seq=0;const API={budget:6};  
   function playPos(){if(L.via==='buffer')return L.bufPos();const p=document.getElementById('player');return p?p.currentTime:0;}
   // is a line being sung at the playing position? null = not known (no scan for this song, not scanned that far, demo, microphone)
   function lineAt(){const J=job;if(!J||L.mode!=='file'||L.loop)return null;const k=Math.floor(playPos()*FPS);if(k<0||k>=J.done-FPS)return null;return J.line[k];}   // a second of margin: a line's start can still move back that far
-  return Object.assign(API,{start,lineAt,stop(){seq++;job=null;},job:()=>job,FPS});})();
+  // Oct 18 (singer disguises): the smoothed confidence at the playing position, and seconds until the next sung line starts
+  // (looking at most `look` s ahead; null = none that soon, or not scanned that far)
+  function zAt(look){const J=job;if(!J||L.mode!=='file'||L.loop)return null;const k=Math.floor(playPos()*FPS);if(k<0||k>=J.done-FPS)return null;
+    let next=null;if(!J.line[k]){const e=Math.min(J.done-1,k+Math.ceil((look||1)*FPS));for(let j=k+1;j<=e;j++)if(J.line[j]){next=(j-k)/FPS;break;}}
+    return {z:J.z[k],next};}
+  return Object.assign(API,{start,lineAt,zAt,stop(){seq++;job=null;},job:()=>job,FPS});})();
 window.addEventListener('band:songfile',e=>{if(window.SCAN)SCAN.start(e.detail);});   // a picked song starts its scan as it loads (announced by ears/sources.js)
 
 /* PATCH16: while the demo loop plays, the beat clock follows the demo's known grid (DEMO_SONG.bpm, downbeat at loopStart),
@@ -1694,7 +1700,8 @@ function vocalsLevel(m,t){const dt=Math.min(.25,Math.max(0,(t-(m.vt||t))/1000));
   /* PATCH18: the demo loop: the mouth follows its known timeline on the smooth demo clock (L.dg, p17) */
   if(window.VOICE&&VOICE.demoMouth&&L.dg&&L.bs&&typeof DEMO_SONG!=='undefined'&&L.loop&&L.loop.end===DEMO_SONG.loopEnd){
     const Lp=DEMO_SONG.loopEnd-DEMO_SONG.loopStart,dm=VOICE.demoMouth,i=Math.min(dm.length-1,Math.floor((((L.dg.pos%Lp)+Lp)%Lp)*30)),c=dm.charCodeAt(i)-48;
-    m.vop=c>0;m.mo=c===2;m.mouth=m.mo;m.open=m.vop;return m.vop?.6:0;}
+    m.demo=true;m.vop=c>0;m.mo=c===2;m.mouth=m.mo;m.open=m.vop;return m.vop?.6:0;}
+  m.demo=false;
   const lo=Math.max(250,Math.min(m.v.lo,m.v.hi-30)),hi=Math.min(3500,Math.max(m.v.hi,lo+30));
   let e=L.energy(lo,hi);if((L.mode==='file'||L.mode==='pc')&&L.dM)e=Math.max(0,L.energy(lo,hi,L.dM)-L.energy(lo,hi,L.dS)*.9);
   {const se=window.STEMS?STEMS.e('vocals'):null;if(se!=null)e=se;}   // Oct 9: one of our songs: the vocals track itself
@@ -1710,6 +1717,7 @@ function vocalsLevel(m,t){const dt=Math.min(.25,Math.max(0,(t-(m.vt||t))/1000));
   /* PATCH19: a scanned song file knows its sung lines (SL = 1 / 0); then the live detector rests, and the mouth opens as a line starts */
   const SL0=window.STEMS?STEMS.line():null,SL=SL0!=null?SL0:window.SCAN?SCAN.lineAt():null,   /* Oct 9: one of our songs: its sung lines come from the vocals track */
     VD=window.VOICE&&window.VOICE.M&&window.VOICE.step,pv=VD&&SL==null?window.VOICE.step(t):0;
+  m.pvs=VD&&SL==null?(m.pvs==null?pv:m.pvs+(pv-m.pvs)*(1-Math.exp(-dt/.25))):null;   // Oct 18: smoothed confidence, for the singer's disguises (puppeteer/singer-disguise.js)
   if(SL!=null){if(SL&&!m.vop){m.vop=true;m.vopened=t;m.vbelow=0;m.mo=true;m.mt=t;}else if(!SL)m.vop=false;}
   else if(VD){const rv=L.mode==='mic'&&!!window.VOICE.MR,pOn=rv?.8:(VOICE.M.on||.8),pOff=rv?.75:(VOICE.M.off||.6);   /* Oct 15: the line thresholds travel with the model (newSinger: .6/.5) */   // Oct 7 (signed off): with the room-trained detector (ears/voice-model-room.js) a line ends a little sooner (tuned on held-out songs)
     if(m.vop){m.vbelow=pv<pOff?m.vbelow+dt:0;if(m.vbelow>=.25)m.vop=false;}else if(pv>pOn){m.vop=true;m.vopened=t;m.vbelow=0;}}
@@ -1774,6 +1782,65 @@ function update(m,t,fs){const P=(k)=>Math.pow(k,fs);
   m.meter.style.width=Math.min(100,m.env*100)+'%';
 }
 
+/* Oct 18 (designer): "clever disguises rather than worry about the match always getting it right". Try-out "singerCover".
+   No detector gets the singer's mouth right all the time, so the singer hides the moments it is unsure about:
+   - SURE he's singing (a sung line and a confident detector): his mouth moves as before.
+   - UNSURE (the detector's confidence is in the grey zone): the mic glides up in front of his mouth, the classic
+     close-to-the-mic pose, so neither a missed word nor a wrong one shows.
+   - SURE nobody sings (no sung line for a while): he lowers the mic, leans toward the band and dances more, like a singer
+     during a solo. With a picked song the scan reads ahead, so he is back at the mic just before the next line.
+   Only the singer's mic arm, body lean and dancing change; the ears and the mouth decision are untouched.
+   DISG.state(m) gives {cover, rest} (0..1, smoothed) for tests and the stats log. */
+window.DISG=(()=>{
+  const ON=()=>!!(window.OPT&&OPT.on('singerCover'));
+  const GREY_LO=.35,GREY_HI=.62,REST_AFTER=3.5,BACK_EARLY=1.1;   // grey zone: inside a sung line below .62 (the line's own 'ending' level), outside a line above .35; seconds without a line before stepping back; seconds before a line to return
+  // (Oct 18, Red in the face, 70 s: mouth wrong where you can see it 24 % of the time -> 3 %; mouth visible for ~3/4 of the singing; mic up ~1/3 of the time)
+  // where the mic is in the mic-arm picture: the middle of the ink beyond the hand (the last 30 % of the picture), as fractions of it
+  const MIC=new WeakMap();
+  function micOf(im){if(MIC.has(im))return MIC.get(im);let r={u:.5,v:.9};
+    try{const w0=im.width||150,h0=im.height||150,k=64/Math.max(w0,h0),w=Math.max(1,Math.round(w0*k)),h=Math.max(1,Math.round(h0*k)),
+        c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(im,0,0,w,h);const d=g.getImageData(0,0,w,h).data;
+      let sx=0,sy=0,n=0;for(let y=Math.floor(h*.7);y<h;y++)for(let x=0;x<w;x++){const i=(y*w+x)*4;if(d[i+3]>60&&d[i]+d[i+1]+d[i+2]<600){sx+=x;sy+=y;n++;}}
+      if(n>3)r={u:(sx/n+.5)/w,v:(sy/n+.5)/h};}catch(e){}
+    MIC.set(im,r);return r;}
+  // how sure is the singer detector right now (0..1), and is a line coming / how long since the last one
+  function read(m,t){
+    const now=t/1000;let z=null,next=null;
+    const st=window.STEMS?STEMS.line():null;
+    if(st!=null)z=st?1:0;   // one of our songs: the vocals track knows exactly
+    else if(window.SCAN&&SCAN.zAt){const a=SCAN.zAt(BACK_EARLY);if(a){z=a.z;next=a.next;}}
+    if(z==null&&m.pvs!=null&&!(window.VOICE&&VOICE.demoMouth&&m.demo))z=m.pvs;   // live detector (mic, this computer, unscanned file)
+    if(z==null)z=m.vop?1:0;   // the demo's known timeline, or the old rules: no grey zone
+    if(m.vop)m.dgLast=now;
+    return {z,next,since:m.dgLast==null?1e9:now-m.dgLast};}
+  function step(m,t){
+    const dt=Math.min(.1,Math.max(0,(t-(m.dgT||t))/1000));m.dgT=t;
+    if(!ON()){m.dgC=0;m.dgR=0;return null;}
+    const r=read(m,t),silent=L.gate!=null&&L.gate<.3;
+    let rest=!silent&&r.since>=REST_AFTER&&!m.vop&&r.z<GREY_LO&&!(r.next!=null&&r.next<=BACK_EARLY);
+    const cover=!rest&&!silent&&(m.vop?r.z<GREY_HI:r.z>GREY_LO);   // a line the detector isn't sure of any more, or no line but a fair chance of singing
+    // hold each decision a little so the mic doesn't twitch: cover needs .35 s to come on and .6 s to go away
+    m.dgCw=cover?(m.dgCw||0)+dt:0;m.dgCn=cover?0:(m.dgCn||0)+dt;
+    const wantC=m.dgCw>=.35?1:m.dgCn>=.6?0:(m.dgCt||0);m.dgCt=wantC;
+    const ease=(v,to,tau)=>v+(to-v)*(1-Math.exp(-dt/tau));
+    m.dgC=ease(m.dgC||0,wantC,.18);m.dgR=ease(m.dgR||0,rest?1:0,rest?.6:.22);   // back to the mic faster than stepping away
+    return {cover:m.dgC,rest:m.dgR,z:r.z};}
+  // two-bone reach: shoulder S, upper arm l1, forearm l2 to the point T; bend chooses the elbow side. Angles as the stage uses them
+  // (0 = hanging straight down; the point at angle R is S + len·(-sin R, cos R)).
+  function reach(S,T,l1,l2,bend){const dx=T.x-S.x,dy=T.y-S.y,d=Math.max(Math.abs(l1-l2)+1e-3,Math.min(l1+l2-1e-3,Math.hypot(dx,dy))),
+      base=Math.atan2(-dx,dy),a=Math.acos(Math.max(-1,Math.min(1,(l1*l1+d*d-l2*l2)/(2*l1*d)))),R1=base-(bend>=0?a:-a),
+      E={x:S.x-Math.sin(R1)*l1,y:S.y+Math.cos(R1)*l1};return [R1,Math.atan2(-(T.x-E.x),T.y-E.y)];}
+  // the mic arm's [upper turn, extra forearm bend] for this frame, given the normal pose `arm` and what drawLayers knows
+  function fore(m,arm,o){const s=m.dgS;if(!s)return arm;
+    const {Sh,el,Hp,ar,eb,im,px,w,z,sx,mouth}=o;let out=arm;
+    if(s.cover>.01&&mouth){const q=micOf(im),l1=(el-o.py)*Hp,l2=Math.max(1,(q.v-el)*Hp),lat=(q.u-px)*w*z*sx;
+      let T={x:mouth.x,y:mouth.y},W=null;
+      for(let it=0;it<2;it++){W=reach(Sh,T,l1,l2,eb||.4);T={x:mouth.x-Math.cos(W[1])*lat,y:mouth.y-Math.sin(W[1])*lat};}   // aim the mic's centre, not the arm's middle line
+      const c=[W[0]-ar,W[1]-W[0]-eb];out=[out[0]+(c[0]-out[0])*s.cover,out[1]+(c[1]-out[1])*s.cover];}
+    if(s.rest>.01){const lowered=[-ar*.55+Math.sin(m.ph||0)*.04,(eb>=0?.55:-.55)-eb*.5];   // arm hangs closer to his side, mic held at the waist
+      out=[out[0]+(lowered[0]-out[0])*s.rest,out[1]+(lowered[1]-out[1])*s.rest];}
+    return out;}
+  return {on:ON,step,fore,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null,micOf,reach};})();
 // ===== 3b. PAPER CUTOUT PUPPETS: each piece has one job and one pivot =====
 // An arm hinged at the shoulder S, swung (and stretched a little) so its hand lands on H.
 // The hand sits 85% of the way down the picture; the hinge is at 10%.
@@ -1816,6 +1883,8 @@ function standsFree(m){const L=m.layers;if(m.id!=='drums'||m.rec||typeof ADJSET=
     if(typeof save==='function')save();}}
 function drawLayers(x,m,t){
   standsFree(m);
+  if(m.id==='vocals'&&window.DISG)m.dgS=DISG.step(m,t);   // Oct 18 try-out singerCover: how much to cover the mouth / step back
+  const dgR=m.id==='vocals'&&m.dgS?m.dgS.rest:0;
   const e=m.env,p=m.p,s=Math.sin(m.ph||0),open=m.mouth!=null?m.mouth:e>.06,L=m.layers,mo=L.mouthO&&(L.mouthO.img||L.mouthO.ph);
   // Step 3.1 rest pose: a player with nothing to play sways slowly and 'breathes', each at his own pace, so the band never looks frozen.
   // It fades out as his instrument comes in (gone by a quarter of his range), and is off while drawing sheets are made (m.rec).
@@ -1823,15 +1892,17 @@ function drawLayers(x,m,t){
     it=(t||0)/1000*2*Math.PI*(.22+.012*IP)+IP,iS=Math.sin(it)*idl,iB=(.5+.5*Math.sin(2*it+1))*idl;
   // Step 3.2: on the beat. dip = 1 on the beat, 0 half-way between; sw swings -1..1 over two beats. ba = how much to move to the beat.
   const ba=m.rec?0:BV.a,dip=.5+.5*Math.cos(2*Math.PI*BV.ph),sw=Math.cos(Math.PI*(BV.n+BV.ph)),
-    dn=m.id==='vocals'?ba*(1-.6*(m.sgS||0)):0;   // the singer dances to the beat, less while he's singing
+    dn=m.id==='vocals'?Math.min(1,ba*(1-.6*(m.sgS||0))*(1+.6*dgR)+.25*dgR):0;   // Oct 18: dances more while stepped back from the mic   // the singer dances to the beat, less while he's singing
   const dyB=-e*5*((1-ba)*Math.abs(Math.sin(t/200))+ba*(1-dip))-iB*1.2+dn*2.5*dip;   // body bobs (now on the beat when there is one) + resting breath + singer's dip
   const il=L.inst,ia=il?(il.a||0)*Math.PI/180:0,ir=s*e*.12+iS*.03;  // instrument's set angle + its rocking
   // Head: where the neck is and how far the head tips. Mouth pieces ride along with it.
   const hl=L.head,hx=SLOTS.head[1]+(hl?hl.x:0),hy=SLOTS.head[2]+(hl?hl.y:0),
         hr=(m.id==='drums'?p.k*.15-p.s*.05:m.id==='vocals'?-e*.12:Math.sin((m.ph||0)*.5)*e*.15*(1-.5*ba))+Math.sin(it*.8+.9)*idl*.06
-          +(m.id==='vocals'?dn*(.08*dip+.04*sw):m.id==='drums'?ba*.04*dip:ba*(.04+.08*e)*dip);   // nod on the beat
+          +(m.id==='vocals'?dn*(.08*dip+.04*sw)-.08*dgR:m.id==='drums'?ba*.04*dip:ba*(.04+.08*e)*dip);   // nod on the beat
   // Neck fingers: a spot on the rocking instrument (near its head) that slides a little along the neck. The neck arm reaches for it.
   let nh=null;
+  let mouthT=null;   // Oct 18: where the singer's mouth is this frame (the disguise brings the mic in front of it)
+  if(m.dgS&&m.dgS.cover>.01){const ml=L.mouth||L.mouthO,md=SLOTS.mouth;if(ml){const ox=md[1]+ml.x-hx,oy=md[2]+ml.y-hy,c=Math.cos(hr),sn=Math.sin(hr);mouthT={x:hx+ox*c-oy*sn,y:hy+dyB+ox*sn+oy*c};}}
   if(il&&L.grip){const g=L.grip,ix=SLOTS.inst[1]+il.x,iy=SLOTS.inst[2]+il.y,c=Math.cos(ir),sn=Math.sin(ir),th=ir+ia,sl=Math.sin((m.ph||0)*.5+1)*e*5*il.s;
     nh={x:ix+g.x*c-g.y*sn+sl*Math.cos(th),y:iy+g.x*sn+g.y*c+sl*Math.sin(th)};}
   m._wr=null;   // where the strum arm's wrist is this frame (the strum hand hangs there)
@@ -1840,7 +1911,7 @@ function drawLayers(x,m,t){
     let rot=0,sx=1,sy=1,dy=0,tx,ty,hide=false,arm=null;
     const peek=ly.peek&&performance.now()<ly.peek,eb=(ly.eb||0)*Math.PI/180,v2arm=!!ly.v2&&!!ly.img&&typeof V2H!=='undefined'&&V2H[k]!=null,el=v2arm?(d[5]+V2H[k])/2:ELBOW,Hp=D*(im.height||150)/Math.max(im.width||150,im.height||150),   // arm picture's height on stage
       l1=(el-d[5])*Hp,l2=(HAND-el)*Hp,Sh={x:d[1]+ly.x,y:d[2]+ly.y},cx=SLOTS.body[1]+(L.body?L.body.x:0),ph=m.ph||0;
-    if(k==='body'){dy=dyB;rot=s*e*.04+iS*.03+dn*.05*sw;}                      // bobs and sways
+    if(k==='body'){dy=dyB;rot=s*e*.04+iS*.03+dn*.05*sw-(m.id==='vocals'?.05*dgR:0);}   // Oct 18: leans away from the mic toward the band                      // bobs and sways
     if(k==='head'){ty=hy+dyB;rot=hr;}                        // rides the body, nods to the music
     if(k==='legL'||k==='legR'){const len=D*.8;ty=d[2]+ly.y+dyB;sy=(len-dyB)/len;   // hips bob, feet stay on the floor
       rot=m.id==='drums'?(k==='legR'?-p.k*.2:p.h*.12):(k==='legL'?1:-1)*(s*e*.08+iS*.015)+dn*.04*sw;}  // drummer's feet work the pedals, others groove
@@ -1865,7 +1936,8 @@ function drawLayers(x,m,t){
     // Swinging arms: [upper arm turn, extra forearm bend]. The forearm does most of the moving.
     if(k==='armV'){const kk=dn>0?(members.find(q=>q.id==='drums')||{p:{k:0}}).p.k:0;   // free hand: swings in time over two beats, flicks on the kick drum
       arm=[Math.sin(ph*.9)*e*.45*(1-dn)+iS*.12+dn*.35*sw,Math.sin(ph*.9-.8)*e*.6*(1-dn)+iS*.15+dn*(.4*Math.cos(Math.PI*(BV.n+BV.ph)-.6)-.3*kk)];}                // free hand swings, forearm follows a beat behind
-    if(k==='fore')arm=[-e*.12+iS*.03+dn*.03*dip,-e*.22+Math.sin(ph*1.3)*e*.1+iS*.04+dn*.05*dip];                          // mic comes up to the mouth when singing
+    if(k==='fore'){arm=[-e*.12+iS*.03+dn*.03*dip,-e*.22+Math.sin(ph*1.3)*e*.1+iS*.04+dn*.05*dip];
+      if(m.dgS&&window.DISG){const w0=im.width||150,h0=im.height||150;arm=DISG.fore(m,arm,{Sh,el,Hp,ar,eb,im,px:d[4],py:d[5],w:w0,z:D/Math.max(w0,h0),sx,mouth:mouthT});}}   // Oct 18: mic in front of the mouth when unsure, lowered while resting                          // mic comes up to the mouth when singing
     if(k==='arm')arm=[s*e*.25+iS*.05,Math.sin(ph+.6)*e*.7+iS*.08];                                  // strumming: mostly forearm
     if(k==='kick')sx=sy=1+p.k*.1;                            // bass drum thumps
     if(k==='snare'){dy=p.s*3;sx=sy=1+p.s*.05;}               // snare jolts
