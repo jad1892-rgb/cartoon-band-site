@@ -1817,7 +1817,7 @@ window.DISG=(()=>{
     const dt=Math.min(.1,Math.max(0,(t-(m.dgT||t))/1000));m.dgT=t;
     if(!ON()){m.dgC=0;m.dgR=0;return null;}
     const r=read(m,t),silent=L.gate!=null&&L.gate<.3;
-    let rest=!silent&&r.since>=REST_AFTER&&!m.vop&&r.z<GREY_LO&&!(r.next!=null&&r.next<=BACK_EARLY);
+    const rest=!silent&&r.since>=REST_AFTER&&!m.vop&&r.z<GREY_HI&&!(r.next!=null&&r.next<=BACK_EARLY);   // Oct 18 (designer, Divvy: never stepped back): no line for 3.5 s is enough unless the detector is fairly sure someone sings (was: very sure nobody does, z < .35, which a guitar solo never reached)
     const cover=!rest&&!silent&&(m.vop?r.z<GREY_HI:r.z>GREY_LO);   // a line the detector isn't sure of any more, or no line but a fair chance of singing
     // hold each decision a little so the mic doesn't twitch: cover needs .35 s to come on and .6 s to go away
     m.dgCw=cover?(m.dgCw||0)+dt:0;m.dgCn=cover?0:(m.dgCn||0)+dt;
@@ -1837,7 +1837,8 @@ window.DISG=(()=>{
       let T={x:mouth.x,y:mouth.y},W=null;
       for(let it=0;it<2;it++){W=reach(Sh,T,l1,l2,eb||.4);T={x:mouth.x-Math.cos(W[1])*lat,y:mouth.y-Math.sin(W[1])*lat};}   // aim the mic's centre, not the arm's middle line
       const c=[W[0]-ar,W[1]-W[0]-eb];out=[out[0]+(c[0]-out[0])*s.cover,out[1]+(c[1]-out[1])*s.cover];}
-    if(s.rest>.01){const lowered=[-ar*.55+Math.sin(m.ph||0)*.04,(eb>=0?.55:-.55)-eb*.5];   // arm hangs closer to his side, mic held at the waist
+    if(s.rest>.01){   // Oct 18 v2 (designer couldn't see v1): the arm drops right down by his side, mic at the hip, swinging a little with the beat
+      const sw=Math.sin((m.ph||0)*.9)*.08,R1=-.1+sw,R2=R1+(eb>=0?.18:-.18),lowered=[R1-ar,R2-R1-eb];
       out=[out[0]+(lowered[0]-out[0])*s.rest,out[1]+(lowered[1]-out[1])*s.rest];}
     return out;}
   return {on:ON,step,fore,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null,micOf,reach};})();
@@ -1892,13 +1893,13 @@ function drawLayers(x,m,t){
     it=(t||0)/1000*2*Math.PI*(.22+.012*IP)+IP,iS=Math.sin(it)*idl,iB=(.5+.5*Math.sin(2*it+1))*idl;
   // Step 3.2: on the beat. dip = 1 on the beat, 0 half-way between; sw swings -1..1 over two beats. ba = how much to move to the beat.
   const ba=m.rec?0:BV.a,dip=.5+.5*Math.cos(2*Math.PI*BV.ph),sw=Math.cos(Math.PI*(BV.n+BV.ph)),
-    dn=m.id==='vocals'?Math.min(1,ba*(1-.6*(m.sgS||0))*(1+.6*dgR)+.25*dgR):0;   // Oct 18: dances more while stepped back from the mic   // the singer dances to the beat, less while he's singing
+    dn=m.id==='vocals'?Math.min(1,ba*(1-.6*(m.sgS||0))*(1+.8*dgR)+.4*dgR):0;   // Oct 18: dances more while stepped back from the mic   // the singer dances to the beat, less while he's singing
   const dyB=-e*5*((1-ba)*Math.abs(Math.sin(t/200))+ba*(1-dip))-iB*1.2+dn*2.5*dip;   // body bobs (now on the beat when there is one) + resting breath + singer's dip
   const il=L.inst,ia=il?(il.a||0)*Math.PI/180:0,ir=s*e*.12+iS*.03;  // instrument's set angle + its rocking
   // Head: where the neck is and how far the head tips. Mouth pieces ride along with it.
   const hl=L.head,hx=SLOTS.head[1]+(hl?hl.x:0),hy=SLOTS.head[2]+(hl?hl.y:0),
         hr=(m.id==='drums'?p.k*.15-p.s*.05:m.id==='vocals'?-e*.12:Math.sin((m.ph||0)*.5)*e*.15*(1-.5*ba))+Math.sin(it*.8+.9)*idl*.06
-          +(m.id==='vocals'?dn*(.08*dip+.04*sw)-.08*dgR:m.id==='drums'?ba*.04*dip:ba*(.04+.08*e)*dip);   // nod on the beat
+          +(m.id==='vocals'?dn*(.08*dip+.04*sw)-.14*dgR:m.id==='drums'?ba*.04*dip:ba*(.04+.08*e)*dip);   // nod on the beat
   // Neck fingers: a spot on the rocking instrument (near its head) that slides a little along the neck. The neck arm reaches for it.
   let nh=null;
   let mouthT=null;   // Oct 18: where the singer's mouth is this frame (the disguise brings the mic in front of it)
@@ -1911,7 +1912,7 @@ function drawLayers(x,m,t){
     let rot=0,sx=1,sy=1,dy=0,tx,ty,hide=false,arm=null;
     const peek=ly.peek&&performance.now()<ly.peek,eb=(ly.eb||0)*Math.PI/180,v2arm=!!ly.v2&&!!ly.img&&typeof V2H!=='undefined'&&V2H[k]!=null,el=v2arm?(d[5]+V2H[k])/2:ELBOW,Hp=D*(im.height||150)/Math.max(im.width||150,im.height||150),   // arm picture's height on stage
       l1=(el-d[5])*Hp,l2=(HAND-el)*Hp,Sh={x:d[1]+ly.x,y:d[2]+ly.y},cx=SLOTS.body[1]+(L.body?L.body.x:0),ph=m.ph||0;
-    if(k==='body'){dy=dyB;rot=s*e*.04+iS*.03+dn*.05*sw-(m.id==='vocals'?.05*dgR:0);}   // Oct 18: leans away from the mic toward the band                      // bobs and sways
+    if(k==='body'){dy=dyB;rot=s*e*.04+iS*.03+dn*.05*sw-(m.id==='vocals'?.1*dgR:0);}   // Oct 18: leans away from the mic toward the band                      // bobs and sways
     if(k==='head'){ty=hy+dyB;rot=hr;}                        // rides the body, nods to the music
     if(k==='legL'||k==='legR'){const len=D*.8;ty=d[2]+ly.y+dyB;sy=(len-dyB)/len;   // hips bob, feet stay on the floor
       rot=m.id==='drums'?(k==='legR'?-p.k*.2:p.h*.12):(k==='legL'?1:-1)*(s*e*.08+iS*.015)+dn*.04*sw;}  // drummer's feet work the pedals, others groove
