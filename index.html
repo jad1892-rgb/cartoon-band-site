@@ -1986,6 +1986,9 @@ function drawLayers(x,m,t){
     const X=tx==null?d[1]+ly.x:tx,Y=ty==null?d[2]+ly.y+dy:ty;
     let R=rot+ar,R2=null;
     if(arm){if(k==='arm2'||k==='armL'||k==='armR'){R=arm[0];R2=arm[1];}else{R=ar+arm[0];R2=R+eb+arm[1];}}   // swinging arms: set bend + the music's bend   // reaching arms come back as world angles
+    // Oct 18 (after the giant-mic bug): a piece whose numbers have gone bad (not a number, or absurdly stretched) is skipped for this
+    // frame instead of being drawn across the stage; DRAWBAD counts them so the pre-publish check can fail on it
+    if(!isFinite(X)||!isFinite(Y)||!isFinite(R)||(R2!=null&&!isFinite(R2))||!isFinite(sx)||!isFinite(sy)||Math.abs(sx)>8||Math.abs(sy)>8){window.DRAWBAD=(window.DRAWBAD||0)+1;continue;}
     if(m.rec)m.rec[k]={x:X,y:Y,r:R,D,sx,sy,px:d[4],py:d[5]};   // only used when making drawing sheets
     if(hide)continue;
     const w=im.width||150,h=im.height||150,z=D/Math.max(w,h);
