@@ -1793,6 +1793,7 @@ function update(m,t,fs){const P=(k)=>Math.pow(k,fs);
    DISG.state(m) gives {cover, rest} (0..1, smoothed) for tests and the stats log. */
 window.DISG=(()=>{
   const ON=()=>!!(window.OPT&&OPT.on('singerCover'));
+  const ss=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v);};   // eases in and out (gentle start and finish)
   const STYLE=.35,GREY_LO=.35,GREY_HI=.62,REST_AFTER=3.5,BACK_EARLY=1.1;   // grey zone: inside a sung line below .62 (the line's own 'ending' level), outside a line above .35; seconds without a line before stepping back; seconds before a line to return
   // (Oct 18, Red in the face, 70 s: mouth wrong where you can see it 24 % of the time -> 3 %; mouth visible for ~3/4 of the singing; mic up ~1/3 of the time)
   // where the mic is in the mic-arm picture: the middle of the ink beyond the hand (the last 30 % of the picture), as fractions of it
@@ -1826,7 +1827,7 @@ window.DISG=(()=>{
     m.dgCw=cover?(m.dgCw||0)+dt:0;m.dgCn=cover?0:(m.dgCn||0)+dt;
     const wantC=rest?0:m.dgCw>=.35?1:m.dgCn>=.6?0:(m.dgCt||0);m.dgCt=wantC;   // stepping back drops the mic-at-mouth at once (no hold)
     const ease=(v,to,tau)=>v+(to-v)*(1-Math.exp(-dt/tau));
-    m.dgC=ease(m.dgC||0,wantC,.18);m.dgR=ease(m.dgR||0,rest?1:0,rest?.6:.22);   // back to the mic faster than stepping away
+    m.dgC=ease(m.dgC||0,wantC,.4);   // Oct 18 (designer: gentler): ~1 s to settle (was ~.5 s)m.dgR=ease(m.dgR||0,rest?1:0,rest?.6:.22);   // back to the mic faster than stepping away
     // Oct 18 (designer: 'distracting when the mic goes down to the side and there is no mouth'): what counts as 'covered' is how
     // close the mic really is to the mouth, so the mouth hides only while the mic is in front of it
     return {cover:m.dgC*(1-m.dgR),rest:m.dgR,z:r.z};}
@@ -1841,7 +1842,7 @@ window.DISG=(()=>{
     if(s.cover>.01&&mouth){const q=micOf(im),l1=(el-o.py)*Hp,l2=Math.max(1,(q.v-el)*Hp),lat=(q.u-px)*w*z*sx;
       let T={x:mouth.x,y:mouth.y},W=null;
       for(let it=0;it<2;it++){W=reach(Sh,T,l1,l2,eb||.4);T={x:mouth.x-Math.cos(W[1])*lat,y:mouth.y-Math.sin(W[1])*lat};}   // aim the mic's centre, not the arm's middle line
-      const c=[W[0]-ar,W[1]-W[0]-eb];out=[out[0]+(c[0]-out[0])*s.cover,out[1]+(c[1]-out[1])*s.cover];}
+      const c=[W[0]-ar,W[1]-W[0]-eb],k=ss(s.cover);out=[out[0]+(c[0]-out[0])*k,out[1]+(c[1]-out[1])*k];}
     if(s.rest>.01){   // Oct 18 v2 (designer couldn't see v1): the arm drops right down by his side, mic at the hip, swinging a little with the beat
       const sw=Math.sin((m.ph||0)*.9)*.08,R1=-.1+sw,R2=R1+(eb>=0?.18:-.18),lowered=[R1-ar,R2-R1-eb];
       out=[out[0]+(lowered[0]-out[0])*s.rest,out[1]+(lowered[1]-out[1])*s.rest];}
@@ -1866,12 +1867,14 @@ window.DISG=(()=>{
     let bx,by,along;if(E.wx!=null){bx=E.wx;by=E.wy;along=(H.v-HAND)*h*sc;}else{bx=E.x;by=E.y;along=(H.v-el)*h*sc;}
     const lat=(H.u-px)*w*z*sx,cx=bx-Math.sin(R2)*along+Math.cos(R2)*lat,cy=by+Math.cos(R2)*along+Math.sin(R2)*lat;
     let mw=0;for(const ml of o.mouths){const mi=ml&&(ml.img||ml.ph);if(!mi)continue;const D=SLOTS.mouth[3]*ml.s,zz=D/Math.max(mi.width||150,mi.height||150);mw=Math.max(mw,inkW(mi)*(mi.width||150)*zz);}
-    const head=H.iw*w*z*sx,S=head>0&&mw>0?Math.max(1,Math.min(2.6,1.3*mw/head)):1.4,k=1+(S-1)*Math.min(1,s.cover);
+    const head=H.iw*w*z*sx,S=head>0&&mw>0?Math.max(1,Math.min(2.6,1.3*mw/head)):1.4,k=1+(S-1)*ss(s.cover);
     if(k<1.02)return;
     x.save();x.translate(cx,cy);x.rotate(R2);x.scale(z*sx*k,sc*k);
     x.shadowColor='rgba(0,0,0,'+(.28*Math.min(1,s.cover))+')';x.shadowBlur=6*k;x.shadowOffsetX=1.5;x.shadowOffsetY=2.5;
     x.drawImage(H.c,-H.c.width/2,-H.c.height/2);x.restore();}
-  return {on:ON,step,fore,bigMic,headOf,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null,micOf,reach};})();
+  // how much of the mouth still shows (1 = all): it fades out behind the mic as the mic arrives, and back in as it leaves
+  const mouthAlpha=m=>m&&m.dgS?1-ss((m.dgS.cover-.4)/.45):1;
+  return {on:ON,step,fore,bigMic,mouthAlpha,headOf,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null,micOf,reach};})();
 // ===== 3b. PAPER CUTOUT PUPPETS: each piece has one job and one pivot =====
 // An arm hinged at the shoulder S, swung (and stretched a little) so its hand lands on H.
 // The hand sits 85% of the way down the picture; the hinge is at 10%.
@@ -1977,7 +1980,7 @@ function drawLayers(x,m,t){
     if(k==='hat'){rot=p.h*.25;dy=p.h*2;}                     // hi-hat tilts
     if(k==='mouth'){if(open&&mo)hide=true;else if(open)sy=1+e*.8;} // closed art swaps to open art
     if(k==='mouthO'&&!open)hide=true;
-    if((k==='mouth'||k==='mouthO')&&m.dgS&&m.dgS.cover>.6)hide=true;   // Oct 18 (designer): while the mic covers his mouth, no mouth shows at all (nothing peeks out around the mic)
+    let fade=1;if((k==='mouth'||k==='mouthO')&&m.dgS&&window.DISG){fade=DISG.mouthAlpha(m);if(fade<.02)hide=true;}   // Oct 18 (designer): the mouth fades out behind the mic (fully gone while covered), and back in as it leaves
     const X=tx==null?d[1]+ly.x:tx,Y=ty==null?d[2]+ly.y+dy:ty;
     let R=rot+ar,R2=null;
     if(arm){if(k==='arm2'||k==='armL'||k==='armR'){R=arm[0];R2=arm[1];}else{R=ar+arm[0];R2=R+eb+arm[1];}}   // swinging arms: set bend + the music's bend   // reaching arms come back as world angles
@@ -1989,7 +1992,7 @@ function drawLayers(x,m,t){
       if(k==='arm'){const l2=(HAND-el)*h*z*sy;m._wr=E.wx!=null?{x:E.wx,y:E.wy,r:R2}:{x:E.x-Math.sin(R2)*l2,y:E.y+Math.cos(R2)*l2,r:R2};}
       if(peek){x.save();x.strokeStyle='#e8553d';x.lineWidth=1;x.beginPath();x.arc(E.x,E.y,2.5,0,7);x.stroke();x.restore();}   // the elbow, while adjusting
       continue;}
-    x.save();x.translate(X,Y);x.rotate(R);x.scale(z*sx,z*sy);x.drawImage(im,-w*d[4],-h*d[5],w,h);x.restore();}}
+    x.save();if(fade<1)x.globalAlpha*=fade;x.translate(X,Y);x.rotate(R);x.scale(z*sx,z*sy);x.drawImage(im,-w*d[4],-h*d[5],w,h);x.restore();}}
 
 let lastT=0;
 // Step 3.2: where we are in the beat, for the drawing. BV.a = how much the band moves to the beat (0-1, eases in/out over ~0.4 s),
