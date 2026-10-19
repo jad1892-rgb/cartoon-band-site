@@ -861,6 +861,7 @@ window.WTXT={
   'band.defaultName': 'My band',
   'band.fileName': '{name} (oddbop).json',
   'band.stillLoading': 'One moment: your drawings are still loading',
+  'band.drawingsDidntLoad': "Your drawings didn't load. Tap here to try again.",   // Oct 18: the browser's drawing store wouldn't open (memory/browser-memory.js)
   'band.notSaved': 'Not saved',
   'band.saved': 'Backup made 💾 On the other phone: Edit band → Open a backup',
   'band.making': 'Making the backup…',
@@ -1508,14 +1509,27 @@ function saveOk(){try{tidy();   // true when saved; player-cards.js uses it to u
   return true;}catch(e){return false;}}
 function save(){if(!saveOk())msg(TXT('band.couldNotSave'));}
 // start: open the database; first time, move the library out of localStorage; otherwise load it and show the user's own pieces
-(()=>{if(!window.indexedDB){ARTDB.done=true;return;}ARTDB.open().then(db=>{ARTDB.db=db;
+(()=>{if(!window.indexedDB){ARTDB.done=true;setTimeout(()=>ARTDB.trouble(),0);return;}ARTDB.open().then(db=>{ARTDB.db=db;
   return new Promise((res,rej)=>{const out={},c=db.transaction('lib','readonly').objectStore('lib').openCursor();
     c.onsuccess=()=>{const k=c.result;if(k){out[k.key]=k.value;k.continue();}else res(out);};c.onerror=()=>rej(c.error);});}).then(stored=>{
   ARTDB.ok=true;stored=stored||{};for(const f in stored)ARTDB.keys.add(f);
   if(S.libInDb){S.lib=Object.assign(stored,S.lib||{});ARTDB.refresh.forEach(fn=>{try{fn();}catch(e){}});save();}
   else{S.libInDb=true;S.lib=Object.assign(stored,S.lib||{});save();}   // one-time move out of localStorage
   ARTDB.done=true;
-}).catch(()=>{ARTDB.ok=false;ARTDB.done=true;});})();   // done = the library has loaded (or can't): the band is fully drawn
+}).catch(()=>{ARTDB.ok=false;ARTDB.done=true;ARTDB.trouble();});
+  setTimeout(()=>{if(!ARTDB.ok)ARTDB.trouble();},8000);})();   // done = the library has loaded (or can't): the band is fully drawn
+/* Oct 18 (code review): if the drawing store won't open (some private windows; a rare Safari glitch where it never answers),
+   the user's own drawings simply didn't appear and nothing said why, so the band looked lost and they might press Start
+   over. Nothing is ever deleted while the store is closed (tidy() and writeLib() wait for it). Now, for a user who has
+   drawings of their own, a note at the top says so; tapping it reloads the page (the home-screen app has no reload button). */
+ARTDB.trouble=()=>{if(ARTDB.ok||ARTDB.told||!S.libInDb)return;
+  if(!Object.values(S.art||{}).some(u=>typeof u==='string'&&u.startsWith('@s:')))return;   // nothing of theirs to show anyway
+  const show=()=>{if(!document.body){setTimeout(show,300);return;}if(ARTDB.ok)return;ARTDB.told=true;
+    const b=document.createElement('button');b.id='artdbNote';b.type='button';b.textContent=TXT('band.drawingsDidntLoad');
+    b.style.cssText="position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:9999;max-width:calc(100% - 32px);"+
+      "background:#fff;color:#1c1c20;border:2px solid #1c1c20;border-radius:16px;padding:10px 16px;font:600 15px 'oddbop hand',system-ui,sans-serif;cursor:pointer";
+    b.onclick=()=>location.reload();document.body.appendChild(b);};
+  show();};
 // Placeholder pieces: simple flat shapes, one per slot, replaced when you upload art
 function phImg(m,k){const col=C[m.id],sk='#ffd9b3',dk='#222',g='#d4a017';
   const Ln=(a,b,c,d,f,w)=>`<line x1="${a}" y1="${b}" x2="${c}" y2="${d}" stroke="${f}" stroke-width="${w}" stroke-linecap="round"/>`;
@@ -1903,10 +1917,19 @@ function spanOf(im){if(SPAN.has(im))return SPAN.get(im);let s=[0,1];
   if(im.complete&&(im.width||0)>0)SPAN.set(im,s);return s;}
 function keyboardSpan(kl){const im=kl&&(kl.img||kl.ph),d=SLOTS.inst,D=d[3]*(kl?kl.s:1),w=im&&im.width||150,h=im&&im.height||150,z=D/Math.max(w,h),
   s=im?spanOf(im):[0,1],cx=d[1]+(kl?kl.x:0),x0=cx+(s[0]-.5)*w*z,x1=cx+(s[1]-.5)*w*z;return {x0,x1,mid:(x0+x1)/2,half:(x1-x0)/2};}
+/* Oct 18 (code review, speed): how many strips a bending arm is drawn in. It was always 14, so every bending arm cost 16
+   picture draws a frame (~160 of the ~200 the band makes), the main cost on slow phones. Now just enough strips that the
+   bend's outer edge never strays more than a quarter of a screen pixel from a smooth curve: a nearly straight arm or a
+   small one on a phone needs 2-4, a strongly bent arm drawn big still gets up to 14. Always an even number, so the elbow
+   point (half-way through the bend) is unchanged. len = the bend's length and wid = the arm picture's width, both in the
+   arm's own units; the canvas transform turns them into screen pixels. */
+function bendStrips(x,len,wid,bend){const t=x.getTransform(),k=Math.hypot(t.a,t.b)||1,th=Math.abs(bend);if(!(th>1e-4)||!isFinite(th))return 2;
+  const r=len*k/th+wid*k/2,err=.25,n=r>err?th/(2*Math.acos(Math.max(-1,1-err/r))):14;
+  return Math.max(2,Math.min(14,2*Math.ceil(n/2)));}
 function drawArm(x,im,X,Y,R1,R2,z,sx,sy,px,py,el,bendy){   // returns the elbow point
  const w=im.width||150,h=im.height||150,ye=h*(el-py),ov=h*.03;
  if(bendy){   // Oct 5: new-sheet arms bend smoothly over a short stretch around the elbow (no hinge cut, nothing sticks out)
-   const sc=z*sy,zl=h*.16,y0=h*el-zl/2,n=14,seg=zl/n;let cx=X-Math.sin(R1)*(y0-h*py)*sc,cy=Y+Math.cos(R1)*(y0-h*py)*sc,ex=cx,ey=cy;
+   const sc=z*sy,zl=h*.16,y0=h*el-zl/2,n=bendStrips(x,zl*sc,w*z*sx,R2-R1),seg=zl/n;let cx=X-Math.sin(R1)*(y0-h*py)*sc,cy=Y+Math.cos(R1)*(y0-h*py)*sc,ex=cx,ey=cy;
    const strip=(px0,py0,a,r0,len)=>{x.save();x.translate(px0,py0);x.rotate(a);x.scale(z*sx,sc);x.beginPath();x.rect(-w,0,2*w,len);x.clip();x.drawImage(im,-w*px,-r0,w,h);x.restore();};
    x.save();x.translate(X,Y);x.rotate(R1);x.scale(z*sx,sc);x.beginPath();x.rect(-w,-2*h,2*w,2*h+(y0-h*py)+1.5);x.clip();x.drawImage(im,-w*px,-h*py,w,h);x.restore();
    for(let i=0;i<n;i++){const a=R1+(R2-R1)*(i+.5)/n;strip(cx,cy,a,y0+i*seg,seg+1.5);cx-=Math.sin(a)*seg*sc;cy+=Math.cos(a)*seg*sc;if(i===n/2-1){ex=cx;ey=cy;}}
@@ -2160,6 +2183,19 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.class
 {const fsLabel=()=>{const b=document.getElementById('stFull');if(b)b.textContent=(document.fullscreenElement||document.webkitFullscreenElement)?TXT('stage.exitFullScreen'):TXT('stage.fullScreen');};
  document.addEventListener('fullscreenchange',fsLabel);document.addEventListener('webkitfullscreenchange',fsLabel);}   // Oct 4: full screen only on request (stage button); leaving it stays on the stage
 
+/* Oct 18 (designer's iPhone, review item 5): locking the phone or switching apps in the middle of a song. Before, the song
+   kept playing with the screen off (where nobody can see the band), and on coming back the sound engine could still be
+   asleep. Now, on phones and tablets, the song pauses when the page is hidden (screen locked, another app, another tab)
+   and the sound engine is woken again when it comes back, so one tap on Play carries on from the same spot.
+   Not paused: a popped-out band (stage/pop-out.js, it is meant to keep playing beside other apps), a recording in progress
+   (sharing/record.js finishes it itself), the microphone and "this computer" (no song of ours to pause).
+   To let songs play on with the screen locked instead, delete this block. */
+{const touch=matchMedia('(pointer:coarse)').matches,pl=document.getElementById('player');
+ document.addEventListener('visibilitychange',()=>{if(typeof L==='undefined')return;
+   if(document.visibilityState==='hidden'){
+     if(!touch||(window.POPOUT&&POPOUT.isOut())||(window.RECORDER&&RECORDER.state&&RECORDER.state()&&RECORDER.state().on))return;
+     if(L.via==='element'&&pl&&!pl.paused)pl.pause();else if(L.via==='buffer'&&L.bs)L.pauseBuf();}
+   else if(L.ctx&&L.ctx.state!=='running')L.ctx.resume().catch(()=>{});});}   // without a tap a phone may refuse; the next tap anywhere wakes it (ears/sources.js)
 // ===== 4. INPUT BUTTONS =====
 document.getElementById('mic').onclick=async()=>{try{await L.mic();msg('Listening to the mic. Play a song nearby (speaker volume up, headphones off).');}
   catch(e){msg('Mic blocked here. Try "Play a file" or "Demo beat", or open this page in your browser and allow the mic.');}};
@@ -2234,7 +2270,7 @@ document.getElementById('fileLbl').addEventListener('click',()=>{L.init().catch(
  window.addEventListener('band:ended',()=>{if(L.via==='buffer')afterEnd();});
  window.needTap=on=>{window.__needTap=on;if(window.STAGE&&STAGE.tapHint)STAGE.tapHint(on);};
  document.addEventListener('pointerdown',e=>{if(L.ctx&&L.ctx.state!=='running')L.ctx.resume().catch(()=>{});
-   if(!window.__needTap)return;window.needTap(false);if(e.target&&e.target.id==='stPlay')return;   // the play button does it itself
+   if(!window.__needTap)return;window.needTap(false);if(e.target&&e.target.closest&&e.target.closest('#stPlay,#bPlay'))return;   // the play buttons do it themselves (Oct 18: closest, because a tap usually lands on the drawn word INSIDE the button; matching only the button's own id made one tap start the song here and then pause it there)
    if(L.via==='element'&&p.paused)p.play().catch(()=>window.needTap(true));else if(L.via==='buffer'&&!L.bs)L.playBuf(L.boff);},true);}
 </script>
 <script id="demo-song">
@@ -2554,6 +2590,13 @@ function bulbsOf(img){try{const k=4,w=Math.ceil(img.width/k),h=Math.ceil(img.hei
         for(const [ax,ay] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=jx+ax,ny=jy+ay,m=ny*w+nx;if(nx>=0&&ny>=0&&nx<w&&ny<h&&!seen[m]&&col(m)){seen[m]=1;st.push(m);}}}
       if(n>=4){const r=Math.min(255,sr/n*1.4)|0,gg=Math.min(255,sg/n*1.4)|0,b=Math.min(255,sb/n*1.4)|0;out.push([(sx/n+.5)/w,(sy/n+.5)/h,`${r},${gg},${b}`]);}}
     return out;}catch(e){return [];}}
+/* Oct 18 (code review, speed): each bulb's glow used to be a new gradient built and filled every frame, for every bulb
+   across the stage. Now one soft glow per colour is painted once (a small picture, same gradient) and stamped with the
+   bulb's brightness as its see-through-ness, which looks the same. Repainted when the stage changes size. */
+const GLOWS=new Map();
+function bulbGlow(c,r0){const R=Math.max(2,Math.ceil(r0*dpr)),k=c+'|'+R;let g=GLOWS.get(k);if(g)return g;if(GLOWS.size>64)GLOWS.clear();
+  g=document.createElement('canvas');g.width=g.height=2*R;const q=g.getContext('2d'),gr=q.createRadialGradient(R,R,0,R,R,R);
+  gr.addColorStop(0,`rgba(${c},1)`);gr.addColorStop(1,`rgba(${c},0)`);q.fillStyle=gr;q.fillRect(0,0,2*R,2*R);GLOWS.set(k,g);return g;}
 function club(){const g=geo(),pu=beatPulse(),bh=Math.max(10,H*.03),bw=bh*2.4,A=clubArt(g);
   if(A.wall){x.fillStyle='#120c0c';x.fillRect(0,0,W,H);x.drawImage(A.wall,0,0,W,g.back+1);}else{
   x.fillStyle='#120c0c';x.fillRect(0,0,W,H);
@@ -2562,13 +2605,14 @@ function club(){const g=geo(),pu=beatPulse(),bh=Math.max(10,H*.03),bw=bh*2.4,A=c
     for(let xx=-off;xx<W;xx+=bw)x.fillRect(xx,y,1.5,bh);}
   x.fillStyle='rgba(255,255,255,.035)';for(let r=0,y=0;y<g.back;r++,y+=bh){const off=r%2?bw/2:0;for(let xx=-off+3;xx<W;xx+=bw)if(((xx*7+y*3)|0)%5===0)x.fillRect(xx,y+3,bw-6,bh-6);}
   const fade=x.createLinearGradient(0,0,0,g.back);fade.addColorStop(0,'rgba(0,0,0,.6)');fade.addColorStop(1,'rgba(0,0,0,.15)');x.fillStyle=fade;x.fillRect(0,0,W,g.back+1);}
-  if(A.lights){const top=Math.max(H*.035,window.PAPERBOX?PAPERBOX.topInset(W,H)-A.lh*.15:0);   // Oct 14: below the paper theatre's framex.drawImage(A.lights,0,top,W,A.lh);   // the drawn string; each bulb glows in its own colour, twinkling on the beat
+  if(A.lights){const top=Math.max(H*.035,window.PAPERBOX?PAPERBOX.topInset(W,H)-A.lh*.15:0);   // Oct 14: below the paper theatre's frame
+    x.drawImage(A.lights,0,top,W,A.lh);   // the drawn string (Oct 18: this line had been swallowed by the comment above, so only the glows showed); each bulb glows in its own colour, twinkling on the beat
     x.save();x.globalCompositeOperation='lighter';const tw=A.lightsTw,r0=A.lh*.28;let i=0;
     const md=moodOn(),bz=md?FACTS.busy:0,tn=performance.now()/1000;   // Oct 17 try-out "moodLights": each bulb shimmers a little on its own, a bit faster when the music is busy (Oct 18: gentler; the beat leads again)
     for(let t=0,xx=0;xx<W+tw;xx+=tw,t++)for(const [fx,fy,c] of A.bulbs){const bx=xx+(t%2?1-fx:fx)*tw,by=top+fy*A.lh,ii=i++,
       on=md?.28+.38*(ii%2?pu:1-pu*.6)+.14*(.5+.5*Math.sin(tn*6.283*(.25+.9*bz)*(1+.29*(ii%5))+ii*1.7))*(.5+.5*bz):.3+.45*(ii%2?pu:1-pu*.6);
-      if(bx<-r0||bx>W+r0)continue;const gl=x.createRadialGradient(bx,by,0,bx,by,r0);gl.addColorStop(0,`rgba(${c},${on})`);gl.addColorStop(1,`rgba(${c},0)`);
-      x.fillStyle=gl;x.fillRect(bx-r0,by-r0,r0*2,r0*2);}
+      if(bx<-r0||bx>W+r0)continue;const gl=bulbGlow(c,r0);x.globalAlpha=Math.max(0,Math.min(1,on));x.drawImage(gl,bx-r0,by-r0,r0*2,r0*2);}
+    x.globalAlpha=1;
     x.restore();}else{
   const n=Math.max(8,Math.round(W/60));                                                            // string of party lights, twinkling on the beat
   for(let i=0;i<=n;i++){const f=i/n,lx=f*W,ly=H*.07+Math.sin(f*Math.PI*3)*H*.025+H*.02,cols=['#ffd36b','#ff7aa8','#7ad7ff','#b6ff7a'],c=cols[i%4],on=.55+.45*((i+(window.BV?0:0))%2?pu:1-pu*.5);
@@ -2742,7 +2786,16 @@ window.PAPERBOX=(function(){
   return {draw,copyTo,topInset,hold:v=>{held=v;},isOpen:()=>open>=1,state:()=>({open,target,paints})};})();
 /* PATCH07: where each player's drawn feet are (in his own 160 x 140 frame), measured in his rest pose, refreshed once a second */
 const FEET={};
+/* Oct 18 (code review, speed): measuring means drawing the whole player off screen and reading every pixel back, which on
+   a phone is one of the slowest things a page can do; it ran for all five players every second. Now, once a second, it
+   only re-measures when something that moves the feet changed: a drawing, or a piece's spot, size, angle or elbow. */
+const FEETPIC=new WeakMap();let feetPicN=0;
+function feetKey(m){let k='';for(const n in m.layers){const l=m.layers[n],im=l.img||l.ph;let id=0;
+    if(im){id=FEETPIC.get(im);if(!id){id=++feetPicN;FEETPIC.set(im,id);}}
+    k+=n+':'+id+(im&&im.complete?'':'?')+','+l.x+','+l.y+','+l.s+','+l.a+','+(l.eb||0)+','+(l.v2||0)+';';}
+  return k;}
 function feetOf(m){const now=performance.now(),f=FEET[m.id];if(f&&now-f.t<1000)return f;
+  const key=feetKey(m);if(f&&f.key===key){f.t=now;return f;}
   const OX=60,OY=80,c=document.createElement('canvas');c.width=280;c.height=320;const g=c.getContext('2d',{willReadFrequently:true});
   const keep={env:m.env,p:m.p,pl:m.pl,pr:m.pr,rec:m.rec,wr:m._wr};let r={t:now,y:138,cx:80,w:92};
   try{m.env=0;m.p={k:0,s:0,h:0,c:0};m.pl=m.pr=null;m.rec={};g.translate(OX,OY);drawLayers(g,m,0);
@@ -2752,7 +2805,7 @@ function feetOf(m){const now=performance.now(),f=FEET[m.id];if(f&&now-f.t<1000)r
       let l=W2,rr=-1;for(let y=Math.max(0,b-14);y<=b;y++)for(let i=0;i<W2;i++)if(d[(y*W2+i)*4+3]>128){if(i<l)l=i;if(i>rr)rr=i;}   /* feet: the ink in the lowest 14 px */
       if(b>0&&rr>l)r={t:now,y:b+1-OY,cx:(l+rr+1)/2-OX,w:rr+1-l};}}
   catch(e){}finally{m.env=keep.env;m.p=keep.p;m.pl=keep.pl;m.pr=keep.pr;m.rec=keep.rec;m._wr=keep.wr;}
-  FEET[m.id]=r;return r;}
+  r.key=key;FEET[m.id]=r;return r;}
 /* PATCH07: one floor line per row: players whose spots are less than 0.03 apart front to back stand on the same line */
 function floorLines(order){const fl={};let row=[];
   const close=()=>{if(!row.length)return;const sy=row.reduce((a,m)=>a+place(P[m.id]).sy,0)/row.length;row.forEach(m=>fl[m.id]=sy);row=[];};
@@ -3995,39 +4048,11 @@ async function openImage(file){
         const {image}=await dec.decode(),bmp=await createImageBitmap(image);image.close();return bmp;}
     }catch(e){note('browser HEIC',e);}
     try{return await heicToCanvas(file);}catch(e){note('built-in HEIC reader',e);}  // reads the file itself, no downloads
-    try{                                                                          // last resort: download a converter
-      const conv=await getHeicConverter();
-      const out=await conv({blob:file,toType:'image/jpeg',quality:.92});
-      return await createImageBitmap(Array.isArray(out)?out[0]:out);
-    }catch(e){note('downloaded converter',e);}
+    // Oct 18 (code review): no last-resort download any more. It fetched a photo converter from an outside website and ran
+    // it, which broke the promise that nothing leaves the device. If the steps above can't read the photo, the user is told
+    // to send it as a JPEG (words.js upload.heic).
   }
   throw new Error(tried.join(' | ')||'unknown');
-}
-// Loads the HEIC converter so that it is available as a function, even on pages that have a module loader
-// (the converter hides itself from the page when it sees one, which caused "heic2any is not a function").
-const HEIC_URL='https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
-async function getHeicConverter(url){
-  url=url||HEIC_URL;
-  const pick=h=>typeof h==='function'?h:(h&&typeof h.default==='function'?h.default:null);
-  if(pick(window.heic2any))return pick(window.heic2any);
-  const names=['define','module','exports'],saved={};
-  names.forEach(n=>{saved[n]=Object.getOwnPropertyDescriptor(window,n);});
-  names.forEach(n=>{try{Object.defineProperty(window,n,{value:undefined,configurable:true,writable:true});}catch(e){}});   // hide module loaders while it starts
-  try{
-    await new Promise((ok,no)=>{const sc=document.createElement('script');sc.src=url;sc.onload=ok;
-      sc.onerror=()=>no(new Error('the HEIC converter could not be downloaded'));document.head.appendChild(sc);
-      setTimeout(()=>no(new Error('the HEIC converter timed out')),20000);});
-  }finally{
-    names.forEach(n=>{try{if(saved[n])Object.defineProperty(window,n,saved[n]);else delete window[n];}catch(e){}});
-  }
-  let f=pick(window.heic2any);if(f)return f;
-  // Second way: run the converter's code privately, with module loaders switched off just for it.
-  try{
-    const code=await (await fetch(url)).text(),holder={};
-    new Function('define','module','exports',code).call(holder,undefined,undefined,undefined);
-    f=pick(holder.heic2any);if(f)return f;
-  }catch(e){}
-  throw new Error('the HEIC converter loaded but did not start (found: '+typeof window.heic2any+')');
 }
 async function loadPhoto(file){
   const bmp=await openImage(file);
@@ -4768,7 +4793,7 @@ $('scanClose').onclick=()=>{$('scan').hidden=true;};
 const bad=checkConfig();
 $('scanCheck').textContent=bad.length?'Setup problems: '+bad.join('; '):'Setup check: all sheet settings match the player.';
 if(bad.length){console.warn('Scanner setup problems',bad);$('scanCheck').style.color='#c0392b';}
-window.__scan={calibrate,colourShare,readStrip,S2,process,extract,CFG,getHeicConverter,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
+window.__scan={calibrate,colourShare,readStrip,S2,process,extract,CFG,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
 })();
 /* Oct 12 (remote test 3: "the steps were not obvious at first"; designer: a quick tutorial like the main screen's, with
    arrows pointing at the right spots). A short tour of Edit band: the page dims, a light frames the button for each step,
