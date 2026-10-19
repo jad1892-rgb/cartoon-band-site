@@ -1824,10 +1824,12 @@ window.DISG=(()=>{
     const cover=!rest&&!silent&&(m.vop?(r.z<GREY_HI||m.dgLine):r.z>GREY_LO);   // a line the detector isn't sure of any more, or no line but a fair chance of singing
     // hold each decision a little so the mic doesn't twitch: cover needs .35 s to come on and .6 s to go away
     m.dgCw=cover?(m.dgCw||0)+dt:0;m.dgCn=cover?0:(m.dgCn||0)+dt;
-    const wantC=m.dgCw>=.35?1:m.dgCn>=.6?0:(m.dgCt||0);m.dgCt=wantC;
+    const wantC=rest?0:m.dgCw>=.35?1:m.dgCn>=.6?0:(m.dgCt||0);m.dgCt=wantC;   // stepping back drops the mic-at-mouth at once (no hold)
     const ease=(v,to,tau)=>v+(to-v)*(1-Math.exp(-dt/tau));
     m.dgC=ease(m.dgC||0,wantC,.18);m.dgR=ease(m.dgR||0,rest?1:0,rest?.6:.22);   // back to the mic faster than stepping away
-    return {cover:m.dgC,rest:m.dgR,z:r.z};}
+    // Oct 18 (designer: 'distracting when the mic goes down to the side and there is no mouth'): what counts as 'covered' is how
+    // close the mic really is to the mouth, so the mouth hides only while the mic is in front of it
+    return {cover:m.dgC*(1-m.dgR),rest:m.dgR,z:r.z};}
   // two-bone reach: shoulder S, upper arm l1, forearm l2 to the point T; bend chooses the elbow side. Angles as the stage uses them
   // (0 = hanging straight down; the point at angle R is S + len·(-sin R, cos R)).
   function reach(S,T,l1,l2,bend){const dx=T.x-S.x,dy=T.y-S.y,d=Math.max(Math.abs(l1-l2)+1e-3,Math.min(l1+l2-1e-3,Math.hypot(dx,dy))),
