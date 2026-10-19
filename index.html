@@ -1793,7 +1793,7 @@ function update(m,t,fs){const P=(k)=>Math.pow(k,fs);
    DISG.state(m) gives {cover, rest} (0..1, smoothed) for tests and the stats log. */
 window.DISG=(()=>{
   const ON=()=>!!(window.OPT&&OPT.on('singerCover'));
-  const GREY_LO=.35,GREY_HI=.62,REST_AFTER=3.5,BACK_EARLY=1.1;   // grey zone: inside a sung line below .62 (the line's own 'ending' level), outside a line above .35; seconds without a line before stepping back; seconds before a line to return
+  const STYLE=.35,GREY_LO=.35,GREY_HI=.62,REST_AFTER=3.5,BACK_EARLY=1.1;   // grey zone: inside a sung line below .62 (the line's own 'ending' level), outside a line above .35; seconds without a line before stepping back; seconds before a line to return
   // (Oct 18, Red in the face, 70 s: mouth wrong where you can see it 24 % of the time -> 3 %; mouth visible for ~3/4 of the singing; mic up ~1/3 of the time)
   // where the mic is in the mic-arm picture: the middle of the ink beyond the hand (the last 30 % of the picture), as fractions of it
   const MIC=new WeakMap();
@@ -1818,7 +1818,10 @@ window.DISG=(()=>{
     if(!ON()){m.dgC=0;m.dgR=0;return null;}
     const r=read(m,t),silent=L.gate!=null&&L.gate<.3;
     const rest=!silent&&r.since>=REST_AFTER&&!m.vop&&r.z<GREY_HI&&!(r.next!=null&&r.next<=BACK_EARLY);   // Oct 18 (designer, Divvy: never stepped back): no line for 3.5 s is enough unless the detector is fairly sure someone sings (was: very sure nobody does, z < .35, which a guitar solo never reached)
-    const cover=!rest&&!silent&&(m.vop?r.z<GREY_HI:r.z>GREY_LO);   // a line the detector isn't sure of any more, or no line but a fair chance of singing
+    // Oct 18 (designer): the mic must also come up while he's clearly singing, so covering is part of his style and doesn't give the
+    // unsure moments away: at each new sung line he picks (about 1 line in 3) to sing that whole line into the mic
+    if(m.vop&&!m.dgWas)m.dgLine=Math.random()<STYLE;m.dgWas=m.vop;if(!m.vop)m.dgLine=false;
+    const cover=!rest&&!silent&&(m.vop?(r.z<GREY_HI||m.dgLine):r.z>GREY_LO);   // a line the detector isn't sure of any more, or no line but a fair chance of singing
     // hold each decision a little so the mic doesn't twitch: cover needs .35 s to come on and .6 s to go away
     m.dgCw=cover?(m.dgCw||0)+dt:0;m.dgCn=cover?0:(m.dgCn||0)+dt;
     const wantC=m.dgCw>=.35?1:m.dgCn>=.6?0:(m.dgCt||0);m.dgCt=wantC;
@@ -1947,6 +1950,7 @@ function drawLayers(x,m,t){
     if(k==='hat'){rot=p.h*.25;dy=p.h*2;}                     // hi-hat tilts
     if(k==='mouth'){if(open&&mo)hide=true;else if(open)sy=1+e*.8;} // closed art swaps to open art
     if(k==='mouthO'&&!open)hide=true;
+    if((k==='mouth'||k==='mouthO')&&m.dgS&&m.dgS.cover>.6)hide=true;   // Oct 18 (designer): while the mic covers his mouth, no mouth shows at all (nothing peeks out around the mic)
     const X=tx==null?d[1]+ly.x:tx,Y=ty==null?d[2]+ly.y+dy:ty;
     let R=rot+ar,R2=null;
     if(arm){if(k==='arm2'||k==='armL'||k==='armR'){R=arm[0];R2=arm[1];}else{R=ar+arm[0];R2=R+eb+arm[1];}}   // swinging arms: set bend + the music's bend   // reaching arms come back as world angles
