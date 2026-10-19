@@ -1841,7 +1841,7 @@ window.DISG=(()=>{
   // the mic arm's [upper turn, extra forearm bend] for this frame, given the normal pose `arm` and what drawLayers knows
   function fore(m,arm,o){const s=m.dgS;if(!s||!isFinite(s.cover)||!isFinite(s.rest))return arm;
     const {Sh,el,Hp,ar,eb,im,px,w,z,sx,mouth}=o;let out=arm;
-    if(s.cover>.01&&mouth){const q=micOf(im),l1=(el-o.py)*Hp,l2=Math.max(1,(q.v-el)*Hp),lat=(q.u-px)*w*z*sx;
+    if(s.cover>.01&&mouth){const q=headOf(im)||micOf(im),l1=(el-o.py)*Hp,l2=Math.max(1,(q.v-el)*Hp),lat=(q.u-px)*w*z*sx;
       let T={x:mouth.x,y:mouth.y},W=null;
       for(let it=0;it<2;it++){W=reach(Sh,T,l1,l2,eb||.4);T={x:mouth.x-Math.cos(W[1])*lat,y:mouth.y-Math.sin(W[1])*lat};}   // aim the mic's centre, not the arm's middle line
       const c=[W[0]-ar,W[1]-W[0]-eb],k=ss(s.cover);out=[out[0]+(c[0]-out[0])*k,out[1]+(c[1]-out[1])*k];}
@@ -1876,7 +1876,15 @@ window.DISG=(()=>{
     x.drawImage(H.c,-H.c.width/2,-H.c.height/2);x.restore();}
   // how much of the mouth still shows (1 = all): it fades out behind the mic as the mic arrives, and back in as it leaves
   const mouthAlpha=m=>m&&m.dgS?1-ss((m.dgS.cover-.4)/.45):1;
-  return {on:ON,step,fore,bigMic,mouthAlpha,headOf,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null,micOf,reach};})();
+  // the middle of a drawing's ink, as fractions of the picture (a mouth drawn off-centre in its box is aimed at where it really is)
+  const INK=new WeakMap();
+  function inkCentre(im){if(INK.has(im))return INK.get(im);let r={u:.5,v:.5};
+    try{const w0=im.width||150,h0=im.height||150,k=96/Math.max(w0,h0),w=Math.max(1,Math.round(w0*k)),h=Math.max(1,Math.round(h0*k)),
+        c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(im,0,0,w,h);const d=g.getImageData(0,0,w,h).data;
+      let x0=w,x1=-1,y0=h,y1=-1;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>60){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+      if(x1>=x0)r={u:(x0+x1+1)/2/w,v:(y0+y1+1)/2/h};}catch(e){}
+    INK.set(im,r);return r;}
+  return {on:ON,step,fore,bigMic,inkCentre,mouthAlpha,headOf,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null,micOf,reach};})();
 // ===== 3b. PAPER CUTOUT PUPPETS: each piece has one job and one pivot =====
 // An arm hinged at the shoulder S, swung (and stretched a little) so its hand lands on H.
 // The hand sits 85% of the way down the picture; the hinge is at 10%.
@@ -1938,7 +1946,10 @@ function drawLayers(x,m,t){
   // Neck fingers: a spot on the rocking instrument (near its head) that slides a little along the neck. The neck arm reaches for it.
   let nh=null;
   let mouthT=null;   // Oct 18: where the singer's mouth is this frame (the disguise brings the mic in front of it)
-  if(m.dgS&&m.dgS.cover>.01){const ml=L.mouth||L.mouthO,md=SLOTS.mouth;if(ml){const ox=md[1]+ml.x-hx,oy=md[2]+ml.y-hy,c=Math.cos(hr),sn=Math.sin(hr);mouthT={x:hx+ox*c-oy*sn,y:hy+dyB+ox*sn+oy*c};}}
+  if(m.dgS&&m.dgS.cover>.01){const ml=(L.mouthO&&(L.mouthO.img||L.mouthO.ph))?L.mouthO:L.mouth,md=SLOTS.mouth;if(ml){
+    // Oct 18 (designer: the mic sat a little left of the mouth): aim at the drawn mouth's ink, not the middle of its box
+    const mi=ml.img||ml.ph,ic=mi&&window.DISG?DISG.inkCentre(mi):{u:.5,v:.5},mw=mi&&mi.width||150,mh=mi&&mi.height||150,zm=md[3]*ml.s/Math.max(mw,mh),
+      ox=md[1]+ml.x-hx+(ic.u-md[4])*mw*zm,oy=md[2]+ml.y-hy+(ic.v-md[5])*mh*zm,c=Math.cos(hr),sn=Math.sin(hr);mouthT={x:hx+ox*c-oy*sn,y:hy+dyB+ox*sn+oy*c};}}
   if(il&&L.grip){const g=L.grip,ix=SLOTS.inst[1]+il.x,iy=SLOTS.inst[2]+il.y,c=Math.cos(ir),sn=Math.sin(ir),th=ir+ia,sl=Math.sin((m.ph||0)*.5+1)*e*5*il.s;
     nh={x:ix+g.x*c-g.y*sn+sl*Math.cos(th),y:iy+g.x*sn+g.y*c+sl*Math.sin(th)};}
   m._wr=null;   // where the strum arm's wrist is this frame (the strum hand hangs there)
