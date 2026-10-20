@@ -593,21 +593,7 @@ body.in-app #ws{padding-top:112px}
 <script id="band-settings">
 // ======================================================================
 // BAND SETTINGS: the designer's dials. Plain values only; change, save, reload.
-// Saved with "Save band file" on 2026-10-05.
-// Saved with "Save band file" on 2026-10-05.
-// Saved with "Save band file" on 2026-10-05.
-// Saved with "Save band file" on 2026-10-04.
-// Saved with "Save band file" on 2026-10-03.
-// Saved with "Save band file" on 2026-10-03.
-// Saved with "Save band file" on 2026-10-03.
-// Saved with "Save band file" on 2026-10-03.
-// Saved with "Save band file" on 2026-10-03.
-// Saved with "Save band file" on 2026-10-03.
-// Saved with "Save band file" on 2026-10-03.
-// Saved with "Save band file" on 2026-10-03.
-// Saved with "Save band file" on 2026-10-03.
-// Saved with "Save band file" on 2026-10-03.
-// Saved with "Save band file" on 2026-10-02. Oct 3: designer's pasted positions/sound for Bass, Guitar, Vocals applied.
+// Saved with "Save band file" on 2026-10-19.
 // Tip: the "Copy layout" button gives you LAYOUT and SOUND for whatever is on screen,
 // ready to paste over the ones below (adj = LAYOUT, v = SOUND).
 // ======================================================================
@@ -643,7 +629,7 @@ const LAYOUT = {
   "vocals.armV":{"x":1.1794871794871824,"y":-10.46153846153846,"s":1.1255623021488865,"eb":8,"v2":1},
   "vocals.mouth":{"y":-2,"s":0.8322922097413782,"v2":1},
   "vocals.mouthO":{"y":-2,"s":0.8375427815950692,"v2":1},
-  "vocals.fore":{"x":-18,"y":-35,"s":1.35,"a":34,"eb":113,"v2":1},
+  "vocals.fore":{"x":-16,"y":-33,"s":1.35,"a":34,"eb":113,"ua":51,"ue":116,"v2":1},
   "guitar.legL":{"x":1.487179487179489,"y":2,"s":0.95,"a":14,"v2":1},
   "guitar.legR":{"x":-1.487179487179489,"y":2,"s":0.9,"v2":1},
   "guitar.body":{"s":0.5107692307692308,"v2":1},
@@ -680,24 +666,24 @@ const PRESET_DEFAULT = { id:'default', name:'Original (placeholders, saved layou
 const PRESETS_BUILTIN = {
   bass: [
     {"art":{"bass.legL":"@b:art45","bass.legR":"@b:art46","bass.body":"@b:art47","bass.head":"@b:art48","bass.arm2":"@b:art49","bass.inst":"@b:art50","bass.grip":"@b:art51","bass.arm":"@b:art52","bass.hand":"@b:art68"},"adj":{"bass.legL":{"x":0.974358974358978,"y":2,"s":0.9236767131503973,"a":0,"v2":1},"bass.legR":{"x":-0.974358974358978,"y":2,"s":0.9236767131503973,"a":0,"v2":1},"bass.body":{"x":0,"y":0,"s":0.5415384615384615,"a":0,"v2":1},"bass.head":{"x":0,"y":-2,"s":0.9,"a":0,"v2":1},"bass.arm2":{"x":-19,"y":-39.90769230769231,"s":1.2113353286347737,"a":-60,"eb":0,"v2":1},"bass.inst":{"x":11,"y":-12,"s":1.65,"a":-29,"v2":1},"bass.grip":{"x":36,"y":-16.595098882787124,"s":1.1282051282051282,"a":0,"v2":1},"bass.arm":{"x":-32,"y":-15,"s":1,"a":21,"eb":-96,"v2":1},"bass.hand":{"x":0,"y":0,"s":1.161930975135719,"a":0,"v2":1}},"v":{"sens":3,"smooth":0.95,"speed":1.2,"steady":1,"lo":20,"hi":150},"id":"saved-default","name":"★ Default (saved 2026-10-05)"},
-    {"id":"look","name":"Saved look (2026-10-05)","art":{"bass.legL":"@b:art45","bass.legR":"@b:art46","bass.body":"@b:art47","bass.head":"@b:art48","bass.arm2":"@b:art49","bass.inst":"@b:art50","bass.grip":"@b:art51","bass.arm":"@b:art52","bass.hand":"@b:art68"}}
+    {"id":"look","name":"Saved look (2026-10-19)","art":{"bass.legL":"@b:art45","bass.legR":"@b:art46","bass.body":"@b:art47","bass.head":"@b:art48","bass.arm2":"@b:art49","bass.inst":"@b:art50","bass.grip":"@b:art51","bass.arm":"@b:art52","bass.hand":"@b:art68"}}
   ],
   drums: [
     {"art":{"drums.legL":"@b:art9","drums.legR":"@b:art10","drums.body":"@b:art69","drums.head":"@b:art70","drums.snareSt":"@b:art71","drums.hatSt":"@b:art72","drums.snare":"@b:art73","drums.kick":"@b:art74","drums.hat":"@b:art75","drums.armS":"@b:art37","drums.armH":"@b:art38"},"adj":{"drums.legL":{"x":7,"y":0,"s":0,"a":0},"drums.legR":{"x":0,"y":0,"s":0,"a":0},"drums.body":{"x":-4,"y":4,"s":0.45,"a":0,"v2":1},"drums.head":{"x":-5,"y":9,"s":0.75,"a":0,"v2":1},"drums.snareSt":{"x":23,"y":-14.3,"s":0.803,"a":0,"v2":3},"drums.hatSt":{"x":-9,"y":-12,"s":0.807,"a":0,"v2":3},"drums.snare":{"x":23,"y":15,"s":0.9567999999999999,"a":0,"v2":1},"drums.kick":{"x":-3,"y":-4,"s":0.95,"a":0,"v2":1},"drums.hat":{"x":-9,"y":-1,"s":0.9089599999999999,"a":0,"v2":1},"drums.armS":{"x":20.525714285714287,"y":-1,"s":0.8293615936738478,"a":-16,"eb":-92,"v2":2},"drums.armH":{"x":-31,"y":-2,"s":1.7754930984995387,"a":-46,"eb":-54,"v2":2}},"v":{"sens":1.5,"thr":0.1,"hold":110},"id":"saved-default","name":"★ Default (saved 2026-10-05)"},
-    {"id":"look","name":"Saved look (2026-10-05)","art":{"drums.legL":"@b:art9","drums.legR":"@b:art10","drums.body":"@b:art69","drums.head":"@b:art70","drums.snareSt":"@b:art71","drums.hatSt":"@b:art72","drums.snare":"@b:art73","drums.kick":"@b:art74","drums.hat":"@b:art75","drums.armS":"@b:art37","drums.armH":"@b:art38"}}
+    {"id":"look","name":"Saved look (2026-10-19)","art":{"drums.legL":"@b:art9","drums.legR":"@b:art10","drums.body":"@b:art69","drums.head":"@b:art70","drums.snareSt":"@b:art71","drums.hatSt":"@b:art72","drums.snare":"@b:art73","drums.kick":"@b:art74","drums.hat":"@b:art75","drums.armS":"@b:art37","drums.armH":"@b:art38"}}
   ],
   vocals: [
     {"id":"mic-up","name":"Mic raised layout","v":{},"adj":{"vocals.fore":{"x":0,"y":-24,"s":1,"a":160},"vocals.armV":{"x":-1,"y":-3,"s":1.15,"a":0}}},
     {"art":{"vocals.legL":"@b:art39","vocals.legR":"@b:art40","vocals.body":"@b:art41","vocals.head":"@b:art42","vocals.armV":"@b:art43","vocals.mouth":"@b:art44","vocals.mouthO":"@b:art53","vocals.fore":"@b:art54"},"adj":{"vocals.legL":{"x":1.7948717948717956,"y":2,"s":0.8257110011495976,"a":0,"v2":1},"vocals.legR":{"x":-1.7948717948717956,"y":2,"s":0.8297096016394262,"a":0,"v2":1},"vocals.body":{"x":0,"y":0,"s":0.49230769230769234,"a":0,"v2":1},"vocals.head":{"x":1,"y":2,"s":0.95,"a":0,"v2":1},"vocals.armV":{"x":1.1794871794871824,"y":-10.46153846153846,"s":1.1255623021488865,"a":0,"eb":8,"v2":1},"vocals.mouth":{"x":0,"y":-2,"s":0.8322922097413782,"a":0,"v2":1},"vocals.mouthO":{"x":0,"y":-2,"s":0.8375427815950692,"a":0,"v2":1},"vocals.fore":{"x":-18,"y":-35,"s":1.35,"a":34,"eb":113,"v2":1}},"v":{"sens":3,"smooth":0.95,"steady":1,"gate":0.14,"voice":0.6,"lo":100,"hi":6000},"id":"saved-default","name":"★ Default (saved 2026-10-05)"},
-    {"id":"look","name":"Saved look (2026-10-05)","art":{"vocals.legL":"@b:art39","vocals.legR":"@b:art40","vocals.body":"@b:art41","vocals.head":"@b:art42","vocals.armV":"@b:art11","vocals.mouth":"@b:art44","vocals.mouthO":"@b:art53","vocals.fore":"@b:art12"}}
+    {"id":"look","name":"Saved look (2026-10-19)","art":{"vocals.legL":"@b:art39","vocals.legR":"@b:art40","vocals.body":"@b:art41","vocals.head":"@b:art42","vocals.armV":"@b:art11","vocals.mouth":"@b:art44","vocals.mouthO":"@b:art53","vocals.fore":"@b:art12"}}
   ],
   guitar: [
     {"art":{"guitar.legL":"@b:art28","guitar.legR":"@b:art29","guitar.body":"@b:art30","guitar.head":"@b:art31","guitar.arm2":"@b:art32","guitar.inst":"@b:art33","guitar.grip":"@b:art34","guitar.arm":"@b:art35","guitar.hand":"@b:art36"},"adj":{"guitar.legL":{"x":1.487179487179489,"y":2,"s":0.95,"a":14,"v2":1},"guitar.legR":{"x":-1.487179487179489,"y":2,"s":0.9,"a":0,"v2":1},"guitar.body":{"x":0,"y":0,"s":0.5107692307692308,"a":0,"v2":1},"guitar.head":{"x":0,"y":0.5,"s":0.95,"a":0,"v2":1},"guitar.arm2":{"x":-24,"y":-42,"s":1.1425094576896158,"a":23,"eb":-17,"v2":1},"guitar.inst":{"x":9,"y":-18,"s":1.2,"a":-28,"v2":1},"guitar.grip":{"x":28,"y":-9,"s":0.8,"a":-12,"v2":1},"guitar.arm":{"x":-31,"y":-13,"s":1,"a":11,"eb":-108,"v2":1},"guitar.hand":{"x":3,"y":0,"s":0.75,"a":9,"v2":1}},"v":{"sens":1.8,"smooth":0.5,"speed":1.5,"steady":0.6,"lo":620,"hi":3500},"id":"saved-default","name":"★ Default (saved 2026-10-05)"},
-    {"id":"look","name":"Saved look (2026-10-05)","art":{"guitar.legL":"@b:art28","guitar.legR":"@b:art29","guitar.body":"@b:art30","guitar.head":"@b:art31","guitar.arm2":"@b:art32","guitar.inst":"@b:art33","guitar.grip":"@b:art34","guitar.arm":"@b:art13","guitar.hand":"@b:art36"}}
+    {"id":"look","name":"Saved look (2026-10-19)","art":{"guitar.legL":"@b:art28","guitar.legR":"@b:art29","guitar.body":"@b:art30","guitar.head":"@b:art31","guitar.arm2":"@b:art32","guitar.inst":"@b:art33","guitar.grip":"@b:art34","guitar.arm":"@b:art13","guitar.hand":"@b:art36"}}
   ],
   keys: [
     {"art":{"keys.legL":"@b:art55","keys.legR":"@b:art56","keys.body":"@b:art57","keys.head":"@b:art58","keys.inst":"@b:art59","keys.armL":"@b:art60","keys.armR":"@b:art78"},"adj":{"keys.legL":{"x":1.7948717948717956,"y":2,"s":0.8257110011495976,"a":0,"v2":1},"keys.legR":{"x":-1.7948717948717956,"y":2,"s":0.8217124006597691,"a":0,"v2":1},"keys.body":{"x":0,"y":0,"s":0.49230769230769234,"a":0,"v2":1},"keys.head":{"x":0,"y":2,"s":0.9,"a":0,"v2":1},"keys.inst":{"x":2,"y":0,"s":0.9572649572649572,"a":0,"v2":1},"keys.armL":{"x":8,"y":-33,"s":1,"a":12,"eb":-30,"v2":1},"keys.armR":{"x":-8,"y":-33,"s":1.05,"a":-19,"eb":30,"v2":1}},"v":{"sens":2,"smooth":0.7,"speed":0.8,"steady":0.3,"lo":2000,"hi":6000},"id":"saved-default","name":"★ Default (saved 2026-10-05)"},
-    {"id":"look","name":"Saved look (2026-10-05)","art":{"keys.legL":"@b:art55","keys.legR":"@b:art56","keys.body":"@b:art57","keys.head":"@b:art58","keys.inst":"@b:art59","keys.armL":"@b:art60","keys.armR":"@b:art14"}}
+    {"id":"look","name":"Saved look (2026-10-19)","art":{"keys.legL":"@b:art55","keys.legR":"@b:art56","keys.body":"@b:art57","keys.head":"@b:art58","keys.inst":"@b:art59","keys.armL":"@b:art60","keys.armR":"@b:art14"}}
   ]
 };
 // Presets applied automatically the first time (or after "Reset all"), until something else is chosen:
@@ -706,7 +692,7 @@ const PRESET_AUTOLOAD = {"bass":"look","drums":"look","vocals":"look","guitar":"
 // Show Time stage. Spots: x 0 = left edge .. 1 = right edge; y 0 = back of the stage .. 1 = front edge.
 // Dragging players on stage saves their own spots in the browser; "↺ Positions" returns to these.
 const STAGE_SET = {
-  spots: { bass:{x:0.788,y:0.539}, drums:{x:0.295,y:0.155}, vocals:{x:0.46,y:0.791}, guitar:{x:0.167,y:0.61}, keys:{x:0.621,y:0.173} },
+  spots: { bass:{x:0.325,y:0.41}, drums:{x:0.453,y:0.214}, vocals:{x:0.524,y:0.967}, guitar:{x:0.619,y:0.105}, keys:{x:0.748,y:0.448} },
   curtain:'#5a1830',   // back curtain colour
   floor:'#9a6a3c',     // stage floor colour
   wings:'#1a1216',     // dark sides and front of the stage
@@ -1442,7 +1428,7 @@ const TURNS=/^(arm|inst|fore|grip|head|leg|hand)/;   // pieces that get an angle
 const ARMS=new Set(['arm','arm2','armV','armL','armR','armS','armH','fore']),ELBOW=.42,HAND=.85,ELBOW2=.475;   // ELBOW2: new-sheet arms bend halfway between shoulder (.1) and hand (.85)
 // arms drawn on a new sheet: where the hand sits along the picture (shoulder at .1); they bend halfway between the two
 const V2H={arm:.85,arm2:.85,armL:.85,armR:.85,armS:.6,armH:.6,armV:.85,fore:.65};
-const adjOf=l=>{const o={x:l.x,y:l.y,s:l.s,a:l.a};if(l.eb!=null)o.eb=l.eb;if(l.ua!=null)o.ua=l.ua;if(l.ue!=null)o.ue=l.ue;/* Oct 19: the singer's mic-up pose */if(l.v2)o.v2=+l.v2||1;return o;};   // PATCH01: v2 = version of the new sheet the piece was placed from   // v2: piece drawn on a new sheet   // arms also keep their elbow bend (even 0)   // a piece's nudges, as saved
+const adjOf=l=>{const o={x:l.x,y:l.y,s:l.s,a:l.a};if(l.eb!=null)o.eb=l.eb;if(l.us!=null)o.us=l.us;/* Oct 19: the singer's mic-up size */if(l.v2)o.v2=+l.v2||1;return o;};   // PATCH01: v2 = version of the new sheet the piece was placed from   // v2: piece drawn on a new sheet   // arms also keep their elbow bend (even 0)   // a piece's nudges, as saved
 // Saved settings (slider positions, artwork, nudges) live in this browser
 let S={v:{},art:{},adj:{}};try{S=Object.assign(S,JSON.parse(localStorage.getItem('bandSave')||'{}'));}catch(e){}
 // This browser's memory belongs to one band file (its fingerprint, FILE_SIG = its BAND SETTINGS block). When the file changes
@@ -1572,22 +1558,20 @@ members.forEach(m=>{
   const c=document.createElement('div');c.className='card';
   c.innerHTML=`<h2>${m.name}</h2><canvas width="640" height="560"></canvas><div class="uact"><button class="alt" data-ush>${TXT('edit.cardSheet')}</button><button class="alt" data-urs>${TXT('edit.cardReset')}</button></div><div class="meter"><i></i></div><div class="pre"><select data-p aria-label="Preset"></select><details><summary class="hint">Edit presets</summary><input type="text" data-pn placeholder="Preset name" maxlength="40"><div class="pb"><button class="alt" data-pa>Apply</button><button class="alt" data-pf title="Save what is on screen as this player's starting point">★ Make default</button><button class="alt" data-pu>Update</button><button class="alt" data-pw>Save new</button><button class="alt" data-pr>Rename</button><button class="alt" data-pd>Delete</button></div><div class="hint" data-ps></div></details></div>`+
    `<details class="snd" open><summary>Sound settings</summary>`+m.sl.map(s=>`<label>${s[1]}: <b data-v="${s[0]}">${m.v[s[0]]}</b><input type="range" min="${s[2]}" max="${s[3]}" step="${s[5]}" value="${m.v[s[0]]}" data-k="${s[0]}"></label>`).join('')+`</details>`+
-   `<details class="art"><summary>Artwork pieces</summary>`+SETS[m.id].map(k=>`<div class="slot"><b>${SLOTS[k][0]}</b> <button class="alt" data-c>use placeholder</button><input type="file" accept="image/*" data-s="${k}"><div class="nudge"><input type="range" data-a="x" min="-60" max="60" title="left / right"><input type="range" data-a="y" min="-60" max="60" title="up / down"><input type="range" data-a="s" min=".3" max="2.5" step=".05" title="size">${TURNS.test(k)?'<input type="range" data-a="a" min="-180" max="180" title="angle">':''}${ARMS.has(k)?'<input type="range" data-a="eb" min="-150" max="150" step="1" title="elbow bend (degrees)">'+(k==='fore'?'<input type="range" data-a="ua" min="-180" max="180" step="1" title="mic up: arm turn (degrees)"><input type="range" data-a="ue" min="-150" max="150" step="1" title="mic up: elbow bend (degrees)">':''):''}</div><div class="hint">left/right · up/down · size${TURNS.test(k)?' · angle':''}${ARMS.has(k)?' · elbow bend':''}</div></div>`).join('')+`</details>`;
+   `<details class="art"><summary>Artwork pieces</summary>`+SETS[m.id].map(k=>`<div class="slot"><b>${SLOTS[k][0]}</b> <button class="alt" data-c>use placeholder</button><input type="file" accept="image/*" data-s="${k}"><div class="nudge"><input type="range" data-a="x" min="-60" max="60" title="left / right"><input type="range" data-a="y" min="-60" max="60" title="up / down"><input type="range" data-a="s" min=".3" max="2.5" step=".05" title="size">${TURNS.test(k)?'<input type="range" data-a="a" min="-180" max="180" title="angle">':''}${ARMS.has(k)?'<input type="range" data-a="eb" min="-150" max="150" step="1" title="elbow bend (degrees)">'+(k==='fore'?'<input type="range" data-a="us" min="1" max="2.6" step=".05" title="mic up: how big the mic gets over the mouth (x its drawn size)">':''):''}</div><div class="hint">left/right · up/down · size${TURNS.test(k)?' · angle':''}${ARMS.has(k)?' · elbow bend':''}</div></div>`).join('')+`</details>`;
   grid.appendChild(c);const sd=c.querySelector('.snd');if(m.id==='vocals'){m.dbg=document.createElement('div');m.dbg.className='art';sd.appendChild(m.dbg);}if((S.open||{})[m.id]===false)sd.open=false;sd.ontoggle=()=>{S.open=S.open||{};S.open[m.id]=sd.open;save();};m.cv=c.querySelector('canvas');m.x=m.cv.getContext('2d');m.meter=c.querySelector('.meter i');
   c.querySelectorAll('input[data-k]').forEach(r=>r.oninput=()=>{m.v[r.dataset.k]=+r.value;c.querySelector(`b[data-v="${r.dataset.k}"]`).textContent=r.value;S.v[m.id]=Object.assign({},m.v);save();});
   SETS[m.id].forEach(k=>{
     const key=m.id+'.'+k,ly=m.layers[k]=Object.assign({img:null,x:0,y:0,s:1,a:0},DEF[key],S.adj[key]);ly.ph=phImg(m,k);if(ARMS.has(k))ly.eb=+(ly.eb||0);
     const row=c.querySelector(`[data-s="${k}"]`).parentNode;
-    const sv=r=>r.value=r.dataset.a==='eb'?(ly.eb||0):(r.dataset.a==='ua'||r.dataset.a==='ue')?(ly[r.dataset.a]!=null?ly[r.dataset.a]:((window.DISG&&DISG.autoDeg(m))||{})[r.dataset.a]||0):ly[r.dataset.a];
-    // Oct 19: the singer's two "mic up" sliders (mic arm only) show the pose while they are moved; not set yet, they start
-    // from the pose worked out from the drawings, so the first touch doesn't throw the arm somewhere else
-    row.querySelectorAll('[data-a="ua"],[data-a="ue"]').forEach(r=>r.addEventListener('pointerdown',()=>{ly.peekUp=performance.now()+3000;
-      if(ly[r.dataset.a]==null&&window.DISG){const a=DISG.autoDeg(m);if(a)r.value=a[r.dataset.a];}}));
-    row.querySelectorAll('[data-a]').forEach(r=>{sv(r);r.oninput=()=>{ly[r.dataset.a]=+r.value;if(ARMS.has(k))ly.peek=performance.now()+1500;if(r.dataset.a==='ua'||r.dataset.a==='ue')ly.peekUp=performance.now()+3000;S.adj[key]=adjOf(ly);save();};});   // arms: elbow dot shows while adjusting
+    const sv=r=>r.value=r.dataset.a==='eb'?(ly.eb||0):r.dataset.a==='us'?(ly.us!=null?ly.us:1.3):ly[r.dataset.a];
+    // Oct 19: the singer's "mic up: size" slider (mic arm only) shows the mic up while it is moved
+    row.querySelectorAll('[data-a="us"]').forEach(r=>r.addEventListener('pointerdown',()=>{ly.peekUp=performance.now()+3000;}));
+    row.querySelectorAll('[data-a]').forEach(r=>{sv(r);r.oninput=()=>{ly[r.dataset.a]=+r.value;if(ARMS.has(k))ly.peek=performance.now()+1500;if(r.dataset.a==='us')ly.peekUp=performance.now()+3000;S.adj[key]=adjOf(ly);save();};});   // arms: elbow dot shows while adjusting
     const set=u=>{u=artURL(u);if(!u)return;ly.want=u;const im=new Image();im.onload=()=>{if(ly.want===u)ly.img=im;};im.src=u;};   // Oct 7: the last picture asked for wins, even if an earlier, bigger one finishes loading later
     ARTSET[key]=u=>{set(u);S.art[key]=u;save();};
     ARTCLEAR[key]=()=>{ly.img=null;delete S.art[key];};     // back to the placeholder (used by presets)
-    ADJSET[key]=o=>{const d=Object.assign({x:0,y:0,s:1,a:0},DEF[key],o||{});['x','y','s','a'].forEach(q=>ly[q]=+d[q]);ly.v2=d.v2?(+d.v2||1):0;if(ARMS.has(k))ly.eb=+(d.eb||0);if(k==='fore'){ly.ua=d.ua!=null?+d.ua:null;ly.ue=d.ue!=null?+d.ue:null;}   // o missing = original layout
+    ADJSET[key]=o=>{const d=Object.assign({x:0,y:0,s:1,a:0},DEF[key],o||{});['x','y','s','a'].forEach(q=>ly[q]=+d[q]);ly.v2=d.v2?(+d.v2||1):0;if(ARMS.has(k))ly.eb=+(d.eb||0);if(k==='fore')ly.us=d.us!=null?+d.us:null;   // o missing = original layout
       row.querySelectorAll('[data-a]').forEach(sv);if(o)S.adj[key]=adjOf(ly);else delete S.adj[key];};
     if(S.art[key])set(S.art[key]);
     ARTDB.refresh.push(()=>{if(S.art[key])set(S.art[key]);});   // Oct 7: the user's own drawings arrive from the browser's database a moment after start
@@ -1860,37 +1844,32 @@ window.DISG=(()=>{
   function reach(S,T,l1,l2,bend){const dx=T.x-S.x,dy=T.y-S.y,d=Math.max(Math.abs(l1-l2)+1e-3,Math.min(l1+l2-1e-3,Math.hypot(dx,dy))),
       base=Math.atan2(-dx,dy),a=Math.acos(Math.max(-1,Math.min(1,(l1*l1+d*d-l2*l2)/(2*l1*d)))),R1=base-(bend>=0?a:-a),
       E={x:S.x-Math.sin(R1)*l1,y:S.y+Math.cos(R1)*l1};return [R1,Math.atan2(-(T.x-E.x),T.y-E.y)];}
-  /* Oct 19 (designer: "the mic is swinging round wildly … rework the mic arm"): the mic-up pose is no longer worked out live
-     every frame (which could flip the elbow from one side to the other and chase the dancing head). It is a fixed pose, like
-     every other piece: Edit band → Vocals → the mic arm's two "mic up" sliders (turn and elbow, in degrees, same meaning as
-     its normal angle and elbow). The arm glides between his normal pose and that pose. While up, it follows the head (turns
-     about the shoulder by as much as the mouth has moved), a fraction of a second behind, with a slow gentle drift, so it
-     looks held by hand rather than glued on (designer: "follow the head but with some drift").
-     Not set (a user's own singer): the pose is worked out ONCE from the drawings at rest (mic head on the resting mouth,
-     elbow on the same side as his normal bend) and kept until a drawing or a slider changes. */
-  const ang=(S,p)=>Math.atan2(-(p.x-S.x),p.y-S.y);   // the stage's angle of the line from S to p (0 = straight down)
-  function upPose(m,o){const ly=o.ly||{},key=[o.im&&o.im.src&&o.im.src.length,o.im&&o.im.width,o.Sh.x,o.Sh.y,o.ar,o.eb,o.mouthR.x.toFixed(1),o.mouthR.y.toFixed(1)].join('|');
-    if(!m.dgAuto||m.dgAuto.key!==key){const {Sh,el,Hp,im,px,w,z,sx}=o,q=headOf(im)||micOf(im),l1=(el-o.py)*Hp,l2=Math.max(1,(q.v-el)*Hp),lat=(q.u-px)*w*z*sx;
-      let T={x:o.mouthR.x,y:o.mouthR.y},W=null;
-      for(let it=0;it<2;it++){W=reach(Sh,T,l1,l2,o.eb||.4);T={x:o.mouthR.x-Math.cos(W[1])*lat,y:o.mouthR.y-Math.sin(W[1])*lat};}   // aim the mic's centre, not the arm's middle line
-      m.dgAuto={key,R1:W[0],R2:W[1]};}
-    const R1=ly.ua!=null?ly.ua*Math.PI/180:m.dgAuto.R1,R2=R1+(ly.ue!=null?ly.ue*Math.PI/180:m.dgAuto.R2-m.dgAuto.R1);
-    return {R1,R2};}
-  // the mic up pose in the slider's degrees (the Edit band sliders start from it when not set yet)
-  const autoDeg=m=>m&&m.dgAuto?{ua:Math.round(m.dgAuto.R1*180/Math.PI),ue:Math.round((m.dgAuto.R2-m.dgAuto.R1)*180/Math.PI)}:null;
-  // the mic arm's [upper turn, extra forearm bend] for this frame, given the normal pose `arm` and what drawLayers knows
-  function fore(m,arm,o){const s=m.dgS,ly=o.ly||{},peek=ly.peekUp&&performance.now()<ly.peekUp;
-    if(!o.mouthR||!o.im)return arm;
-    const P=upPose(m,o);   // always kept up to date (cheap, cached), so the sliders can start from it
-    const cover=peek?1:s&&isFinite(s.cover)?s.cover:0,rest=peek?0:s&&isFinite(s.rest)?s.rest:0;
-    let out=arm;const {ar,eb}=o;
-    if(cover>.01){const now=performance.now()/1000,dt=Math.min(.1,Math.max(0,now-(m.dgFt||now)));m.dgFt=now;
-      let d=ang(o.Sh,o.mouth||o.mouthR)-ang(o.Sh,o.mouthR);d=Math.atan2(Math.sin(d),Math.cos(d));   // how far the mouth has turned about his shoulder
-      m.dgFd=m.dgFd==null||!isFinite(m.dgFd)?d:m.dgFd+(d-m.dgFd)*(1-Math.exp(-dt/.18));             // follows the head ~0.2 s behind
-      const w1=.025*Math.sin(now*1.3+.5)+.015*Math.sin(now*.53),w2=.035*Math.sin(now*.9+1.7);       // slow drift of the hand and wrist
-      const R1=P.R1+m.dgFd+w1,R2=P.R2+m.dgFd+w1+w2,c=[R1-ar,R2-R1-eb],k=ss(cover);
-      if(isFinite(c[0])&&isFinite(c[1]))out=[out[0]+(c[0]-out[0])*k,out[1]+(c[1]-out[1])*k];}
-    else{m.dgFd=null;m.dgFt=null;}
+  /* Oct 19, 01:39 (designer, after setting the up pose by hand: one shoulder spot can't suit both poses, "too low when down,
+     too high on the face when up"; idea: "the arm is the same but at the elbow it folds up like a 2D sheet, the back is the same
+     as the front"). So the arm no longer swings to the mouth at all. The upper arm and shoulder stay exactly as he holds the
+     mic normally; at the elbow the forearm FOLDS over like paper: it flattens onto the crease and comes over the other way
+     (the same drawing, mirrored), so the mic lands on the mouth. The crease is chosen each frame so the folded mic points at
+     the mouth (the line half-way between "where the mic is" and "where the mouth is", through the elbow); the forearm may
+     stretch or shrink a little (0.8-1.25x) to reach. It follows the head ~0.2 s behind with a gentle drift.
+     The old mic-up sliders (turn, elbow) are no longer used; a "mic up: size" slider sets how big the mic gets. */
+  const ang2=(a,b)=>Math.atan2(b.y-a.y,b.x-a.x);
+  function cov(m,ly){return ly&&ly.peekUp&&performance.now()<ly.peekUp?1:m.dgS&&isFinite(m.dgS.cover)?m.dgS.cover:0;}
+  // the fold for this frame: the canvas matrix to draw the forearm (and its mic) with, or null when the mic isn't up
+  function fold(m,o){const f=ss(cov(m,o.ly));if(f<.01||!o.mouth||!o.im){m.dgTg=null;return null;}
+    const {im,X,Y,R1,R2,z,sx,sy,px,py,el}=o,w=im.width||150,h=im.height||150,ye=h*(el-py)*z*sy,
+      E={x:X-Math.sin(R1)*ye,y:Y+Math.cos(R1)*ye},q=headOf(im)||micOf(im),al=(q.v-el)*h*z*sy,lat=(q.u-px)*w*z*sx,
+      M={x:E.x-Math.sin(R2)*al+Math.cos(R2)*lat,y:E.y+Math.cos(R2)*al+Math.sin(R2)*lat};
+    const now=performance.now()/1000,dt=Math.min(.1,Math.max(0,now-(m.dgTt||now)));m.dgTt=now;
+    const g=m.dgTg&&isFinite(m.dgTg.x)?m.dgTg:{x:o.mouth.x,y:o.mouth.y},kk=1-Math.exp(-dt/.18);
+    g.x+=(o.mouth.x-g.x)*kk;g.y+=(o.mouth.y-g.y)*kk;m.dgTg=g;                        // the mouth, followed ~0.2 s behind
+    const T={x:g.x+1.0*Math.sin(now*1.3+.5)+.6*Math.sin(now*.53),y:g.y+.8*Math.sin(now*.9+1.7)};   // gentle drift
+    const a1=ang2(E,M),a2=ang2(E,T),ph=a1+Math.atan2(Math.sin(a2-a1),Math.cos(a2-a1))/2,c=Math.cos(Math.PI*f),
+      st=Math.pow(Math.max(.8,Math.min(1.25,Math.hypot(T.x-E.x,T.y-E.y)/Math.max(1e-3,Math.hypot(M.x-E.x,M.y-E.y)))),f),
+      cp=Math.cos(ph),sp=Math.sin(ph),A=st*(cp*cp+c*sp*sp),B=st*cp*sp*(1-c),D=st*(sp*sp+c*cp*cp);
+    const F=[A,B,B,D,E.x-(A*E.x+B*E.y),E.y-(B*E.x+D*E.y)];
+    if(!F.every(isFinite))return null;m.dgPhi=ph;return F;}
+  // the mic arm's [upper turn, extra forearm bend] for this frame: only the stepping-back pose changes it now (the fold is drawn)
+  function fore(m,arm,o){const s=m.dgS,rest=s&&isFinite(s.rest)?s.rest:0;let out=arm;const {ar,eb}=o;
     if(rest>.01){   // Oct 18 v2 (designer couldn't see v1): the arm drops right down by his side, mic at the hip, swinging a little with the beat
       const sw=Math.sin((m.ph||0)*.9)*.08,R1=-.1+sw,R2=R1+(eb>=0?.18:-.18),lowered=[R1-ar,R2-R1-eb];
       out=[out[0]+(lowered[0]-out[0])*rest,out[1]+(lowered[1]-out[1])*rest];}
@@ -1910,15 +1889,16 @@ window.DISG=(()=>{
     HEAD.set(im,r);return r;}
   const MW=new WeakMap();
   function inkW(im){if(MW.has(im))return MW.get(im);let r=1;try{const s=spanOf(im);r=s[1]-s[0];}catch(e){}MW.set(im,r);return r;}
-  function bigMic(x,m,im,E,R2,o){const s=m.dgS;if(!s||!(s.cover>=.02))return;const H=headOf(im);if(!H)return;
+  function bigMic(x,m,im,E,R2,o){const cv=cov(m,o.ly);if(!(cv>=.02))return;const H=headOf(im);if(!H)return;
     const w=im.width||150,h=im.height||150,{z,sx,sy,px,el}=o,sc=z*sy;
     let bx,by,along;if(E.wx!=null){bx=E.wx;by=E.wy;along=(H.v-HAND)*h*sc;}else{bx=E.x;by=E.y;along=(H.v-el)*h*sc;}
     const lat=(H.u-px)*w*z*sx,cx=bx-Math.sin(R2)*along+Math.cos(R2)*lat,cy=by+Math.cos(R2)*along+Math.sin(R2)*lat;
     let mw=0;for(const ml of o.mouths){const mi=ml&&(ml.img||ml.ph);if(!mi)continue;const D=SLOTS.mouth[3]*ml.s,zz=D/Math.max(mi.width||150,mi.height||150);mw=Math.max(mw,inkW(mi)*(mi.width||150)*zz);}
-    const head=H.iw*w*z*sx,S=head>0&&mw>0?Math.max(1,Math.min(2.6,1.3*mw/head)):1.4,k=1+(S-1)*ss(s.cover);
+    // Oct 19 (designer: the growth was too much): Edit band's "mic up: size" slider sets it; not set, it is a bit wider than his mouth but at most 1.6x
+    const head=H.iw*w*z*sx,S=o.ly&&o.ly.us!=null?Math.max(1,Math.min(2.6,+o.ly.us)):head>0&&mw>0?Math.max(1,Math.min(1.6,1.3*mw/head)):1.3,k=1+(S-1)*ss(cv);
     if(!(k>=1.02&&k<=2.7)||!isFinite(cx)||!isFinite(cy))return;
-    x.save();x.translate(cx,cy);x.rotate(R2);x.scale(z*sx*k,sc*k);
-    x.shadowColor='rgba(0,0,0,'+(.28*Math.min(1,s.cover))+')';x.shadowBlur=6*k;x.shadowOffsetX=1.5;x.shadowOffsetY=2.5;
+    x.save();if(o.fold)x.transform(...o.fold);x.translate(cx,cy);x.rotate(R2);x.scale(z*sx*k,sc*k);
+    x.shadowColor='rgba(0,0,0,'+(.28*Math.min(1,cv))+')';x.shadowBlur=6*k;x.shadowOffsetX=1.5;x.shadowOffsetY=2.5;
     x.drawImage(H.c,-H.c.width/2,-H.c.height/2);x.restore();}
   // how much of the mouth still shows (1 = all): it fades out behind the mic as the mic arrives, and back in as it leaves
   const mouthAlpha=m=>m&&m.dgS?1-ss((m.dgS.cover-.4)/.45):1;
@@ -1930,7 +1910,7 @@ window.DISG=(()=>{
       let x0=w,x1=-1,y0=h,y1=-1;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>60){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
       if(x1>=x0)r={u:(x0+x1+1)/2/w,v:(y0+y1+1)/2/h};}catch(e){}
     INK.set(im,r);return r;}
-  return {on:ON,step,fore,autoDeg,bigMic,inkCentre,mouthAlpha,headOf,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null,micOf,reach};})();
+  return {on:ON,step,fore,fold,bigMic,inkCentre,mouthAlpha,headOf,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null,micOf,reach};})();
 // ===== 3b. PAPER CUTOUT PUPPETS: each piece has one job and one pivot =====
 // An arm hinged at the shoulder S, swung (and stretched a little) so its hand lands on H.
 // The hand sits 85% of the way down the picture; the hinge is at 10%.
@@ -1958,9 +1938,9 @@ function keyboardSpan(kl){const im=kl&&(kl.img||kl.ph),d=SLOTS.inst,D=d[3]*(kl?k
 function bendStrips(x,len,wid,bend){const t=x.getTransform(),k=Math.hypot(t.a,t.b)||1,th=Math.abs(bend);if(!(th>1e-4)||!isFinite(th))return 2;
   const r=len*k/th+wid*k/2,err=.25,n=r>err?th/(2*Math.acos(Math.max(-1,1-err/r))):14;
   return Math.max(2,Math.min(14,2*Math.ceil(n/2)));}
-function drawArm(x,im,X,Y,R1,R2,z,sx,sy,px,py,el,bendy){   // returns the elbow point
+function drawArm(x,im,X,Y,R1,R2,z,sx,sy,px,py,el,bendy,fold){   // returns the elbow point. fold (Oct 19, the singer's mic): a canvas matrix the forearm is drawn through (a straight paper crease at the elbow)
  const w=im.width||150,h=im.height||150,ye=h*(el-py),ov=h*.03;
- if(bendy){   // Oct 5: new-sheet arms bend smoothly over a short stretch around the elbow (no hinge cut, nothing sticks out)
+ if(bendy&&!fold){   // Oct 5: new-sheet arms bend smoothly over a short stretch around the elbow (no hinge cut, nothing sticks out)
    const sc=z*sy,zl=h*.16,y0=h*el-zl/2,n=bendStrips(x,zl*sc,w*z*sx,R2-R1),seg=zl/n;let cx=X-Math.sin(R1)*(y0-h*py)*sc,cy=Y+Math.cos(R1)*(y0-h*py)*sc,ex=cx,ey=cy;
    const strip=(px0,py0,a,r0,len)=>{x.save();x.translate(px0,py0);x.rotate(a);x.scale(z*sx,sc);x.beginPath();x.rect(-w,0,2*w,len);x.clip();x.drawImage(im,-w*px,-r0,w,h);x.restore();};
    x.save();x.translate(X,Y);x.rotate(R1);x.scale(z*sx,sc);x.beginPath();x.rect(-w,-2*h,2*w,2*h+(y0-h*py)+1.5);x.clip();x.drawImage(im,-w*px,-h*py,w,h);x.restore();
@@ -1969,7 +1949,7 @@ function drawArm(x,im,X,Y,R1,R2,z,sx,sy,px,py,el,bendy){   // returns the elbow 
    const rest=(HAND*h-(y0+zl))*sc;return {x:ex,y:ey,wx:cx-Math.sin(R2)*rest,wy:cy+Math.cos(R2)*rest};}
   x.save();x.translate(X,Y);x.rotate(R1);x.scale(z*sx,z*sy);x.beginPath();x.rect(-w,-2*h,2*w,2*h+ye+ov);x.clip();x.drawImage(im,-w*px,-h*py,w,h);x.restore();
   const ex=X-Math.sin(R1)*ye*z*sy,ey=Y+Math.cos(R1)*ye*z*sy;
-  x.save();x.translate(ex,ey);x.rotate(R2);x.scale(z*sx,z*sy);x.beginPath();x.rect(-w,-ov,2*w,2*h);x.clip();x.drawImage(im,-w*px,-h*el,w,h);x.restore();return {x:ex,y:ey};}
+  x.save();if(fold)x.transform(...fold);x.translate(ex,ey);x.rotate(R2);x.scale(z*sx,z*sy);x.beginPath();x.rect(-w,-ov,2*w,2*h);x.clip();x.drawImage(im,-w*px,-h*el,w,h);x.restore();return {x:ex,y:ey};}
 const STAND_BASE={snareSt:[80,140],hatSt:[122,140]},INKB=new WeakMap();
 function inkBottom(im){if(INKB.has(im))return INKB.get(im);const w=im.width,h=im.height;if(!w||!h)return 1;const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(im,0,0);
   const a=g.getImageData(0,0,w,h).data;const need=Math.max(3,w*.02);let r=h-1;for(;r>0;r--){let n=0;for(let i=0;i<w;i++)if(a[(r*w+i)*4+3]>128)n++;if(n>=need)break;}   /* ignore stray specks */const v=(r+1)/h;INKB.set(im,v);return v;}   // lowest drawn line, as a share of the picture's height   // PATCH02: where a free stand's feet sit with its sliders at 0 (under the drum's slot, on the bass drum slot's bottom)
@@ -2001,7 +1981,7 @@ function drawLayers(x,m,t){
   // Neck fingers: a spot on the rocking instrument (near its head) that slides a little along the neck. The neck arm reaches for it.
   let nh=null;
   let mouthT=null,mouthR=null;   // Oct 18: where the singer's mouth is this frame, and (Oct 19) where it is at rest (no nod, no bob)
-  if(m.id==='vocals'&&L.fore&&window.DISG){const ml=(L.mouthO&&(L.mouthO.img||L.mouthO.ph))?L.mouthO:L.mouth,md=SLOTS.mouth;if(ml){
+  if(m.id==='vocals'&&L.fore&&window.DISG&&((m.dgS&&m.dgS.cover>.01)||(L.fore.peekUp&&performance.now()<L.fore.peekUp))){const ml=(L.mouthO&&(L.mouthO.img||L.mouthO.ph))?L.mouthO:L.mouth,md=SLOTS.mouth;if(ml){
     // Oct 18 (designer: the mic sat a little left of the mouth): aim at the drawn mouth's ink, not the middle of its box
     const mi=ml.img||ml.ph,ic=mi&&window.DISG?DISG.inkCentre(mi):{u:.5,v:.5},mw=mi&&mi.width||150,mh=mi&&mi.height||150,zm=md[3]*ml.s/Math.max(mw,mh),
       ox=md[1]+ml.x-hx+(ic.u-md[4])*mw*zm,oy=md[2]+ml.y-hy+(ic.v-md[5])*mh*zm,c=Math.cos(hr),sn=Math.sin(hr);mouthT={x:hx+ox*c-oy*sn,y:hy+dyB+ox*sn+oy*c};mouthR={x:hx+ox,y:hy+oy};}}
@@ -2039,7 +2019,7 @@ function drawLayers(x,m,t){
     if(k==='armV'){const kk=dn>0?(members.find(q=>q.id==='drums')||{p:{k:0}}).p.k:0;   // free hand: swings in time over two beats, flicks on the kick drum
       arm=[Math.sin(ph*.9)*e*.45*(1-dn)+iS*.12+dn*.35*sw,Math.sin(ph*.9-.8)*e*.6*(1-dn)+iS*.15+dn*(.4*Math.cos(Math.PI*(BV.n+BV.ph)-.6)-.3*kk)];}                // free hand swings, forearm follows a beat behind
     if(k==='fore'){arm=[-e*.12+iS*.03+dn*.03*dip,-e*.22+Math.sin(ph*1.3)*e*.1+iS*.04+dn*.05*dip];
-      if(window.DISG&&mouthR){const w0=im.width||150,h0=im.height||150;arm=DISG.fore(m,arm,{Sh,el,Hp,ar,eb,im,ly,px:d[4],py:d[5],w:w0,z:D/Math.max(w0,h0),sx,mouth:mouthT,mouthR});}}   // Oct 18: mic in front of the mouth when unsure, lowered while resting                          // mic comes up to the mouth when singing
+      if(window.DISG&&m.dgS)arm=DISG.fore(m,arm,{ar,eb});}   // Oct 18: mic in front of the mouth when unsure, lowered while resting                          // mic comes up to the mouth when singing
     if(k==='arm')arm=[s*e*.25+iS*.05,Math.sin(ph+.6)*e*.7+iS*.08];                                  // strumming: mostly forearm
     if(k==='kick')sx=sy=1+p.k*.1;                            // bass drum thumps
     if(k==='snare'){dy=p.s*3;sx=sy=1+p.s*.05;}               // snare jolts
@@ -2058,8 +2038,9 @@ function drawLayers(x,m,t){
     if(m.rec)m.rec[k]={x:X,y:Y,r:R,D,sx,sy,px:d[4],py:d[5]};   // only used when making drawing sheets
     if(hide)continue;
     const w=im.width||150,h=im.height||150,z=D/Math.max(w,h);
-    if(R2!=null){const E=drawArm(x,im,X,Y,R,R2,z,sx,sy,d[4],d[5],el,v2arm);
-      if(k==='fore'&&m.dgS&&window.DISG)DISG.bigMic(x,m,im,E,R2,{z,sx,sy,px:d[4],el,mouths:[L.mouth,L.mouthO]});   // Oct 18: the mic comes toward the viewer while it covers his mouth
+    if(R2!=null){const FO=k==='fore'&&window.DISG&&mouthT?DISG.fold(m,{im,X,Y,R1:R,R2,z,sx,sy,px:d[4],py:d[5],el,ly,mouth:mouthT}):null;   // Oct 19: the mic forearm folds over at the elbow
+      const E=drawArm(x,im,X,Y,R,R2,z,sx,sy,d[4],d[5],el,v2arm,FO);
+      if(k==='fore'&&window.DISG&&mouthT)DISG.bigMic(x,m,im,E,R2,{z,sx,sy,px:d[4],el,ly,fold:FO,mouths:[L.mouth,L.mouthO]});   // Oct 18: the mic comes toward the viewer while it covers his mouth
       if(k==='arm'){const l2=(HAND-el)*h*z*sy;m._wr=E.wx!=null?{x:E.wx,y:E.wy,r:R2}:{x:E.x-Math.sin(R2)*l2,y:E.y+Math.cos(R2)*l2,r:R2};}
       if(peek){x.save();x.strokeStyle='#e8553d';x.lineWidth=1;x.beginPath();x.arc(E.x,E.y,2.5,0,7);x.stroke();x.restore();}   // the elbow, while adjusting
       continue;}
@@ -2140,7 +2121,7 @@ function bandFileText(){
   // where every piece sits and every slider, right now
   const layout={},sound={},looks={},auto={};
   members.forEach(m=>{sound[m.id]=Object.assign({},m.v);
-    SETS[m.id].forEach(k=>{const l=m.layers[k],e={};if(l.x)e.x=l.x;if(l.y)e.y=l.y;if(l.s!==1)e.s=l.s;if(l.a)e.a=l.a;if(l.eb)e.eb=l.eb;if(l.ua!=null)e.ua=l.ua;if(l.ue!=null)e.ue=l.ue;if(l.v2)e.v2=+l.v2||1;/* PATCH03: keep the sheet version */if(Object.keys(e).length)layout[m.id+'.'+k]=e;});
+    SETS[m.id].forEach(k=>{const l=m.layers[k],e={};if(l.x)e.x=l.x;if(l.y)e.y=l.y;if(l.s!==1)e.s=l.s;if(l.a)e.a=l.a;if(l.eb)e.eb=l.eb;if(l.us!=null)e.us=l.us;if(l.v2)e.v2=+l.v2||1;/* PATCH03: keep the sheet version */if(Object.keys(e).length)layout[m.id+'.'+k]=e;});
     const art={};SETS[m.id].forEach(k=>{const u=S.art[m.id+'.'+k];if(u)art[m.id+'.'+k]=u;});
     if(Object.keys(art).length){looks[m.id]={id:'look',name:'Saved look ('+day+')',art:artOf(art)};auto[m.id]='look';}});
   // presets: built-in ones, the saved look, and this browser's own presets and defaults
@@ -3274,7 +3255,7 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
    const art={},adj={};
    for(const m of members)for(const k of SETS[m.id]){const key=m.id+'.'+k,u=d.art&&d.art[key];
      if(typeof u==='string'&&/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(u)&&u.length<8e6){art[key]=u;
-       const a=d.adj&&d.adj[key];if(a&&typeof a==='object'){const o={};['x','y','s','a','eb','v2','ua','ue'].forEach(q=>{if(a[q]!=null&&isFinite(+a[q]))o[q]=+a[q];});adj[key]=o;}}}
+       const a=d.adj&&d.adj[key];if(a&&typeof a==='object'){const o={};['x','y','s','a','eb','v2','us'].forEach(q=>{if(a[q]!=null&&isFinite(+a[q]))o[q]=+a[q];});adj[key]=o;}}}
    members.forEach(m=>{if(m.example)m.example();});   // every player back to this file's default…
    for(const key in art){ARTSET[key](art[key]);if(adj[key])ADJSET[key](adj[key]);}   // …and the saved band's own pieces on top
    S.bandName=typeof d.bandName==='string'?d.bandName.slice(0,30):undefined;
