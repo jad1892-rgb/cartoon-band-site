@@ -78,6 +78,10 @@ body.show #beatDot,body:not(.dev) #beatDot{display:none!important}
 #scan h2{font-size:16px;margin:0 0 6px}#scan .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
 #scan select{font:inherit;padding:9px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 #scanMsg{font-size:13px;min-height:18px}#scanWho[hidden]{display:none}#scanCheck{font-size:11px;color:var(--mut);margin-top:6px}
+#addSel button[aria-pressed="true"]{outline:3px solid #e8553d;outline-offset:1px}
+#addCv{display:block;max-width:100%;margin:6px 0;touch-action:none;border:1px solid var(--line);border-radius:10px;background:#fff}
+#picCv{display:block;max-width:100%;margin:6px 0;touch-action:none;border:1px solid var(--line);border-radius:10px;background:#fff}
+#jointsCv{display:block;width:100%;max-width:420px;margin:6px 0;touch-action:none;cursor:grab;border:1px solid var(--line);border-radius:10px;background:#fff}
 #scanParts{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 .pv{border:1px solid var(--line);border-radius:10px;padding:6px;font-size:11px}
 .pv img{width:100%;aspect-ratio:1;object-fit:contain;display:block;border-radius:6px;background:repeating-conic-gradient(#d9d9d9 0 25%,#fff 0 50%) 0 0/16px 16px}
@@ -568,11 +572,20 @@ body.in-app #ws{padding-top:112px}
     <select id="scanSheet" class="devonly"></select></div>
   <div id="scanMsg" data-t="upload.start">Choose a photo to start.</div>
   <div id="scanWho" class="row" hidden=""></div>
+  <div id="scanPic" hidden=""><div class="row"><label class="inl"><span data-t="pic.piece">Piece:</span> <select id="picPiece"></select></label>
+    <label class="inl"><input type="checkbox" id="picSnap" checked=""> <span data-t="pic.snap">Snap to shape</span></label></div>
+    <div class="hint" style="font-size:13px" data-t="pic.help"></div><canvas id="picCv" width="10" height="10"></canvas>
+    <div class="row"><button id="picUse" data-t="pic.use">Use this part</button></div></div>
   <div class="row"><label class="inl">Line darkness: <b id="thrV"></b><input id="scanThr" type="range" min="0.2" max="0.7" step="0.01" style="width:150px"></label>
     <label class="inl"><input id="scanFill" type="checkbox"> Fill closed shapes</label>
     <label class="inl"><input id="scanColour" type="checkbox"> Keep colours</label>
     <label class="inl" title="A bold border around the outside of each drawing, so it stands out on stage. Off: your lines exactly as drawn."><input id="scanBold" type="checkbox" checked=""> Bold outlines</label></div>
+  <div id="addCheck" hidden=""><div class="hint" style="font-size:13px" data-t="add.checkHelp">Tap a piece to change it. Draw round anything we missed.</div>
+    <canvas id="addCv" width="10" height="10"></canvas>
+    <div id="addSel" class="row" hidden=""><label class="inl"><span data-t="add.thisIs">This piece is the</span> <select id="addPiece"></select></label><button class="alt" id="addOut" data-t="add.leaveOut">Leave out</button><button class="alt" id="addBrushAdd" aria-pressed="false" data-t="add.brushAdd">Add</button><button class="alt" id="addBrushRub" aria-pressed="false" data-t="add.brushRub">Rub out</button><button class="alt" id="addMouth" hidden="" aria-pressed="false" data-t="add.mouth">Mark the mouth</button><span id="addLook" class="hint" style="font-size:13px"></span></div>
+    <div class="row"><label class="inl"><input type="checkbox" id="addSnap" checked=""> <span data-t="pic.snap">Snap to shape</span></label><button id="addNext" data-t="add.next">Next: put them together</button></div></div>
   <div id="scanParts"></div>
+  <div id="scanJoints" hidden=""><h3 style="margin:10px 0 2px;font-size:15px" data-t="joints.title">Put them together</h3><div class="hint" style="font-size:13px" data-t="joints.help"></div><canvas id="jointsCv" width="10" height="10"></canvas><div class="row"><button class="alt" id="addBack" hidden="" data-t="add.back">Back</button><button class="alt" id="jointsReset" data-t="joints.reset">Put the dots back</button></div></div>
   <div class="row"><label class="devonly" style="margin-right:10px;font-size:13px" title="On: a new upload only swaps the drawings; your position, size, angle and elbow stay. Off: place everything from the drawing again."><input type="checkbox" id="scanKeep" checked=""> Keep my placement</label><button id="scanApply" disabled="" data-t="upload.useDrawings">✓ Use these drawings</button><button class="alt" id="scanClose" data-t="upload.close">Close</button></div>
   <details class="devonly"><summary class="hint">How the page was read</summary><canvas id="scanPage" width="10" height="10"></canvas></details>
   <div id="scanCheck" class="devonly"></div>
@@ -887,7 +900,7 @@ window.WTXT={
   'edit.backupNote': 'Your band saves itself on this phone. A backup moves it to another phone or keeps a spare copy.',
   'edit.players': 'Players',
   'edit.print': '🖨 Print drawing sheets',
-  'edit.upload': '📷 Upload a drawn sheet',
+  'edit.upload': '📷 Add drawings',   // Oct 21: one way in for sheets, drawings on any paper and pictures (needs a new drawn word)
   'edit.undo': '↶ Undo',
   'edit.cardSheet': '🖨 Sheet',
   'edit.cardReset': '↺ Reset',
@@ -926,8 +939,8 @@ window.WTXT={
 
   // ---- Upload a drawn sheet
   'upload.darkPhoto': 'Tip: this photo is quite dark. Daylight or a bright lamp gives the cleanest lines.',   // Oct 9
-  'upload.title': '📷 Upload a drawn sheet',
-  'upload.help': 'Photograph your finished sheet from straight above, flat, in good light, with all four black corner squares in view. Each drawing is found for you: untick any you don\'t want, then press <b>Use these drawings</b>.',   // (bold ok)
+  'upload.title': '📷 Add drawings',
+  'upload.help': 'A photo of a printed sheet, drawings on any paper, or a picture. We find the pieces for you. Draw each piece on its own with a little space round it; plain paper, dark lines, even light.',
   'upload.choosePhoto': 'Choose photo',
   'upload.takePhoto': 'Take photo',
   'upload.useDrawings': '✓ Use these drawings',
@@ -954,6 +967,60 @@ window.WTXT={
   'upload.tryJpeg': 'Try a JPEG or PNG.',
   'upload.wentWrong': 'Something went wrong reading that photo: ',
   'upload.couldNotApply': 'Could not apply: ',
+
+  // ---- Drawings on plain paper (Oct 21): no printed sheet
+  'upload.freeOffer': 'Drawn on plain paper? Read the drawings',
+  'upload.freeWho': 'Which player are these drawings for?',
+  'upload.freeFinding': 'Looking for your drawings…',
+  'upload.freeFound': 'Found {n} drawing{s}. Check each one says the right piece (or Leave out), then press Use these drawings.',
+  'upload.freeNone': 'Couldn\'t find any drawings. Use plain paper, dark lines and even light, with a little space around each drawing.',
+  'upload.freeLeaveOut': 'Leave out',
+  'upload.freeLegL': 'left leg',
+  'upload.freeLegR': 'right leg',
+  'upload.freeInst': 'instrument',
+
+  // ---- A picture as one piece (Oct 21): a painting or picture, paint kept
+  'upload.picOffer': 'Use part of this picture as one piece',
+  'pic.piece': 'Piece:',
+  'pic.help': 'Draw round the part you want with your finger, a little outside it: with Snap to shape on, the line pulls in to the part. Then press Use this part. Draw round more parts for other pieces.',
+  'pic.use': 'Use this part',
+  'pic.snap': 'Snap to shape',
+  'pic.noSnap': 'Couldn\'t find a clear shape inside your line (the colours around it are too alike), so your line is used as drawn.',
+  'pic.added': '{piece} is ready. Draw round another part for another piece, or press Use these drawings.',
+
+  // ---- Add drawings (Oct 21): check the pieces, then put them together
+  'add.who': 'No printed sheet, so we\'ll find your drawings. Which player are these for?',
+  'add.notSheet': 'Not a printed sheet? Find the drawings instead',
+  'add.checkHelp': 'Tap a piece to change it. Draw round anything we missed.',
+  'add.found': 'Found {n} piece{s}. Tap one to change it, or draw round anything we missed. Then press Next.',
+  'add.picture': 'This looks like a picture, not separate drawings. Draw round each part you want with your finger, then press Next.',
+  'add.none': 'No drawings found by themselves. Draw round each piece you want with your finger.',
+  'add.thisIs': 'This piece is the',
+  'add.leaveOut': 'Leave out',
+  'add.left': 'left out',
+  'add.lookDrawn': 'Look: drawn (it\'s a line drawing)',
+  'add.lookPrinted': 'Look: printed (it\'s painted or a photo)',
+  'add.brushAdd': '🖌 Add',
+  'add.brushRub': '🖌 Rub out',
+  'add.brushHelp': 'Paint over the photo to add to this piece, or to rub bits of it out. Tap the button again to stop.',
+  'add.mouth': '👄 Mark the mouth',
+  'add.mouthHelp': 'Drag a line across the lips, from one corner of the mouth to the other. Everything below it, down to the chin, becomes the jaw that drops when they sing.',
+  'add.mouthDone': 'Mouth marked: the jaw drops when they sing. Drag again to move it.',
+  'edit.cardEdit': '✎ Edit',
+  'add.arrange': 'Move, turn or size any part, then press Use these drawings. Parts you don\'t touch stay as they are.',
+  'add.nothingChanged': 'Nothing was changed, so nothing moved.',
+  'add.next': 'Next: put them together',
+  'add.back': 'Back',
+  'add.nothing': 'Name at least one piece first.',
+
+  // ---- Adjust joints (Oct 21): after a scan, pin the pieces to the body
+  'joints.title': 'Put them together',
+  'joints.help': 'Each dot is a pin holding a piece to the body. Drag a dot to where the joint is on the body (the shoulder, the hip, the base of the neck). Drag a piece to slide it so the right spot sits on the pin. Tap a piece, then drag its round handle to turn it or make it bigger or smaller.',
+  'joints.reset': 'Put the dots back',
+  'joints.neck': 'neck',
+  'joints.shoulder': 'shoulder',
+  'joints.hip': 'hip',
+  'joints.hand': 'hand',
 };
 
 /* TXT('key') gives the words for a key; TXT('key', {name:'…'}) also fills in {name}. A missing key shows the key itself
@@ -1430,7 +1497,7 @@ const TURNS=/^(arm|inst|fore|grip|head|leg|hand)/;   // pieces that get an angle
 const ARMS=new Set(['arm','arm2','armV','armL','armR','armS','armH','fore']),ELBOW=.42,HAND=.85,ELBOW2=.475;   // ELBOW2: new-sheet arms bend halfway between shoulder (.1) and hand (.85)
 // arms drawn on a new sheet: where the hand sits along the picture (shoulder at .1); they bend halfway between the two
 const V2H={arm:.85,arm2:.85,armL:.85,armR:.85,armS:.6,armH:.6,armV:.85,fore:.65};
-const adjOf=l=>{const o={x:l.x,y:l.y,s:l.s,a:l.a};if(l.eb!=null)o.eb=l.eb;if(l.v2)o.v2=+l.v2||1;return o;};   // PATCH01: v2 = version of the new sheet the piece was placed from   // v2: piece drawn on a new sheet   // arms also keep their elbow bend (even 0)   // a piece's nudges, as saved
+const adjOf=l=>{const o={x:l.x,y:l.y,s:l.s,a:l.a};if(l.eb!=null)o.eb=l.eb;if(l.v2)o.v2=+l.v2||1;if(l.jaw)o.jaw=l.jaw;return o;};   // PATCH01: v2 = version of the new sheet the piece was placed from   // v2: piece drawn on a new sheet   // arms also keep their elbow bend (even 0)   // a piece's nudges, as saved
 // Saved settings (slider positions, artwork, nudges) live in this browser
 let S={v:{},art:{},adj:{}};try{S=Object.assign(S,JSON.parse(localStorage.getItem('bandSave')||'{}'));}catch(e){}
 // This browser's memory belongs to one band file (its fingerprint, FILE_SIG = its BAND SETTINGS block). When the file changes
@@ -1558,7 +1625,7 @@ members.forEach(m=>{
   m.v={};m.sl.forEach(s=>{const sv=(S.v[m.id]||{})[s[0]],dv=(SOUND[m.id]||{})[s[0]];m.v[s[0]]=sv!=null?sv:dv!=null?dv:s[4];});
   m.env=0;m.peak=.05;m.p={k:0,s:0,h:0,c:0};m.avg={k:0,s:0,h:0,c:0};m.last={k:0,s:0,h:0,c:0};m.layers={};
   const c=document.createElement('div');c.className='card';
-  c.innerHTML=`<h2>${m.name}</h2><canvas width="640" height="560"></canvas><div class="uact"><button class="alt" data-ush>${TXT('edit.cardSheet')}</button><button class="alt" data-urs>${TXT('edit.cardReset')}</button></div><div class="meter"><i></i></div><div class="pre"><select data-p aria-label="Preset"></select><details><summary class="hint">Edit presets</summary><input type="text" data-pn placeholder="Preset name" maxlength="40"><div class="pb"><button class="alt" data-pa>Apply</button><button class="alt" data-pf title="Save what is on screen as this player's starting point">★ Make default</button><button class="alt" data-pu>Update</button><button class="alt" data-pw>Save new</button><button class="alt" data-pr>Rename</button><button class="alt" data-pd>Delete</button></div><div class="hint" data-ps></div></details></div>`+
+  c.innerHTML=`<h2>${m.name}</h2><canvas width="640" height="560"></canvas><div class="uact"><button class="alt" data-ued>${TXT('edit.cardEdit')}</button><button class="alt" data-ush>${TXT('edit.cardSheet')}</button><button class="alt" data-urs>${TXT('edit.cardReset')}</button></div><div class="meter"><i></i></div><div class="pre"><select data-p aria-label="Preset"></select><details><summary class="hint">Edit presets</summary><input type="text" data-pn placeholder="Preset name" maxlength="40"><div class="pb"><button class="alt" data-pa>Apply</button><button class="alt" data-pf title="Save what is on screen as this player's starting point">★ Make default</button><button class="alt" data-pu>Update</button><button class="alt" data-pw>Save new</button><button class="alt" data-pr>Rename</button><button class="alt" data-pd>Delete</button></div><div class="hint" data-ps></div></details></div>`+
    `<details class="snd" open><summary>Sound settings</summary>`+m.sl.map(s=>`<label>${s[1]}: <b data-v="${s[0]}">${m.v[s[0]]}</b><input type="range" min="${s[2]}" max="${s[3]}" step="${s[5]}" value="${m.v[s[0]]}" data-k="${s[0]}"></label>`).join('')+`</details>`+
    `<details class="art"><summary>Artwork pieces</summary>`+SETS[m.id].map(k=>`<div class="slot"><b>${SLOTS[k][0]}</b> <button class="alt" data-c>use placeholder</button><input type="file" accept="image/*" data-s="${k}"><div class="nudge"><input type="range" data-a="x" min="-60" max="60" title="left / right"><input type="range" data-a="y" min="-60" max="60" title="up / down"><input type="range" data-a="s" min=".3" max="2.5" step=".05" title="size">${TURNS.test(k)?'<input type="range" data-a="a" min="-180" max="180" title="angle">':''}${ARMS.has(k)?'<input type="range" data-a="eb" min="-150" max="150" step="1" title="elbow bend (degrees)">':''}</div><div class="hint">left/right · up/down · size${TURNS.test(k)?' · angle':''}${ARMS.has(k)?' · elbow bend':''}</div></div>`).join('')+`</details>`;
   grid.appendChild(c);const sd=c.querySelector('.snd');if(m.id==='vocals'){m.dbg=document.createElement('div');m.dbg.className='art';sd.appendChild(m.dbg);}if((S.open||{})[m.id]===false)sd.open=false;sd.ontoggle=()=>{S.open=S.open||{};S.open[m.id]=sd.open;save();};m.cv=c.querySelector('canvas');m.x=m.cv.getContext('2d');m.meter=c.querySelector('.meter i');
@@ -1571,7 +1638,7 @@ members.forEach(m=>{
     const set=u=>{u=artURL(u);if(!u)return;ly.want=u;const im=new Image();im.onload=()=>{if(ly.want===u)ly.img=im;};im.src=u;};   // Oct 7: the last picture asked for wins, even if an earlier, bigger one finishes loading later
     ARTSET[key]=u=>{set(u);S.art[key]=u;save();};
     ARTCLEAR[key]=()=>{ly.img=null;delete S.art[key];};     // back to the placeholder (used by presets)
-    ADJSET[key]=o=>{const d=Object.assign({x:0,y:0,s:1,a:0},DEF[key],o||{});['x','y','s','a'].forEach(q=>ly[q]=+d[q]);ly.v2=d.v2?(+d.v2||1):0;if(ARMS.has(k))ly.eb=+(d.eb||0);   // o missing = original layout
+    ADJSET[key]=o=>{const d=Object.assign({x:0,y:0,s:1,a:0},DEF[key],o||{});['x','y','s','a'].forEach(q=>ly[q]=+d[q]);ly.v2=d.v2?(+d.v2||1):0;ly.jaw=+(d.jaw||0);if(ARMS.has(k))ly.eb=+(d.eb||0);   // o missing = original layout
       row.querySelectorAll('[data-a]').forEach(sv);if(o)S.adj[key]=adjOf(ly);else delete S.adj[key];};
     if(S.art[key])set(S.art[key]);
     ARTDB.refresh.push(()=>{if(S.art[key])set(S.art[key]);});   // Oct 7: the user's own drawings arrive from the browser's database a moment after start
@@ -1651,6 +1718,7 @@ members.forEach(m=>{
     // first visit (or after Reset all): start from your default if you saved one, otherwise the built-in auto-load preset; skipped if art was already chosen
     // step E.2: card buttons for players. Sheet = print this player's page; Start over = back to the band file's own drawings (asks twice)
     m.example=()=>{const auto=S.defaults[id]?DEFID:PRESET_AUTOLOAD[id],p=find(auto)||PRESET_DEFAULT;if(!p.adj)SETS[id].forEach(k=>ADJSET[pre+k]());apply(p);};
+    c.querySelector('[data-ued]').onclick=()=>{if(window.ADD)ADD.arrange(id);};   /* Oct 21: Put them together for the player as they are, no photo needed */
     c.querySelector('[data-ush]').onclick=()=>{const p=document.getElementById('sheetsP'),w=document.getElementById('shWho');if(w)w.value=id;p.hidden=false;p.scrollIntoView({block:'nearest',behavior:'smooth'});};
     {const rs=c.querySelector('[data-urs]');let armed=0;rs.onclick=()=>{
       if(!armed){rs.textContent='Sure?';armed=setTimeout(()=>{rs.textContent='↺ Reset';armed=0;},3000);return;}
@@ -1915,7 +1983,7 @@ window.DISG=(()=>{
     try{const w0=im.width||150,h0=im.height||150,k=96/Math.max(w0,h0),w=Math.max(1,Math.round(w0*k)),h=Math.max(1,Math.round(h0*k)),
         c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(im,0,0,w,h);const d=g.getImageData(0,0,w,h).data;
       let x0=w,x1=-1,y0=h,y1=-1;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>60){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
-      if(x1>=x0)r={u:(x0+x1+1)/2/w,v:(y0+y1+1)/2/h};}catch(e){}
+      if(x1>=x0)r={u:(x0+x1+1)/2/w,v:(y0+y1+1)/2/h,t:y0/h};}catch(e){}   /* t: top of the ink (Oct 21: a jaw's top edge is the mouth line) */
     INK.set(im,r);return r;}
   return {on:ON,step,fore,strip,inkCentre,mouthAlpha,headOf,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null,micOf,reach};})();
 // ===== 3b. PAPER CUTOUT PUPPETS: each piece has one job and one pivot =====
@@ -1988,10 +2056,10 @@ function drawLayers(x,m,t){
   // Neck fingers: a spot on the rocking instrument (near its head) that slides a little along the neck. The neck arm reaches for it.
   let nh=null;
   let mouthT=null,mouthR=null;   // Oct 18: where the singer's mouth is this frame, and (Oct 19) where it is at rest (no nod, no bob)
-  if(m.id==='vocals'&&L.fore&&window.DISG&&(DISG.on()||(m.dgS&&m.dgS.cover>.01)||(L.fore.peekUp&&performance.now()<L.fore.peekUp))){const ml=(L.mouthO&&(L.mouthO.img||L.mouthO.ph))?L.mouthO:L.mouth,md=SLOTS.mouth;if(ml){
+  if(m.id==='vocals'&&L.fore&&window.DISG&&(DISG.on()||(m.dgS&&m.dgS.cover>.01)||(L.fore.peekUp&&performance.now()<L.fore.peekUp))){const jw=L.mouth&&L.mouth.jaw&&L.mouth.img,ml=jw?L.mouth:(L.mouthO&&(L.mouthO.img||L.mouthO.ph))?L.mouthO:L.mouth,md=SLOTS.mouth;if(ml){   /* Oct 21 (designer): a photo face's mouth is where the jaw meets the face, not where the drawn open mouth sat */
     // Oct 18 (designer: the mic sat a little left of the mouth): aim at the drawn mouth's ink, not the middle of its box
     const mi=ml.img||ml.ph,ic=mi&&window.DISG?DISG.inkCentre(mi):{u:.5,v:.5},mw=mi&&mi.width||150,mh=mi&&mi.height||150,zm=md[3]*ml.s/Math.max(mw,mh),
-      ox=md[1]+ml.x-hx+(ic.u-md[4])*mw*zm,oy=md[2]+ml.y-hy+(ic.v-md[5])*mh*zm,c=Math.cos(hr),sn=Math.sin(hr);mouthT={x:hx+ox*c-oy*sn,y:hy+dyB+ox*sn+oy*c};mouthR={x:hx+ox,y:hy+oy};}}
+      ox=md[1]+ml.x-hx+(ic.u-md[4])*mw*zm,oy=md[2]+ml.y-hy+((jw&&ic.t!=null?ic.t:ic.v)-md[5])*mh*zm+(jw?ml.jaw*.4:0),c=Math.cos(hr),sn=Math.sin(hr);mouthT={x:hx+ox*c-oy*sn,y:hy+dyB+ox*sn+oy*c};mouthR={x:hx+ox,y:hy+oy};}}
   if(il&&L.grip){const g=L.grip,ix=SLOTS.inst[1]+il.x,iy=SLOTS.inst[2]+il.y,c=Math.cos(ir),sn=Math.sin(ir),th=ir+ia,sl=Math.sin((m.ph||0)*.5+1)*e*5*il.s;
     nh={x:ix+g.x*c-g.y*sn+sl*Math.cos(th),y:iy+g.x*sn+g.y*c+sl*Math.sin(th)};}
   m._wr=null;   // where the strum arm's wrist is this frame (the strum hand hangs there)
@@ -2004,7 +2072,7 @@ function drawLayers(x,m,t){
     if(k==='head'){ty=hy+dyB;rot=hr;}                        // rides the body, nods to the music
     if(k==='legL'||k==='legR'){const len=D*.8;ty=d[2]+ly.y+dyB;sy=(len-dyB)/len;   // hips bob, feet stay on the floor
       rot=m.id==='drums'?(k==='legR'?-p.k*.2:p.h*.12):(k==='legL'?1:-1)*(s*e*.08+iS*.015)+dn*.04*sw;}  // drummer's feet work the pedals, others groove
-    if(k==='mouth'||k==='mouthO'){const ox=d[1]+ly.x-hx,oy=d[2]+ly.y-hy,c=Math.cos(hr),sn=Math.sin(hr);
+    if(k==='mouth'||k==='mouthO'){const ox=d[1]+ly.x-hx,oy=d[2]+ly.y-hy+(k==='mouth'&&ly.jaw?ly.jaw*(open?Math.min(1,.35+e*2.5):0)*(m.dgS&&window.DISG?DISG.mouthAlpha(m):1):0),c=Math.cos(hr),sn=Math.sin(hr);   /* Oct 21: a picture face's jaw drops while singing (and stays shut behind the mic, like a drawn mouth fades) */
       tx=hx+ox*c-oy*sn;ty=hy+dyB+ox*sn+oy*c;rot=hr;}
     if(k==='inst')rot=ir;                                    // instrument rocks
     if(k==='arm2'){if(!nh)continue;const r=bentReach(Sh,nh,l1,l2,eb);arm=[r.R1,r.R2];sy=r.st;}   // shoulder stays put, elbow bent as set, hand locked on the neck
@@ -2033,9 +2101,9 @@ function drawLayers(x,m,t){
     if(k==='armS')arm=v2arm?(u=>[u*.15+iS*.02,u+iS*.03])((.1+.5*Math.min(1,e*3))*(1-p.s)):[-p.s*.22+s*e*.03+iS*.04,-p.s*.6+s*e*.04+iS*.05];   // PATCH01   // snare stick comes down on the hit, mostly from the forearm
     if(k==='armH')arm=v2arm?(u=>[-u*.15-iS*.02,-u-iS*.03])((.1+.5*Math.min(1,e*3))*(1-p.h)):[p.h*.22+s*e*.03-iS*.04,p.h*.6+s*e*.04-iS*.05];     // hi-hat stick likewise
     if(k==='hat'){rot=p.h*.25;dy=p.h*2;}                     // hi-hat tilts
-    if(k==='mouth'){if(open&&mo)hide=true;else if(open)sy=1+e*.8;} // closed art swaps to open art
-    if(k==='mouthO'&&!open)hide=true;
-    let fade=1;if((k==='mouth'||k==='mouthO')&&m.dgS&&window.DISG){fade=DISG.mouthAlpha(m);if(fade<.02)hide=true;}   // Oct 18 (designer): the mouth fades out behind the mic (fully gone while covered), and back in as it leaves
+    if(k==='mouth'&&!ly.jaw){if(open&&mo)hide=true;else if(open)sy=1+e*.8;} // closed art swaps to open art (a jaw just drops, above)
+    if(k==='mouthO'&&(!open||(L.mouth&&L.mouth.jaw)))hide=true;
+    let fade=1;if((k==='mouth'||k==='mouthO')&&!(k==='mouth'&&ly.jaw)&&m.dgS&&window.DISG){fade=DISG.mouthAlpha(m);if(fade<.02)hide=true;}   // Oct 18 (designer): the mouth fades out behind the mic (fully gone while covered), and back in as it leaves
     const X=tx==null?d[1]+ly.x:tx,Y=ty==null?d[2]+ly.y+dy:ty;
     let R=rot+ar,R2=null;
     if(arm){if(k==='arm2'||k==='armL'||k==='armR'){R=arm[0];R2=arm[1];}else{R=ar+arm[0];R2=R+eb+arm[1];}}   // swinging arms: set bend + the music's bend   // reaching arms come back as world angles
@@ -3952,7 +4020,162 @@ return {layoutFor,decode,bitsFor,names:NAMES,makePDF,renderPage,renderPage2,exam
     catch(e){say("Couldn't make the sheets: "+e.message);}finally{b.disabled=false;}};
 })();
 </script>
-<script id="scan-logic">
+<script id="scan-logic">// ===== 5a. ADJUST JOINTS (Oct 21): pin the limbs to the body, like a paper puppet with split pins =====
+// After a scan of a new sheet the player is shown put together, the body in the middle. Each joint is a pin:
+//  - the DOT sits on the body (or, for a hand, on the arm) where the limb joins: drag it to the shoulder, the hip, the base
+//    of the neck; the limb comes with it.
+//  - the LIMB itself can be dragged, so the right spot of it (the top of the arm, the top of the leg) sits on the pin.
+// Inside, a joint is two points: the socket on the body (J.neck, J.shL, ... and arms[a].sock) and the pin on the piece
+// (pivots.head, pivots.legL, arms[a].S, pivots.hand). The printed sheet has them on the same spot; here they can differ.
+// No elbow pin: arms still bend halfway (designer, Oct 20). Nothing moved = exactly the printed sheet, as before.
+// Oct 20 first try (one dot shared by both pieces) is gone: a dot dragged onto the body's shoulder also became the arm's
+// hinge, out beside the arm (designer's test, Oct 21).
+window.JOINTS=(function(){
+const $=id=>document.getElementById(id);
+let st=null;
+const same=(a,b)=>a&&b&&(a===b||(a[0]===b[0]&&a[1]===b[1]));
+const midpt=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2],add=(a,b)=>[a[0]+b[0],a[1]+b[1]],sub=(a,b)=>[a[0]-b[0],a[1]-b[1]];
+
+// the limbs this sheet pins to the body: piece -> {sock: socket name (or 'W:arm' for a hand), pin: printed pin, t: words key}
+function limbsOf(sh){const J=sh.J,o={};
+  o.head={sock:'neck',pin:sh.pivots.head,t:'joints.neck'};
+  for(const [a,ar] of Object.entries(sh.arms)){const side=same(ar.S,J.shL)?'shL':same(ar.S,J.shR)?'shR':null;if(side)o[a]={sock:side,pin:ar.S,t:'joints.shoulder'};
+    if(sh.hand&&same(sh.hand.wrist,ar.W))o.hand={sock:'W:'+a,pin:sh.hand.wrist,t:'joints.hand'};}
+  if(J.hipL){o.legL={sock:'hipL',pin:sh.pivots.legL,t:'joints.hip'};o.legR={sock:'hipR',pin:sh.pivots.legR,t:'joints.hip'};}
+  return o;}
+const fresh=base=>{const L=limbsOf(base),J=base.J;
+  return {sock:Object.fromEntries(['neck','shL','shR','hipL','hipR'].filter(n=>J[n]).map(n=>[n,J[n].slice()])),
+    pin:Object.fromEntries(Object.entries(L).map(([k,v])=>[k,v.pin.slice()])),
+    W:Object.fromEntries(Object.entries(base.arms).map(([a,ar])=>[a,ar.W.slice()])),moved:new Set(),rot:{},size:{},selK:null};};
+// a piece's turn and size (Oct 21, the Put them together screen): about its own pin. Arms are sized only: the band swings them.
+const ROT=k=>(st.base.arms[k]?0:st.rot[k]||0),SIZE=k=>st.size[k]||1;
+
+// where a limb's socket is, on the sheet (a hand's socket rides on its arm)
+function sockAt(k){const L=limbsOf(st.base)[k];if(!L)return null;
+  if(L.sock.startsWith('W:')){const a=L.sock.slice(2),pA=sockAt(a),z=SIZE(a);return [pA[0]+(st.W[a][0]-st.pin[a][0])*z,pA[1]+(st.W[a][1]-st.pin[a][1])*z];}   /* rides on its arm, sized with it */
+  return st.sock[L.sock];}
+// how far a piece's drawing moves from its box to sit on its pin (body and unpinned pieces stay where drawn)
+const RIDES=k=>k==='mouth'||k==='mouthO';   /* Oct 21 (designer): the mouth (a picture face's jaw) goes where the head goes */
+function offset(k){if(RIDES(k))return st.pin.head?offset('head'):[0,0];const L=limbsOf(st.base)[k];if(!L)return [0,0];return sub(sockAt(k),st.pin[k]);}
+
+// the sheet to place pieces with: a copy carrying the pins (the printed one, untouched, when nothing moved)
+function sheetFor(mid,base){if(!st||st.mid!==mid||!st.moved.size)return base;
+  const c=JSON.parse(JSON.stringify(base)),L=limbsOf(base);
+  for(const n of Object.keys(st.sock))c.J[n]=st.sock[n].slice();
+  if(L.head)c.pivots.head=st.pin.head.slice();
+  for(const lg of ['legL','legR'])if(L[lg])c.pivots[lg]=st.pin[lg].slice();
+  for(const a of Object.keys(c.arms)){c.arms[a].W=st.W[a].slice();if(L[a]){c.arms[a].S=st.pin[a].slice();c.arms[a].sock=st.sock[L[a].sock].slice();
+    const z=SIZE(a);c.arms[a].W=[c.arms[a].S[0]+(st.W[a][0]-st.pin[a][0])*z,c.arms[a].S[1]+(st.W[a][1]-st.pin[a][1])*z];}}   /* a bigger arm reaches further: its hand end moves with it */
+  if(L.hand){const a=L.hand.sock.slice(2),E=midpt(c.arms[a].S,c.arms[a].W),p=st.pin.hand.slice();
+    c.hand.wrist=p;c.pivots.hand=p.slice();c.hand.from=add(p,sub(E,c.arms[a].W));}   // the hand turns along the forearm
+  return c;}
+function moved(mid){return (st&&st.mid===mid)?new Set(st.moved):new Set();}
+
+// ---------- the view: the player put together, each limb swinging a little from its pin ----------
+const ticked=()=>{const on=new Set();document.querySelectorAll('#scanParts input[data-key]').forEach(cb=>{if(cb.checked)on.add(cb.dataset.key.split('.')[1]);});return on;};
+const ORDER=['legL','legR','kick','snareSt','hatSt','snare','hat','body','head','mouth','mouthO','arm','arm2','armL','armR','armV','fore','armH','armS','inst','grip','hand'];
+function pieces(){const on=ticked(),L=limbsOf(st.base);
+  return st.results.filter(r=>{const k=r.key.split('.')[1];return !r.empty&&on.has(k)&&k!=='mouthO';})   /* the open mouth only shows while singing */   /* Oct 21 (designer): every part shows; the limbs can be pinned */
+    .sort((a,b)=>ORDER.indexOf(a.key.split('.')[1])-ORDER.indexOf(b.key.split('.')[1]));}
+function pins(){const L=limbsOf(st.base),o={};for(const r of pieces()){const k=r.key.split('.')[1];if(L[k])o[k]=L[k];}return o;}
+function frame(){const cv=$('jointsCv'),P=pieces();let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  const grow=(x,y)=>{x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);};
+  for(const r of P){const k=r.key.split('.')[1],[,bx,by,bw,bh]=r.box,o=offset(k);grow(bx+o[0],by+o[1]);grow(bx+bw+o[0],by+bh+o[1]);}
+  if(st.bodyArt){const b=st.base.boxes.find(q=>q[0]==='body');grow(b[1],b[2]);grow(b[1]+b[3],b[2]+b[4]);}
+  if(!P.length){st.view=null;return;}
+  const pad=40;x0-=pad;y0-=pad;x1+=pad;y1+=pad;   // room to drag a limb a little way out
+  const maxW=Math.min(420,cv.parentElement.clientWidth||420),maxH=Math.max(260,Math.min(560,(window.innerHeight||800)*.6)),
+    sc=Math.min(maxW/(x1-x0),maxH/(y1-y0)),dpr=Math.min(2,window.devicePixelRatio||1),cw=(x1-x0)*sc,chh=(y1-y0)*sc;
+  cv.style.width=Math.round(cw)+'px';cv.style.height=Math.round(chh)+'px';cv.width=Math.round(cw*dpr);cv.height=Math.round(chh*dpr);
+  st.view={x0,y0,sc,dpr};}
+function swing(k,t){if(st.drag||st.selK)return 0;const amp=k==='head'?6:k.startsWith('leg')?4:k==='hand'?12:10;return Math.sin(t/650+ORDER.indexOf(k))*amp*Math.PI/180;}
+function draw(t){const cv=$('jointsCv');if(!st||!st.view)return;const g=cv.getContext('2d'),{x0,y0,sc,dpr}=st.view;
+  g.setTransform(1,0,0,1,0,0);g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);g.setTransform(sc*dpr,0,0,sc*dpr,-x0*sc*dpr,-y0*sc*dpr);
+  const P=pieces(),L=limbsOf(st.base);
+  if(st.bodyArt&&!P.some(r=>r.key.endsWith('.body'))){const b=st.bodyArt;g.save();g.globalAlpha=.9;g.translate(b.at[0],b.at[1]);g.rotate(-b.th);g.drawImage(b.im,-b.fx*b.Z,-b.fy*b.Z,b.Z,b.Z);g.restore();}
+  // a hand swings with its arm: draw arms first, remember each arm's turn
+  const turn={};
+  for(const r of P){const k=r.key.split('.')[1],[,bx,by,bw,bh]=r.box,o=offset(k);g.save();
+    const hk=RIDES(k)&&L.head?'head':k;
+    if(L[hk]){let piv=sockAt(hk),a=swing(hk,t);
+      if(k==='hand'){const ar=L.hand.sock.slice(2),q=turn[ar];if(q){g.translate(q.p[0],q.p[1]);g.rotate(q.a);g.translate(-q.p[0],-q.p[1]);}}
+      g.translate(piv[0],piv[1]);g.rotate(a+ROT(hk));g.scale(SIZE(hk),SIZE(hk));g.translate(-piv[0],-piv[1]);turn[k]={p:piv,a};}
+    g.translate(o[0],o[1]);g.drawImage(r.cv,bx,by,bw,bh);g.restore();
+    if(st.drag===k){g.setLineDash([4/sc,4/sc]);g.lineWidth=1.5/sc;g.strokeStyle='#e8553d';g.strokeRect(bx+o[0],by+o[1],bw,bh);g.setLineDash([]);}}
+  // the selected piece: a dashed line from its pin to the handle that turns and sizes it
+  if(st.selK&&L[st.selK]){const piv=sockAt(st.selK),h=handleAt(st.selK);if(h){g.setLineDash([5/sc,4/sc]);g.lineWidth=1.5/sc;g.strokeStyle='#e8553d';g.beginPath();g.moveTo(piv[0],piv[1]);g.lineTo(h[0],h[1]);g.stroke();g.setLineDash([]);
+    const R=13/sc;g.beginPath();g.arc(h[0],h[1],R,0,7);g.fillStyle='#e8553d';g.fill();g.lineWidth=2/sc;g.strokeStyle='#fff';g.beginPath();g.arc(h[0],h[1],R*.55,-2.4,1.2);g.stroke();
+    const e=[h[0]+Math.cos(1.2)*R*.55,h[1]+Math.sin(1.2)*R*.55];g.beginPath();g.moveTo(e[0]+R*.3,e[1]-R*.05);g.lineTo(e[0],e[1]);g.lineTo(e[0]+R*.05,e[1]-R*.32);g.stroke();}}
+  // the pins: hollow where the sheet put them, filled once moved
+  const rr=7/sc;g.font=`${11/sc}px sans-serif`;g.textBaseline='middle';
+  for(const [k,l] of Object.entries(pins())){const p=sockAt(k),mv=st.moved.has(k);
+    g.beginPath();g.arc(p[0],p[1],rr,0,7);g.fillStyle=mv?'#e8553d':'rgba(255,255,255,.85)';g.fill();g.lineWidth=2.5/sc;g.strokeStyle='#e8553d';g.stroke();
+    g.fillStyle='#7a2a1e';g.fillText(TXT(l.t),p[0]+rr*1.6,p[1]);}}
+// where the selected piece's handle sits: beyond its far end, turned and sized with it
+function handleAt(k){const r=(st.results||[]).find(x=>x.key.endsWith('.'+k));if(!r)return null;const [,bx,by,bw,bh]=r.box,p=st.pin[k];
+  let v=[bx+bw/2-p[0],by+bh/2-p[1]];if(Math.hypot(v[0],v[1])<5)v=[0,bh/2];const a=ROT(k),z=SIZE(k)*2.15,c=Math.cos(a),s=Math.sin(a),piv=sockAt(k);
+  return [piv[0]+(v[0]*c-v[1]*s)*z,piv[1]+(v[0]*s+v[1]*c)*z];}
+// before the pieces go on stage: each turned or sized piece is redrawn so (about its pin, which stays where it is)
+function finalize(list){if(!st)return list;return list.map(r=>{const k0=r.key.split('.')[1],k=RIDES(k0)?'head':k0,a=ROT(k),z=SIZE(k);if(!st.pin[k]||(!a&&z===1))return r;
+  const [key,bx,by,bw,bh]=r.box,p=st.pin[k],R=r.cv.width/bw,c=Math.cos(a),s=Math.sin(a),T=([x,y])=>{const dx=(x-p[0])*z,dy=(y-p[1])*z;return [p[0]+dx*c-dy*s,p[1]+dx*s+dy*c];};
+  const cs=[[bx,by],[bx+bw,by],[bx+bw,by+bh],[bx,by+bh]].map(T),nx=Math.min(...cs.map(q=>q[0])),ny=Math.min(...cs.map(q=>q[1])),nw=Math.max(...cs.map(q=>q[0]))-nx,nh=Math.max(...cs.map(q=>q[1]))-ny;
+  const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(nw*R));cv.height=Math.max(1,Math.round(nh*R));const g=cv.getContext('2d');
+  g.translate((p[0]-nx)*R,(p[1]-ny)*R);g.rotate(a);g.scale(z,z);g.translate(-(p[0]-bx)*R,-(p[1]-by)*R);g.drawImage(r.cv,0,0);
+  const o=Object.assign({},r,{cv,url:cv.toDataURL('image/png'),box:[key,nx,ny,nw,nh],al:null});
+  if(RIDES(k0)){if(r.spot)o.spot=T(r.spot);if(r.jaw)o.jaw=r.jaw*z;}return o;});}   /* the mouth turns and sizes with the head, about the head's pin */
+function loop(t){if(!st)return;if($('scan').hidden||$('scanJoints').hidden){st.raf=0;return;}draw(t);st.raf=requestAnimationFrame(loop);}
+const go=()=>{if(st&&!st.raf)st.raf=requestAnimationFrame(loop);};
+
+// ---------- dragging: a dot moves the joint (the limb follows); a limb slides along its pin ----------
+function at(e){const cv=$('jointsCv'),b=cv.getBoundingClientRect(),{x0,y0,sc}=st.view;return [x0+(e.clientX-b.left)/sc,y0+(e.clientY-b.top)/sc];}
+function inked(r,k,q){const [,bx,by,bw,bh]=r.box,o=offset(k),x=q[0]-o[0]-bx,y=q[1]-o[1]-by;if(x<0||y<0||x>=bw||y>=bh)return false;
+  r.al=r.al||r.cv.getContext('2d').getImageData(0,0,r.cv.width,r.cv.height).data;
+  const i=Math.floor(x/bw*r.cv.width),j=Math.floor(y/bh*r.cv.height);return r.al[(j*r.cv.width+i)*4+3]>60;}
+function wire(){const cv=$('jointsCv');if(cv.dataset.wired)return;cv.dataset.wired='1';
+  cv.addEventListener('pointerdown',e=>{if(!st||!st.view)return;const q=at(e);let hit=null,bd=(22/st.view.sc)**2;
+    if(st.selK){const h=handleAt(st.selK);if(h&&Math.hypot(h[0]-q[0],h[1]-q[1])<26/st.view.sc){const k=st.selK,piv=sockAt(k);e.preventDefault();st.drag=k;
+      st.grab={handle:true,q,piv,a0:Math.atan2(q[1]-piv[1],q[0]-piv[0]),d0:Math.hypot(q[0]-piv[0],q[1]-piv[1])||1,rot:st.rot[k]||0,size:SIZE(k)};try{cv.setPointerCapture(e.pointerId);}catch(_){}return;}}
+    for(const k of Object.keys(pins())){const p=sockAt(k),d=(p[0]-q[0])**2+(p[1]-q[1])**2;if(d<bd){bd=d;hit={dot:k};}}
+    if(!hit){const L=limbsOf(st.base);for(const r of pieces().reverse()){const k=r.key.split('.')[1];if(L[k]&&inked(r,k,q)){hit={limb:k};break;}}}
+    if(!hit){if(st.selK){st.selK=null;}return;}   /* a tap on empty space lets go of the selected piece */
+    e.preventDefault();st.drag=hit.dot||hit.limb;st.grab=Object.assign(hit,{q,sock:sockAt(st.drag),pin:st.pin[st.drag].slice()});
+    try{cv.setPointerCapture(e.pointerId);}catch(_){}cv.style.cursor='grabbing';});
+  cv.addEventListener('pointermove',e=>{if(!st||!st.drag)return;const k=st.drag,G=st.grab,d=sub(at(e),G.q),L=limbsOf(st.base)[k];
+    if(G.handle){const q=at(e),an=Math.atan2(q[1]-G.piv[1],q[0]-G.piv[0]),dn=Math.hypot(q[0]-G.piv[0],q[1]-G.piv[1]);   /* round: turn; in or out: size */
+      st.rot[k]=G.rot+(an-G.a0);st.size[k]=Math.max(.4,Math.min(2.5,G.size*dn/G.d0));st.moved.add(k);return;}
+    if(G.dot){const p=add(G.sock,d);if(L.sock.startsWith('W:')){const a=L.sock.slice(2),pA=sockAt(a),z=SIZE(a);st.W[a]=[st.pin[a][0]+(p[0]-pA[0])/z,st.pin[a][1]+(p[1]-pA[1])/z];st.moved.add(a);}else{st.sock[L.sock]=p;}}
+    else st.pin[k]=sub(G.pin,d);   // the limb moves with the finger, so the spot under the pin changes
+    st.moved.add(k);});
+  const up=e=>{if(!st||!st.drag)return;const G=st.grab,k=st.drag;
+    if(G&&G.limb&&Math.hypot(...sub(at(e),G.q))*st.view.sc<5){st.pin[k]=G.pin;st.selK=st.selK===k?null:k;}   /* a tap, not a slide: select (or let go of) that piece */
+    st.drag=null;st.grab=null;cv.style.cursor='';frame();};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  $('jointsReset').onclick=()=>{if(!st)return;Object.assign(st,fresh(st.base));frame();};
+  $('scanParts').addEventListener('change',()=>{if(!st)return;$('scanJoints').hidden=false;frame();$('scanJoints').hidden=!st.view;go();});}
+
+// the body already on stage, put back where it was drawn on the sheet, for an upload without a body
+async function bodyOnStage(mid,base){try{if(typeof S==='undefined'||!S.art)return null;const m=members.find(q=>q.id===mid),ly=m&&m.layers.body;
+  const src=artURL(S.art[mid+'.body']);if(!src||!ly||!ly.v2)return null;const im=new Image();im.src=src;await im.decode();
+  const b=base.boxes.find(q=>q[0]==='body'),P=base.pivots.body,f=v2frame(base,'body',['body',...b.slice(1,5)],P);return {im,at:P,th:f.th,fx:f.fx,fy:f.fy,Z:f.Sz};}catch(e){return null;}}
+
+// after every scan of a new sheet (the same player again keeps the pins already moved)
+async function show(mid,base,results){wire();
+  if(!st||st.mid!==mid){st=Object.assign({mid,base,raf:0,bodyArt:null},fresh(base));}
+  st.results=results;
+  if(!results.some(r=>!r.empty&&r.key.endsWith('.body'))&&!st.bodyArt){st.bodyArt=await bodyOnStage(mid,base);}
+  $('scanJoints').hidden=false;frame();$('scanJoints').hidden=!st.view;if(st.view)go();}   // shown first, so it is sized to the panel
+function clear(){if(st&&st.raf)cancelAnimationFrame(st.raf);st=null;const e=$('scanJoints');if(e)e.hidden=true;}
+// plain paper (Oct 21): start the body's pins where the drawn body has its shoulders and hips (the limbs on them count as pinned)
+function preset(mid,sock){if(!st||st.mid!==mid)return;const L=limbsOf(st.base);
+  for(const [n,p] of Object.entries(sock)){if(!st.sock[n])continue;st.sock[n]=p.slice();for(const [k,l] of Object.entries(L))if(l.sock===n)st.moved.add(k);}
+  if(!$('scanJoints').hidden)frame();}
+// pieces already on stage (Add drawings / Edit, Oct 21): their pins where the stage has them; nothing counts as moved yet
+function setup(mid,pins,W){if(!st||st.mid!==mid)return;const L=limbsOf(st.base);
+  for(const [k,p] of Object.entries(pins||{})){if(!L[k])continue;st.pin[k]=p.slice();if(!L[k].sock.startsWith('W:'))st.sock[L[k].sock]=p.slice();}   /* a hand's pin: the end of its arm */
+  for(const [a,w] of Object.entries(W||{}))st.W[a]=w.slice();if(!$('scanJoints').hidden)frame();}
+const touched=k=>!!st&&(RIDES(k)?touched('head'):(st.moved.has(k)||(st.rot[k]||0)!==0||(st.size[k]||1)!==1));
+return {show,clear,sheetFor,moved,preset,finalize,setup,touched,_state:()=>st,_handle:k=>handleAt(k)};
+})();
+
 // ===== 5. SHEET SCANNER: photo of a printed sheet -> artwork pieces =====
 // This block only talks to the player through ARTSET[key](pictureUrl). If it ever fails, the player keeps working.
 (function(){
@@ -4465,7 +4688,10 @@ function printedLayer(id,bx,by,Wp,Hp,N,C){
 function extract2(box,ink){
   const [key,bx,by,bw,bh]=box,R=V2R,Wp=Math.round(bw*R),Hp=Math.round(bh*R),N=Math.max(320,Math.ceil(Math.max(Wp,Hp)/64)*64),{Y,RGB,W,H}=S2.img,h=S2.h,col=ink.keepColour&&RGB,
     g=new Float32Array(N*N),cr=RGB&&[new Float32Array(N*N),new Float32Array(N*N),new Float32Array(N*N)],t3=[0,0,0];
-  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const [u,v]=proj(h,bx+(i+.5)/R,by+(j+.5)/R),p=j*N+i;g[p]=samp(Y,W,H,u,v);
+  const clip=S2.clip;   // Oct 21 (plain paper): outside this drawing's own outline everything reads as plain paper
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const [u,v]=proj(h,bx+(i+.5)/R,by+(j+.5)/R),p=j*N+i;
+    if(clip&&!clip.has(u,v)){g[p]=clip.paper;if(cr){cr[0][p]=clip.rgb[0];cr[1][p]=clip.rgb[1];cr[2][p]=clip.rgb[2];}continue;}
+    g[p]=samp(Y,W,H,u,v);
     if(cr){samp3(RGB,W,H,u,v,t3);cr[0][p]=t3[0];cr[1][p]=t3[1];cr[2][p]=t3[2];}}
   const pe=cr?paperEstimate(g,cr,N):null,bg=pe?pe[0]:paperMap(g,N,8),nm=new Float32Array(N*N);for(let p=0;p<N*N;p++)nm[p]=Math.min(1.2,g[p]/bg[p]);
   let cn=null,chroma=null;
@@ -4611,9 +4837,9 @@ function faceMouth(got,sh){const r=got.head;if(!r||!sh.mouthSpot||!r.cv)return f
   got.mouthO={key:'vocals.mouthO',cv:oc,box:['vocals.mouthO',ocx-oc.width/2/R,ocy-oc.height/2/R,oc.width/R,oc.height/R],spot,face:true};
   return true;}
 function v2apply(list){
-  const mid=list[0].key.split('.')[0],sh=SHEETS2[mid],m=members.find(q=>q.id===mid),L=m.layers,R=V2R,J=sh.J,before=[];before.withAdj=true;
+  const mid=list[0].key.split('.')[0],sh=window.JOINTS?JOINTS.sheetFor(mid,SHEETS2[mid]):SHEETS2[mid],mv=window.JOINTS?JOINTS.moved(mid):new Set(),m=members.find(q=>q.id===mid),L=m.layers,R=V2R,J=sh.J,before=[];before.withAdj=true;
   const got={};for(const r of list)got[r.key.split('.')[1]]=r;
-  if(mid==='vocals')try{faceMouth(got,sh);}catch(e){console.warn('face mouth',e);}   // Oct 12
+  if(mid==='vocals'&&!(got.mouth&&got.mouth.jaw)&&!(got.head&&(got.head.picture||got.head.stage)))try{faceMouth(got,sh);}catch(e){console.warn('face mouth',e);}   // Oct 12
   const A=(k,x,y)=>{const r=got[k];if(!r)return 0;const [,bx,by]=r.box,i=Math.floor((x-bx)*R),j=Math.floor((y-by)*R);if(i<0||j<0||i>=r.cv.width||j>=r.cv.height)return 0;
     r.al=r.al||r.cv.getContext('2d').getImageData(0,0,r.cv.width,r.cv.height).data;return r.al[(j*r.cv.width+i)*4+3];};
   const sub=(a,b)=>[a[0]-b[0],a[1]-b[1]],len=v=>Math.hypot(v[0],v[1]),nrm=v=>{const l=len(v)||1;return [v[0]/l,v[1]/l];};
@@ -4623,20 +4849,20 @@ function v2apply(list){
   if(J.hipL)pairs.push(['legL','body',J.hipL,[0,-1]],['legR','body',J.hipR,[0,-1]]);
   if(sh.hand)pairs.push(['hand','arm',sh.hand.wrist,nrm(sub(sh.hand.from,sh.hand.wrist))]);
   const shift={};
-  for(const [c,p,j,d] of pairs){if(!got[c])continue;const pr=[-d[1],d[0]];let cMax=-1e9,pMin=got[p]?1e9:0;
+  for(const [c,p,j,d] of pairs){if(!got[c]||mv.has(c))continue;   /* Oct 20: a joint placed by hand stays where it was put */const pr=[-d[1],d[0]];let cMax=-1e9,pMin=got[p]?1e9:0;
     for(let t=-30;t<=30;t+=.5)for(let u=-8;u<=8;u+=2){const x=j[0]+d[0]*t+pr[0]*u,y=j[1]+d[1]*t+pr[1]*u;
       if(A(c,x,y)>128&&t>cMax)cMax=t;if(got[p]&&A(p,x,y)>128&&t<pMin)pMin=t;}
     if(cMax<-29||pMin>29)continue;const s=Math.max(0,Math.min(25,pMin-cMax+4));shift[c]=[d[0]*s,d[1]*s];}
   // one scale for the player: the drawn neck-to-hips height becomes the band's neck-to-hips height
   const neckY=SLOTS.head[2]+L.head.y,hipY=(SLOTS.legL[2]+L.legL.y+SLOTS.legR[2]+L.legR.y)/2;
-  let k=(hipY-neckY)/(sh.bodyPivot[1]-J.neck[1]);if(!(k>.05&&k<1))k=.205;
+  const kOf=Jk=>{const v=(hipY-neckY)/((Jk.hipL?(Jk.hipL[1]+Jk.hipR[1])/2:sh.bodyPivot[1])-Jk.neck[1]);return v>.05&&v<1?v:.205;},k0=kOf(SHEETS2[mid].J);let k=got.body?kOf(J):k0;const resized=Math.abs(k-k0)>1e-9;   /* Oct 21: no new body = the body on stage keeps its size, so pins just move the pieces; Oct 20: drawn hips (the printed hips sit on the body pivot's line) */if(!(k>.05&&k<1))k=.205;
   const RB=[SLOTS.body[1]+L.body.x,SLOTS.body[2]+L.body.y],at=jp=>[RB[0]+(jp[0]-sh.bodyPivot[0])*k,RB[1]+(jp[1]-sh.bodyPivot[1])*k];
   // the drum kit keeps its size on stage: the drawn bass drum becomes as big as the bass drum is now
   const KIT=['kick','snare','hat','snareSt','hatSt'],kk=sh.kit?SLOTS.kick[3]*L.kick.s*.92/sh.kit.ref:k;
   // where a piece hangs: arms at the shoulder, mouths at the middle of what was drawn, everything else at its sheet pivot
   const centroid=r=>{const d=r.cv.getContext('2d').getImageData(0,0,r.cv.width,r.cv.height).data;let sx=0,sy=0,n=0;
     for(let j=0;j<r.cv.height;j+=2)for(let i=0;i<r.cv.width;i+=2){const a=d[(j*r.cv.width+i)*4+3];if(a>128){sx+=i;sy+=j;n++;}}
-    const [,bx,by,bw,bh]=r.box;return n?[bx+sx/n/R,by+sy/n/R]:[bx+bw/2,by+bh/2];};
+    const [,bx,by,bw,bh]=r.box,Rx=r.cv.width/bw,Ry=r.cv.height/bh;return n?[bx+sx/n/Rx,by+sy/n/Ry]:[bx+bw/2,by+bh/2];};   /* Oct 21: a piece back from the stage has its own resolution */
   const out={};
   for(const kk2 in got){const r=got[kk2],d=SLOTS[kk2];if(!d)continue;const fx=d[4],fy=d[5],sft=shift[kk2]||[0,0],[,bx,by,bw,bh]=r.box,arm=sh.arms[kk2];
     let P=arm?arm.S:(kk2==='mouth'||kk2==='mouthO')?centroid(r):sh.pivots[kk2];if(!P)continue;
@@ -4647,7 +4873,7 @@ function v2apply(list){
     out[kk2]={url:cv.toDataURL('image/png'),s:Sz*(KIT.includes(kk2)?kk:k)/d[3],P};}
   const key=x=>mid+'.'+x,adjNow=x=>S.adj[key(x)]?Object.assign({},S.adj[key(x)]):undefined,ia=()=>(L.inst&&L.inst.a||0)*Math.PI/180;
   const touched=Object.keys(out);
-  const ver=sh.ver||1,keepOn=typeof KEEP_PLACE==='undefined'||KEEP_PLACE,kept=x=>keepOn&&!!out[x]&&(+L[x].v2||0)>=ver&&!(got[x]&&got[x].spot);   // PATCH01 (Oct 12: a mouth drawn on the face always goes where it was drawn)
+  const ver=sh.ver||1,keepOn=(typeof KEEP_PLACE==='undefined'||KEEP_PLACE)&&!resized,   /* Oct 21: pinned pieces are placed fresh; a new body pinned at a new neck or hips resizes the player, so then all of this upload is */kept=x=>keepOn&&!mv.has(x)&&!(x==='head'&&got.mouth&&got.mouth.jaw)&&!!out[x]&&(+L[x].v2||0)>=ver&&!(got[x]&&got[x].spot);   // PATCH01 (Oct 12: a mouth drawn on the face always goes where it was drawn)
   if(sh.guitar&&out.inst&&!out.grip&&!kept('inst'))touched.push('grip');
   if(sh.noLegs)for(const lg of ['legL','legR'])if(!touched.includes(lg))touched.push(lg);
   // strum arm at rest (Guitar, Bass): bend it so the strum hand lands on the guitar's strum spot
@@ -4667,7 +4893,7 @@ function v2apply(list){
   if(mid==='drums')for(const [ak,dk,off] of [['armH','hat',[-.15,-.08]],['armS','snare',[-.05,-.28]]]){if(!out[ak]||kept(ak)||!sh.arms[ak].tip)continue;
     const ar=sh.arms[ak],fy=SLOTS[ak][5],el=(fy+ar.h)/2,Sz=len(sub(ar.W,ar.S))/(ar.h-fy),th=Math.PI/2-Math.atan2(ar.W[1]-ar.S[1],ar.W[0]-ar.S[0]),
       sf=shift[ak]||[0,0],tv=[ar.tip[0]+sf[0]-ar.S[0],ar.tip[1]+sf[1]-ar.S[1]],tp=[Math.cos(th)*tv[0]-Math.sin(th)*tv[1],Math.sin(th)*tv[0]+Math.cos(th)*tv[1]],u=[tp[0],tp[1]-(el-fy)*Sz],dl0=ang(u),
-      Sh=at(ar.S),dl=L[dk],dd=SLOTS[dk],Dd=dd[3]*dl.s,P=[dd[1]+dl.x+off[0]*Dd,dd[2]+dl.y+off[1]*Dd],dist=len(sub(P,Sh));
+      Sh=at(ar.sock||ar.S),dl=L[dk],dd=SLOTS[dk],Dd=dd[3]*dl.s,P=[dd[1]+dl.x+off[0]*Dd,dd[2]+dl.y+off[1]*Dd],dist=len(sub(P,Sh));
     let s0=out[ak].s,q=SLOTS[ak][3]*s0/Sz,l1=(el-fy)*Sz*q,l2=len(u)*q;
     if(l1+l2<dist*1.08){const g=Math.min(2.4,dist*1.08/(l1+l2));s0*=g;q*=g;l1*=g;l2*=g;out[ak].s=s0;}
     let R1,E;
@@ -4682,9 +4908,10 @@ function v2apply(list){
   for(const kk2 of touched){const ly=L[kk2];
     if(kept(kk2)){const o={x:ly.x,y:ly.y,s:ly.s,a:ly.a,v2:+ly.v2};if(ARMS.has(kk2))o.eb=ly.eb||0;ARTSET[key(kk2)](out[kk2].url);ADJSET[key(kk2)](o);continue;}
     const o={x:ly.x,y:ly.y,s:out[kk2]?out[kk2].s:ly.s,a:ly.a};if(ARMS.has(kk2))o.eb=ly.eb||0;if(out[kk2])o.v2=ver;
-    const jp=Object.assign({head:J.neck,legL:J.hipL,legR:J.hipR},Object.fromEntries(Object.entries(sh.arms).map(([a,v])=>[a,v.S])))[kk2];
+    const jp=Object.assign({head:J.neck,legL:J.hipL,legR:J.hipR},Object.fromEntries(Object.entries(sh.arms).map(([a,v])=>[a,v.sock||v.S])))[kk2];   /* Oct 21: an arm sits on the body's shoulder pin (sock), hangs from its own (S) */
     if(jp&&out[kk2]){const pp=at(jp);o.x=pp[0]-SLOTS[kk2][1];o.y=pp[1]-SLOTS[kk2][2];}
-    if(kk2==='mouth'||kk2==='mouthO'){const g2=got[kk2],hs=shift.head||[0,0],pp=at(g2&&g2.spot?[g2.spot[0]+hs[0],g2.spot[1]+hs[1]]:sh.mouthSpot);o.x=pp[0]-SLOTS[kk2][1];o.y=pp[1]-SLOTS[kk2][2];o.a=0;}   // Oct 12: a face mouth sits where it was drawn
+    if(kk2==='mouth')o.jaw=got.mouth&&got.mouth.jaw?+(got.mouth.jaw*k).toFixed(2):0;   /* Oct 21: a picture face's jaw: how far it drops (stage units) */
+    if(kk2==='mouth'||kk2==='mouthO'){const g2=got[kk2],hs=shift.head||[0,0],np=sh.pivots.head&&J.neck?[J.neck[0]-sh.pivots.head[0],J.neck[1]-sh.pivots.head[1]]:[0,0],pp=at(g2&&g2.spot?[g2.spot[0]+hs[0]+np[0],g2.spot[1]+hs[1]+np[1]]:sh.mouthSpot);   /* Oct 21: a head moved off its pin takes its mouth along */o.x=pp[0]-SLOTS[kk2][1];o.y=pp[1]-SLOTS[kk2][2];o.a=0;}   // Oct 12: a face mouth sits where it was drawn
     if(kk2==='hand'){o.x=0;o.y=0;o.a=0;}
     if(kk2==='grip'&&G){const dx=(G.neck[0]-G.strap[0])*k,dy=(G.neck[1]-G.strap[1])*k,a=ia();o.x=dx*Math.cos(a)-dy*Math.sin(a);o.y=dx*Math.sin(a)+dy*Math.cos(a);if(out.grip)o.a=0;}
     if(kk2==='arm'&&strum){o.a=Math.round(strum.a);o.eb=Math.round(strum.eb);}
@@ -4725,6 +4952,7 @@ $('scanThr').value=CFG.ink.threshold;$('scanFill').checked=CFG.ink.fillShapes;$(
 
 function pieceName(key){const [m,k]=key.split('.');return (typeof SLOTS!=='undefined'&&SLOTS[k]?SLOTS[k][0]:k);}
 async function process(){
+  if(S2.free)return S2.free.redo?S2.free.redo():(window.FREEPAPER?FREEPAPER.redo():undefined);   // Oct 21: not a printed sheet (Add drawings, plain paper, a picture)
   const sh=ensureBoxes(CFG.sheets[sel.value]);if(!S2.img||!sh||!sh.boxes){return;}
   if(S2.hFor!==sel.value&&S2.marks){S2.h=orient(S2.marks.corners,S2.marks.paper,S2.img,sh.boxes).h;S2.hFor=sel.value;}  // sheets differ, so re-check which way up
   say(TXT('upload.cutting'));await tick();
@@ -4735,6 +4963,7 @@ async function process(){
     d.innerHTML=`<img alt="" src="${r.url}"><label style="display:flex;gap:4px;align-items:center;margin:4px 0 0"><input type="checkbox" data-key="${r.key}" ${r.empty?'':'checked'}> <b>${pieceName(r.key)}</b></label><div class="hint devonly">${r.empty?'looks empty, skipped':'ink '+(r.ink*100).toFixed(1)+'%'}</div>`;
     box.appendChild(d);}
   drawPage(sh);
+  if(window.JOINTS){if(sh.v2){const mid=String(sh.boxes[0][0]).split('.')[0];JOINTS.show(mid,SHEETS2[mid],S2.results);}else JOINTS.clear();}   // Oct 20: Adjust joints
   const n=S2.results.filter(r=>!r.empty).length;
   say(n?TXT('upload.found',{n,s:n===1?'':'s',sheet:document.body.classList.contains('dev')?sh.label:sh.label.replace(/ \(.*$/,'')}):TXT('upload.noneFound',{sheet:sh.label}));
   $('scanApply').disabled=!n;
@@ -4748,17 +4977,28 @@ function drawPage(sh){
 const darkTip=m=>{if(m&&m.paper<140&&S2.results&&S2.results.some(r=>!r.empty))say($('scanMsg').textContent+' '+TXT('upload.darkPhoto'));};
 async function run(file){
   try{
-    $('scanApply').disabled=true;$('scanWho').hidden=true;say(TXT('upload.opening'));await tick();
+    $('scanApply').disabled=true;$('scanWho').hidden=true;if(window.JOINTS)JOINTS.clear();S2.free=null;S2.clip=null;if(window.PICTURE)PICTURE.close();if(window.ADD)ADD.close();say(TXT('upload.opening'));await tick();
     let img;try{img=await loadPhoto(file);}catch(e){
       say(TXT('upload.cantOpen',{type:file.type||'unknown type',mb:(file.size/1048576).toFixed(1),error:(e&&e.message)||e})+(looksHeic(file)?TXT('upload.heic'):TXT('upload.tryJpeg')),true);return;}
     S2.img=img;say(TXT('upload.findingCorners'));await tick();
     const m=findMarks(img.Y,img.W,img.H);
-    if(!m){say(TXT('upload.noCorners'),true);S2.img=null;return;}
+    if(!m&&window.ADD){ADD.ask();return;}   // Oct 21 (Add drawings): no printed sheet = find the drawings, no error message in between
+    if(!m){say(TXT('upload.noCorners'),true);   // Oct 21: ...or offer to read it as drawings on plain paper (asked for, so the example page still can't be scanned by mistake)
+      if(window.FREEPAPER){const w=$('scanWho');w.innerHTML='';const b=document.createElement('button');b.id='scanFree';b.textContent=TXT('upload.freeOffer');
+        b.onclick=()=>FREEPAPER.ask().catch(e=>{console.error(e);say(TXT('upload.problem')+e.message,true);});w.appendChild(b);
+        if(window.PICTURE){const c=document.createElement('button');c.id='scanPicBtn';c.className='alt';c.textContent=TXT('upload.picOffer');c.onclick=()=>PICTURE.ask().catch(e=>{console.error(e);say(TXT('upload.problem')+e.message,true);});w.appendChild(c);}   /* Oct 21: a painting or picture as one piece */if(window.UIART)UIART.mapDress(w);w.hidden=false;}
+      else S2.img=null;
+      return;}
     // sheets made by this page carry a code strip: it settles the sheet and which way up it is, no menu needed
-    const strip=readStrip(m,img);
+    let strip=readStrip(m,img);
+    /* Oct 21 (designer's cutting-mat photo: its grid read as corner squares and a code): every sheet printed now carries code
+       1000; any other code counts only if this browser printed it. Otherwise it isn't a printed sheet: Add drawings. */
+    if(strip&&strip.code!==SHEET2.code&&!((typeof S!=='undefined'&&S.sheetLog)||{})[strip.code]&&window.ADD){ADD.ask();return;}
     const cut=TXT('upload.cornerCut');
     if(strip){S2.marks=m;S2.h=strip.h;const {key,note}=sheetFromCode(strip);sel.value=key;S2.hFor=key;await process();
-      if(note)say($('scanMsg').textContent+' '+note);darkTip(m);if(m.guessed)say($('scanMsg').textContent+' '+cut+TXT('upload.cornerGuessed'));return;}
+      if(note)say($('scanMsg').textContent+' '+note);darkTip(m);
+      if(window.ADD){const w=$('scanWho');w.innerHTML='';const b=document.createElement('button');b.className='alt';b.id='scanNotSheet';b.textContent=TXT('add.notSheet');   /* Oct 21: a way out if it isn't one */
+        b.onclick=()=>{w.hidden=true;if(window.JOINTS)JOINTS.clear();$('scanParts').innerHTML='';ADD.ask();};w.appendChild(b);w.hidden=false;}if(m.guessed)say($('scanMsg').textContent+' '+cut+TXT('upload.cornerGuessed'));return;}
     if(m.guessed){say(cut+" Step back a little so all four black squares are in the photo, then try again.",true);S2.img=null;return;}   // Oct 4: don't guess the sheet from a photo we can't line up
     // which sheet? try the QR code if this browser can read it, otherwise use the menu
     if('BarcodeDetector' in window){try{const r=await new BarcodeDetector({formats:['qr_code']}).detect(img.bmp);
@@ -4791,9 +5031,11 @@ function colourShare(list){let ink=0,col=0;
   return ink?col/ink:0;}
 $('scanApply').onclick=()=>{
   const shv=CFG.sheets[sel.value];
-  if(shv&&shv.v2){try{const list=[];$('scanParts').querySelectorAll('input[data-key]').forEach(cb=>{if(!cb.checked)return;const r=S2.results.find(x=>x.key===cb.dataset.key);if(r)list.push(r);});
-      if(!list.length){say(TXT('upload.nothingTicked'));return;}
-      const before=v2apply(list),mid=list[0].key.split('.')[0],n=list.length;
+  if(shv&&shv.v2){try{let list=[];$('scanParts').querySelectorAll('input[data-key]').forEach(cb=>{if(!cb.checked)return;const r=S2.results.find(x=>x.key===cb.dataset.key);if(r)list.push(r);});
+      if(window.JOINTS)list=list.filter(r=>!r.stage||JOINTS.touched(r.key.split('.')[1]));   /* Oct 21: parts already on stage stay as they are unless changed */
+      if(!list.length){say(TXT(S2.results.some(r=>r.stage)?'add.nothingChanged':'upload.nothingTicked'));return;}
+      if(window.JOINTS)list=JOINTS.finalize(list);   /* Oct 21: pieces turned or sized on Put them together */
+      const before=v2apply(list),mid=list[0].key.split('.')[0],n=list.length;if(window.JOINTS)JOINTS.clear();if(window.PICTURE)PICTURE.close();if(window.ADD)ADD.close();
       $('scan').hidden=true;$('scanParts').innerHTML='';$('scanApply').disabled=true;say(TXT('upload.start'));
       if(window.wsNote)wsNote(TXT('upload.newInPlace',{player:SHEETMAKER.names[mid],n,s:n===1?'':'s'})+(colourShare(list)<.08?' '+TXT('upload.colourTip'):''),before,mid);
       if(window.SPOTLIGHT)SPOTLIGHT.next(mid);   /* Oct 9: back on the show, he is shown big first */}catch(e){console.error(e);say(TXT('upload.couldNotApply')+e.message,true);}return;}
@@ -4813,7 +5055,623 @@ $('scanClose').onclick=()=>{$('scan').hidden=true;};
 const bad=checkConfig();
 $('scanCheck').textContent=bad.length?'Setup problems: '+bad.join('; '):'Setup check: all sheet settings match the player.';
 if(bad.length){console.warn('Scanner setup problems',bad);$('scanCheck').style.color='#c0392b';}
-window.__scan={calibrate,colourShare,readStrip,S2,process,extract,CFG,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
+window.__scan={findMarks,outlineScore,loadPhoto,V2R,extract2,solveH,proj,say,inkNow,tick,sel,v2apply,calibrate,colourShare,readStrip,S2,process,extract,CFG,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
+})();
+// ===== 5b. DRAWINGS ON PLAIN PAPER (Oct 21, guided camera step 2): no printed sheet needed =====
+// Each piece is drawn on its own on any paper, with a little space around it. The scanner finds the separate drawings,
+// guesses which piece each one is (by size, shape and where it sits), and a menu under each one fixes a wrong guess.
+// Each drawing is then placed where its piece would be on a printed sheet (head on the neck, arms down from the shoulders,
+// the instrument in its box), and read by the same code that reads a sheet: same cleaning, same Adjust joints, same
+// Use these drawings. It only runs when asked (after "no corner squares"), so the example page still can't be scanned.
+window.FREEPAPER=(function(){
+const $=id=>document.getElementById(id);
+const X=()=>window.__scan;
+let F=null;   // {mid, img, found:{w,h,f,blobs}, assign:[piece key or '' per drawing], results}
+
+// ---------- 1. find the separate drawings ----------
+function find(img){const {Y,W,H}=img,f=Math.max(1,Math.ceil(Math.max(W,H)/900)),w=Math.floor(W/f),h=Math.floor(H/f),g=new Float32Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let s=0;for(let dy=0;dy<f;dy++)for(let dx=0;dx<f;dx++)s+=Y[(y*f+dy)*W+x*f+dx];g[y*w+x]=s/(f*f);}
+  // ink = thin and darker than the paper right beside it (the brightest spot within a few pixels). Broad shadows and
+  // uneven light are dark on both sides, so they don't count; only lines do (Oct 21: the designer's photo had a shadow
+  // over a third of the page)
+  const r=6,rm=new Float32Array(w*h),mx=new Float32Array(w*h);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let m=0;for(let k=Math.max(0,x-r);k<=Math.min(w-1,x+r);k++)if(g[y*w+k]>m)m=g[y*w+k];rm[y*w+x]=m;}
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){let m=0;for(let k=Math.max(0,y-r);k<=Math.min(h-1,y+r);k++)if(rm[k*w+x]>m)m=rm[k*w+x];mx[y*w+x]=m;}
+  // ...with paper on BOTH sides of it, across or along: the edge of a shadow or a sun beam, or of the page against the
+  // table, is dark on one whole side, so it isn't a line (Oct 21)
+  const side=(x,y,dx,dy)=>{let m=0;for(let k=1;k<=r;k++){const X2=x+dx*k,Y2=y+dy*k;if(X2<0||Y2<0||X2>=w||Y2>=h)break;const v=g[Y2*w+X2];if(v>m)m=v;}return m;};
+  const ink=new Uint8Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const p=y*w+x,v=g[p];if(!(mx[p]>40&&v<mx[p]*.7))continue;
+    if(v<.7*Math.min(side(x,y,-1,0),side(x,y,1,0))||v<.7*Math.min(side(x,y,0,-1),side(x,y,0,1)))ink[p]=1;}
+  const bg=(x,y)=>mx[Math.min(h-1,Math.max(0,Math.round(y)))*w+Math.min(w-1,Math.max(0,Math.round(x)))];
+  // join broken lines, then each joined shape is one drawing
+  const R=3,jn=new Uint8Array(w*h);   /* gaps up to about 2/3 % of the photo join (a guitar's neck drawn up to its body) */for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(!ink[y*w+x])continue;
+    for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){const X2=x+dx,Y2=y+dy;if(X2>=0&&Y2>=0&&X2<w&&Y2<h)jn[Y2*w+X2]=1;}}
+  const lab=new Int32Array(w*h).fill(-1),st=new Int32Array(w*h),comps=[];
+  for(let p0=0;p0<w*h;p0++){if(!jn[p0]||lab[p0]>=0)continue;const id=comps.length,c={x0:1e9,y0:1e9,x1:-1,y1:-1,n:0};let sp=0;st[sp++]=p0;lab[p0]=id;
+    while(sp){const p=st[--sp],x=p%w,y=(p/w)|0;if(ink[p])c.n++;if(x<c.x0)c.x0=x;if(x>c.x1)c.x1=x;if(y<c.y0)c.y0=y;if(y>c.y1)c.y1=y;
+      if(x>0&&jn[p-1]&&lab[p-1]<0){lab[p-1]=id;st[sp++]=p-1;}if(x<w-1&&jn[p+1]&&lab[p+1]<0){lab[p+1]=id;st[sp++]=p+1;}
+      if(y>0&&jn[p-w]&&lab[p-w]<0){lab[p-w]=id;st[sp++]=p-w;}if(y<h-1&&jn[p+w]&&lab[p+w]<0){lab[p+w]=id;st[sp++]=p+w;}}
+    comps.push(c);}
+  // keep real drawings: not dust, not a row of grid dots joined up (a drawn line has ink all along its length), and not cut off by the photo's edge (the desk, the page's edge)
+  const minN=Math.max(40,w*h*.0003),edge=3;
+  if(window.__fpWhy)comps.forEach(c=>{if(c.n>=minN)window.__fpWhy.push({box:[c.x0*f,c.y0*f,(c.x1-c.x0)*f,(c.y1-c.y0)*f],n:c.n,long:Math.max(c.x1-c.x0,c.y1-c.y0),edge:!(c.x0>edge&&c.y0>edge&&c.x1<w-1-edge&&c.y1<h-1-edge)});});   // testing: what was found before the checks
+  let keep=comps.map((c,id)=>Object.assign(c,{ids:[id]})).filter(c=>c.n>=minN&&Math.max(c.x1-c.x0,c.y1-c.y0)>=12&&c.n>=1.2*Math.max(c.x1-c.x0,c.y1-c.y0)&&c.x0>edge&&c.y0>edge&&c.x1<w-1-edge&&c.y1<h-1-edge&&!((c.x1-c.x0)>w*.8&&(c.y1-c.y0)>h*.8));   // nor a frame round the whole photo
+  // a drawing has paper all round it: shapes beside the dark table (the page's edge) are not drawings
+  {const srt=Float32Array.from(g).sort(),paper=srt[Math.floor(srt.length*.9)],m=6;
+    keep=keep.filter(c=>{let n=0,dk=0;const x0=Math.max(0,c.x0-m),y0=Math.max(0,c.y0-m),x1=Math.min(w-1,c.x1+m),y1=Math.min(h-1,c.y1+m);
+      const t=(x,y)=>{if(jn[y*w+x])return;n++;if(g[y*w+x]<paper*.4)dk++;};   /* another drawing's line close by isn't the table (Oct 21: legs drawn just under the body) */for(let x=x0;x<=x1;x+=2){t(x,y0);t(x,y1);}for(let y=y0;y<=y1;y+=2){t(x0,y);t(x1,y);}
+      return dk<=n*.08;});}
+  // a shape inside another one's frame (strings inside a guitar, eyes inside a head) belongs to it
+  for(let again=true;again;){again=false;keep.sort((a,b)=>(b.x1-b.x0)*(b.y1-b.y0)-(a.x1-a.x0)*(a.y1-a.y0));
+    outer:for(let i=0;i<keep.length;i++)for(let j=i+1;j<keep.length;j++){const A=keep[i],Bc=keep[j],ix=Math.max(0,Math.min(A.x1,Bc.x1)-Math.max(A.x0,Bc.x0)),iy=Math.max(0,Math.min(A.y1,Bc.y1)-Math.max(A.y0,Bc.y0));
+      if(ix*iy>=.8*(Bc.x1-Bc.x0)*(Bc.y1-Bc.y0)){A.x0=Math.min(A.x0,Bc.x0);A.y0=Math.min(A.y0,Bc.y0);A.x1=Math.max(A.x1,Bc.x1);A.y1=Math.max(A.y1,Bc.y1);A.n+=Bc.n;A.ids.push(...Bc.ids);keep.splice(j,1);again=true;break outer;}}}
+  const blobs=keep.map(c=>clipFor(c,{w,h,f,lab,ink,bg,img}));
+  return {w,h,f,blobs};}
+// what belongs to one drawing (its lines and everything they enclose, a little wider), plus the paper's grey and colour beside it
+function clipFor(c,{w,h,f,lab,ink,bg,img}){const pad=4,x0=Math.max(0,c.x0-pad),y0=Math.max(0,c.y0-pad),x1=Math.min(w-1,c.x1+pad),y1=Math.min(h-1,c.y1+pad),cw=x1-x0+1,ch=y1-y0+1;
+  const ids=new Set(c.ids),mem=new Uint8Array(cw*ch);
+  for(let y=0;y<ch;y++)for(let x=0;x<cw;x++)if(ids.has(lab[(y+y0)*w+x+x0]))mem[y*cw+x]=1;
+  const out=new Uint8Array(cw*ch),st=[];const push=p=>{if(!mem[p]&&!out[p]){out[p]=1;st.push(p);}};
+  for(let x=0;x<cw;x++){push(x);push((ch-1)*cw+x);}for(let y=0;y<ch;y++){push(y*cw);push(y*cw+cw-1);}
+  while(st.length){const p=st.pop(),x=p%cw,y=(p/cw)|0;if(x>0)push(p-1);if(x<cw-1)push(p+1);if(y>0)push(p-cw);if(y<ch-1)push(p+cw);}
+  const keep=new Uint8Array(cw*ch);for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){if(out[y*cw+x])continue;   // the drawing, grown by 2 so the edges of its lines count
+    for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const X2=x+dx,Y2=y+dy;if(X2>=0&&Y2>=0&&X2<cw&&Y2<ch)keep[Y2*cw+X2]=1;}}
+  let r=0,gg=0,b=0,n=0;const D=img.RGB,W=img.W;
+  for(let y=0;y<ch;y+=2)for(let x=0;x<cw;x+=2){if(keep[y*cw+x]||ink[(y+y0)*w+x+x0])continue;const i=((y+y0)*f*W+(x+x0)*f)*4;r+=D[i];gg+=D[i+1];b+=D[i+2];n++;}
+  const paper=bg((c.x0+c.x1)/2,(c.y0+c.y1)/2),rgb=n?[r/n,gg/n,b/n]:[paper,paper,paper];
+  return {x0:c.x0*f,y0:c.y0*f,x1:(c.x1+1)*f,y1:(c.y1+1)*f,n:c.n,
+    clip:{paper:paper*.98,rgb:rgb.map(v=>v*.98),has:(u,v)=>{const x=Math.floor(u/f)-x0,y=Math.floor(v/f)-y0;return x>=0&&y>=0&&x<cw&&y<ch&&keep[y*cw+x]===1;}},
+    pca:pcaOf(keep,cw,ch,x0,y0,f),
+    ends:endsOf(keep,cw,ch)};}
+
+// a drawing's real shape: the long axis through everything it covers (keep: its pixels in a cw x ch grid at x0,y0, f photo pixels each),
+// how far it reaches each way along it, how thin it is
+function pcaOf(keep,cw,ch,x0,y0,f){let n=0,mx=0,my=0;for(let y=0;y<ch;y++)for(let x=0;x<cw;x++)if(keep[y*cw+x]){n++;mx+=x;my+=y;}if(!n)return null;mx/=n;my/=n;
+  let sxx=0,syy=0,sxy=0;for(let y=0;y<ch;y++)for(let x=0;x<cw;x++)if(keep[y*cw+x]){const dx=x-mx,dy=y-my;sxx+=dx*dx;syy+=dy*dy;sxy+=dx*dy;}
+  const th=.5*Math.atan2(2*sxy,sxx-syy),a=[Math.cos(th),Math.sin(th)],b=[-a[1],a[0]];let lo=1e9,hi=-1e9,l2=1e9,h2=-1e9;
+  for(let y=0;y<ch;y++)for(let x=0;x<cw;x++)if(keep[y*cw+x]){const dx=x-mx,dy=y-my,u=dx*a[0]+dy*a[1],v=dx*b[0]+dy*b[1];if(u<lo)lo=u;if(u>hi)hi=u;if(v<l2)l2=v;if(v>h2)h2=v;}
+  const C=[(mx+x0+.5)*f,(my+y0+.5)*f];return {c:C,a,ends:[[C[0]+a[0]*lo*f,C[1]+a[1]*lo*f],[C[0]+a[0]*hi*f,C[1]+a[1]*hi*f]],el:(hi-lo)/Math.max(1,h2-l2)};}
+// how wide a drawing is near its top and near its bottom (a guitar's body is its wide end)
+function endsOf(keep,cw,ch){let top=0,bot=0;const q=Math.max(1,Math.round(ch*.3));for(let y=0;y<ch;y++){let a=-1,z=-1;for(let x=0;x<cw;x++)if(keep[y*cw+x]){if(a<0)a=x;z=x;}
+  if(a<0)continue;if(y<q)top=Math.max(top,z-a);if(y>=ch-q)bot=Math.max(bot,z-a);}return {top,bot};}
+// a piece drawn round by hand (Add drawings, Oct 21): the same description as a drawing the finder found
+function blobFromLine(img,line){const f=4,xs=line.map(p=>p[0]),ys=line.map(p=>p[1]),X0=Math.max(0,Math.min(...xs)),Y0=Math.max(0,Math.min(...ys)),
+    X1=Math.min(img.W,Math.max(...xs)),Y1=Math.min(img.H,Math.max(...ys)),x0=Math.floor(X0/f),y0=Math.floor(Y0/f),cw=Math.max(1,Math.ceil(X1/f)-x0),ch=Math.max(1,Math.ceil(Y1/f)-y0);
+  const c=document.createElement('canvas');c.width=cw;c.height=ch;const g=c.getContext('2d',{willReadFrequently:true});g.fillStyle='#fff';g.beginPath();
+  line.forEach((p,i)=>{const x=p[0]/f-x0,y=p[1]/f-y0;i?g.lineTo(x,y):g.moveTo(x,y);});g.closePath();g.fill();
+  const d=g.getImageData(0,0,cw,ch).data,keep=new Uint8Array(cw*ch);for(let q=0;q<cw*ch;q++)keep[q]=d[q*4]>127?1:0;
+  // the paper beside it: the bright end of what's inside the line (lines are dark), in grey and colour
+  const vals=[];for(let y=0;y<ch;y+=2)for(let x=0;x<cw;x+=2)if(keep[y*cw+x]){const i=((y+y0)*f*img.W+(x+x0)*f);vals.push(i);}
+  vals.sort((a,b)=>img.Y[a]-img.Y[b]);const top=vals.slice(Math.floor(vals.length*.7));let r=0,gg=0,b=0;for(const i of top){r+=img.RGB[i*4];gg+=img.RGB[i*4+1];b+=img.RGB[i*4+2];}
+  const n=Math.max(1,top.length),paper=top.length?img.Y[top[Math.floor(top.length*.5)]]:200;
+  return {x0:X0,y0:Y0,x1:X1,y1:Y1,n:keep.reduce((a,v)=>a+v,0),line,
+    clip:{paper:paper*.98,rgb:[r/n*.98,gg/n*.98,b/n*.98],has:(u,v)=>{const x=Math.floor(u/f)-x0,y=Math.floor(v/f)-y0;return x>=0&&y>=0&&x<cw&&y<ch&&keep[y*cw+x]===1;}},
+    pca:pcaOf(keep,cw,ch,x0,y0,f),ends:endsOf(keep,cw,ch)};}
+// the pieces for a set of drawings, each named (assign[n], '' = left out): cut out with the sheet code, as on a printed sheet
+async function pieces(mid,blobs,assign,only){const {S2,extract2,inkNow,tick}=X(),ink=inkNow(),s=scaleFor(mid,blobs,assign),bi=assign.indexOf('body'),
+    bodyC=bi>=0?[(blobs[bi].x0+blobs[bi].x1)/2,(blobs[bi].y0+blobs[bi].y1)/2]:null,by={},sock={};
+  for(let n=0;n<blobs.length;n++){const k=assign[n],bl=blobs[n];if(!k||(only&&!only(n)))continue;
+    const pl=placeOf(mid,k,bl,s,bodyC);S2.h=pl.h;S2.clip=bl.clip;by[n]=extract2(pl.box,ink);by[n].toSheet=pl.toSheet;S2.clip=null;
+    if(k==='body'){const tl=pl.toSheet([bl.x0,bl.y0]),br=pl.toSheet([bl.x1,bl.y1]),wd=br[0]-tl[0],ht=br[1]-tl[1];
+      sock.shL=[tl[0]+wd*.1,tl[1]+ht*.1];sock.shR=[br[0]-wd*.1,tl[1]+ht*.1];if(SHEETS2[mid].J.hipL){sock.hipL=[tl[0]+wd*.25,br[1]];sock.hipR=[tl[0]+wd*.75,br[1]];}}
+    await tick();}
+  return {by,sock,scale:s};}
+
+// ---------- 2. which piece is which (a guess; the menus fix it) ----------
+const ARMSORT=sh=>Object.keys(sh.arms);   // printed left to right: the first arm is the one on the left of the page
+function guess(mid,blobs){const sh=SHEETS2[mid],keys=sh.boxes.map(b=>b[0]),assign=blobs.map(()=>''),used=new Set();
+  const P=blobs.map((b,i)=>{const bw=b.x1-b.x0,bh=b.y1-b.y0;return {i,bw,bh,area:bw*bh,el:b.pca?b.pca.el:Math.max(bw,bh)/Math.max(1,Math.min(bw,bh)),cx:(b.x0+b.x1)/2,cy:(b.y0+b.y1)/2};});   // el: how long and thin it really is (a slanted arm too)
+  const left=()=>P.filter(p=>!assign[p.i]).sort((a,b)=>b.area-a.area),has=k=>keys.includes(k)&&!used.has(k),take=(p,k)=>{if(p){assign[p.i]=k;used.add(k);}};
+  if(has('inst')){const big=left().slice(0,3).filter(p=>p.el>=1.8)[0];take(big,'inst');   /* the biggest long drawing */}
+  if(has('kick')){const r=left().filter(p=>p.el<1.4)[0];take(r,'kick');}
+  const body=has('body')?left().filter(p=>p.el<2.6)[0]:null;take(body,'body');
+  if(has('head')){const r=left().filter(p=>p.el<1.6&&(!body||p.area<body.area))[0];take(r,'head');}
+  // long thin drawings: below the body's middle = legs, beside it = arms; left to right
+  const longs=left().filter(p=>p.el>=1.8),legKeys=['legL','legR'].filter(has),armKeys=ARMSORT(sh).filter(has);
+  const legs=body?longs.filter(p=>p.cy>body.cy+body.bh*.35):[],arms=longs.filter(p=>!legs.includes(p));
+  const byX=a=>a.slice().sort((p,q)=>p.cx-q.cx);
+  byX(legs.slice(0,legKeys.length)).forEach((p,i)=>take(p,legKeys[i]));
+  byX(arms.slice(0,armKeys.length)).forEach((p,i)=>take(p,armKeys[i]));
+  // the strum hand: the drawing nearest the strum arm (or the biggest small one left)
+  if(has('hand')&&sh.hand){const ar=P.find(p=>assign[p.i]===ARMSORT(sh)[0]),cand=left().filter(p=>p.el<2.2);
+    if(ar&&cand.length)take(cand.sort((a,b)=>Math.hypot(a.cx-ar.cx,a.cy-ar.cy)-Math.hypot(b.cx-ar.cx,b.cy-ar.cy))[0],'hand');}
+  // anything still to fill: the biggest drawings left go to the biggest pieces left (small hands, the kit's parts)
+  const rest=keys.filter(has).sort((a,b)=>{const A=sh.boxes.find(x=>x[0]===a),Bx=sh.boxes.find(x=>x[0]===b);return Bx[3]*Bx[4]-A[3]*A[4];});
+  const fill=['legL','legR',...ARMSORT(sh)];if(rest.includes('hand')&&rest.includes('grip'))rest.splice(rest.indexOf('hand'),1),rest.splice(rest.indexOf('grip'),0,'hand');   // the strum hand matters more than the neck hand
+  for(const k of rest.filter(k=>!fill.includes(k))){const p=left()[0];if(!p)break;take(p,k);}
+  for(const k of rest.filter(k=>fill.includes(k)&&has(k))){const p=left()[0];if(!p)break;take(p,k);}
+  return assign;}
+
+// ---------- 3. put each drawing where its piece would be on a printed sheet ----------
+const unit=v=>{const l=Math.hypot(v[0],v[1])||1;return [v[0]/l,v[1]/l];};
+function scaleFor(mid,blobs,assign){const sh=SHEETS2[mid],i=assign.indexOf('body');
+  if(i>=0)return (sh.bodyPivot[1]-sh.J.neck[1])/Math.max(1,blobs[i].y1-blobs[i].y0);   // the drawn body spans neck to hips
+  const j=assign.indexOf('head'),hb=sh.boxes.find(b=>b[0]==='head');if(j>=0)return hb[4]*.85/Math.max(1,blobs[j].y1-blobs[j].y0);
+  const fits=assign.map((k,n)=>{if(!k)return 0;const b=sh.boxes.find(x=>x[0]===k),bl=blobs[n];return Math.min(b[3]/(bl.x1-bl.x0),b[4]/(bl.y1-bl.y0))*.85;}).filter(Boolean).sort((a,b)=>a-b);
+  return fits.length?fits[fits.length>>1]:1;}
+// sheet point -> photo point for one drawing: anchor As on the sheet = anchor Ap in the photo; the photo's "down" runs along d on the sheet
+function placeOf(mid,key,bl,s,bodyC){const sh=SHEETS2[mid],pb=sh.boxes.find(b=>b[0]===key),bw=bl.x1-bl.x0,bh=bl.y1-bl.y0,ctr=[(bl.x0+bl.x1)/2,(bl.y0+bl.y1)/2];
+  let As,Ap,d=[0,1],dp=[0,1],sc=s;const arm=sh.arms[key];
+  // an arm or leg drawn sideways or slanted: its joint is the end nearest the body (no body: the higher end), and it runs from there
+  const limbEnd=()=>{const L=bl.pca;if(!L||L.el<1.4)return null;const [e1,e2]=L.ends,dd=(e,c)=>Math.hypot(e[0]-c[0],e[1]-c[1]);
+    const near=bodyC?(dd(e1,bodyC)<=dd(e2,bodyC)?e1:e2):(e1[1]<=e2[1]?e1:e2),far=near===e1?e2:e1;return {near,dir:unit([far[0]-near[0],far[1]-near[1]])};};
+  if(key==='body'){As=sh.bodyPivot;Ap=[ctr[0],bl.y1];}
+  else if(key==='head'){As=sh.J.neck;Ap=[ctr[0],bl.y1];}
+  else if(key==='legL'||key==='legR'){As=sh.J[key==='legL'?'hipL':'hipR'];Ap=[ctr[0],bl.y0];const e=limbEnd();if(e){Ap=e.near;dp=e.dir;}}
+  else if(arm){As=arm.S;Ap=[ctr[0],bl.y0];d=unit([arm.W[0]-arm.S[0],arm.W[1]-arm.S[1]]);const e=limbEnd();if(e){Ap=e.near;dp=e.dir;}}
+  else if(key==='hand'&&sh.hand){As=sh.hand.wrist;Ap=[ctr[0],bl.y0];d=unit([sh.hand.wrist[0]-sh.hand.from[0],sh.hand.wrist[1]-sh.hand.from[1]]);}
+  else{As=[pb[1]+pb[3]/2,pb[2]+pb[4]/2];Ap=ctr;let along=bw,across=bh;
+    // an instrument drawn standing up lies down in its box, its body (the wide end) to the left like the printed one
+    if(key==='inst'&&(pb[3]>pb[4])!==(bw>bh)){d=bl.ends.bot>=bl.ends.top?[-1,0]:[1,0];along=bh;across=bw;}
+    if(key==='inst'||SHEETS2[mid].kit&&['kick','snare','hat','snareSt','hatSt'].includes(key))sc=Math.min(pb[3]/along,pb[4]/across)*.94;}
+  // the drawing's own "down" (dp, from its joint along it) lies along d on the sheet; rp and r are the sideways directions
+  const r=[d[1],-d[0]],rp=[dp[1],-dp[0]],
+    toSheet=([u,v])=>{const du=u-Ap[0],dv=v-Ap[1],a=(du*rp[0]+dv*rp[1])*sc,b=(du*dp[0]+dv*dp[1])*sc;return [As[0]+a*r[0]+b*d[0],As[1]+a*r[1]+b*d[1]];},
+    toPhoto=([x,y])=>{const dx=x-As[0],dy=y-As[1],a=(dx*r[0]+dy*r[1])/sc,b=(dx*d[0]+dy*d[1])/sc;return [Ap[0]+a*rp[0]+b*dp[0],Ap[1]+a*rp[1]+b*dp[1]];};
+  const cs=[[bl.x0,bl.y0],[bl.x1,bl.y0],[bl.x1,bl.y1],[bl.x0,bl.y1]].map(toSheet),m=SCAN_CONFIG.frameBand+3.5,
+    x0=Math.min(...cs.map(c=>c[0]))-m,y0=Math.min(...cs.map(c=>c[1]))-m,x1=Math.max(...cs.map(c=>c[0]))+m,y1=Math.max(...cs.map(c=>c[1]))+m;
+  const box=[mid+'.'+key,x0,y0,x1-x0,y1-y0],q=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+  return {box,h:X().solveH(q,q.map(toPhoto)),toSheet};}
+
+// ---------- 4. the screen ----------
+// short names for the menus: the sheet's box words up to a '·' (both legs say 'leg and foot' there, so they get their own)
+const OWN={legL:'upload.freeLegL',legR:'upload.freeLegR',inst:'upload.freeInst'};
+function names(mid){return SHEETS2[mid].boxes.map(b=>[b[0],OWN[b[0]]?TXT(OWN[b[0]]):String(b[5]||b[0]).split(' · ')[0]]);}
+async function build(first){const {S2,extract2,inkNow,tick,say,sel}=X(),{mid,found}=F,ink=inkNow(),blobs=found.blobs,s=scaleFor(mid,blobs,F.assign),bi=F.assign.indexOf('body'),bodyC=bi>=0?[(blobs[bi].x0+blobs[bi].x1)/2,(blobs[bi].y0+blobs[bi].y1)/2]:null;
+  say(TXT('upload.cutting'));await tick();
+  const results=[],thumbs=[],sock={};
+  for(let n=0;n<blobs.length;n++){const k=F.assign[n],bl=blobs[n];if(!k){thumbs.push(null);continue;}
+    const pl=placeOf(mid,k,bl,s,bodyC);S2.h=pl.h;S2.clip=bl.clip;const r=extract2(pl.box,ink);S2.clip=null;results.push(r);thumbs.push(r);
+    if(k==='body'){const tl=pl.toSheet([bl.x0,bl.y0]),br=pl.toSheet([bl.x1,bl.y1]),wd=br[0]-tl[0],ht=br[1]-tl[1];   // the drawn body's shoulders and hips
+      sock.shL=[tl[0]+wd*.1,tl[1]+ht*.1];sock.shR=[br[0]-wd*.1,tl[1]+ht*.1];if(SHEETS2[mid].J.hipL){sock.hipL=[tl[0]+wd*.25,br[1]];sock.hipR=[tl[0]+wd*.75,br[1]];}}
+    await tick();}
+  S2.results=results;F.results=results;sel.value='v2_'+mid;
+  // one card per drawing: its picture and a menu saying which piece it is
+  const box=$('scanParts');box.innerHTML='';const opts=names(mid);
+  blobs.forEach((bl,n)=>{const r=thumbs[n],k=F.assign[n],d=document.createElement('div');d.className='pv';
+    let src=r&&r.url;if(!src){const c=document.createElement('canvas'),sc=Math.min(1,240/Math.max(bl.x1-bl.x0,bl.y1-bl.y0));c.width=Math.max(1,Math.round((bl.x1-bl.x0)*sc));c.height=Math.max(1,Math.round((bl.y1-bl.y0)*sc));
+      try{c.getContext('2d').drawImage(F.img.bmp,bl.x0/F.img.W*(F.img.bmp.width||F.img.W),bl.y0/F.img.H*(F.img.bmp.height||F.img.H),(bl.x1-bl.x0)/F.img.W*(F.img.bmp.width||F.img.W),(bl.y1-bl.y0)/F.img.H*(F.img.bmp.height||F.img.H),0,0,c.width,c.height);}catch(e){}src=c.toDataURL();}
+    d.innerHTML=`<img alt="" src="${src}"><select data-free="${n}" style="width:100%;margin-top:4px"><option value="">${TXT('upload.freeLeaveOut')}</option>${opts.map(([v,t])=>`<option value="${v}"${v===k?' selected':''}>${t}</option>`).join('')}</select>`+
+      (k&&r&&!r.empty?`<input type="checkbox" hidden checked data-key="${r.key}">`:'');
+    box.appendChild(d);});
+  box.querySelectorAll('select[data-free]').forEach(se=>se.onchange=()=>{const n=+se.dataset.free,v=se.value;
+    F.assign=F.assign.map((k,i)=>i===n?v:(v&&k===v?'':k));   // a piece can only be one drawing
+    build(false).catch(e=>{console.error(e);say(TXT('upload.problem')+e.message,true);});});
+  if(window.JOINTS){if(first)JOINTS.clear();await JOINTS.show(mid,SHEETS2[mid],results);if(first&&sock.shL)JOINTS.preset(mid,sock);}
+  const n=results.filter(r=>!r.empty).length;$('scanApply').disabled=!n;
+  say(n?TXT('upload.freeFound',{n:blobs.length,s:blobs.length===1?'':'s'}):TXT('upload.freeNone'),!n);}
+// after "no corner squares": which player are these drawings for?
+async function ask(){const {S2,say}=X();if(!S2.img)return;say(TXT('upload.freeWho'));const w=$('scanWho');w.innerHTML='';
+  SHEET2.ids.forEach(id=>{const b=document.createElement('button');b.className='alt';b.textContent=SHEETMAKER.names[id];b.onclick=()=>{w.hidden=true;start(id).catch(e=>{console.error(e);say(TXT('upload.problem')+e.message,true);});};w.appendChild(b);});
+  if(window.UIART)UIART.mapDress(w);w.hidden=false;}
+async function start(mid){const {S2,say,tick}=X();say(TXT('upload.freeFinding'));await tick();
+  const found=(F&&F.img===S2.img)?F.found:find(S2.img);F={mid,img:S2.img,found,assign:guess(mid,found.blobs)};S2.free=F;
+  if(!found.blobs.length){say(TXT('upload.freeNone'),true);$('scanParts').innerHTML='';return;}
+  await build(true);}
+const redo=()=>F&&X().S2.free===F?build(false):Promise.resolve();
+return {ask,start,redo,find,guess,pieces,blobFromLine,names:mid=>names(mid),_find:find,_guess:guess,_state:()=>F};
+})();
+// ===== 5c. A PICTURE AS ONE PIECE (Oct 21): a painting or picture, cut out by drawing round it, made to look printed =====
+// For what the line readers can't do: a painted face, a coloured picture filling the photo. After "no corner squares",
+// the user picks the player, draws round a part of the picture with a finger (like cutting it out with scissors) and says
+// which piece it is. Several parts of one picture can become several pieces. Then Adjust joints and Use these drawings.
+// The look (designer, Oct 21: "stylised only"): never the picture as it is. Like the screen print from the Oct 14
+// collage test: a few flat colours, ink lines where the colours meet, and the drawn pieces' bold outline and paper rim.
+// Photos of people: everything stays on this device, but using them is still the designer's parked decision.
+window.PICTURE=(function(){
+const $=id=>document.getElementById(id);
+const X=()=>window.__scan;
+let P=null;   // {mid, img, view, line:[[x,y]...] in photo pixels (closed when done), drawing, pieces:{key:result}}
+const RIM=3,LINE=2.2,COLOURS=6,INK=[28,28,32];   // points: paper rim, dark outline; flat colours per piece; ink colour
+
+// ---------- drawing round the part ----------
+function layout(){const cv=$('picCv'),img=P.img,maxW=Math.min(420,cv.parentElement.clientWidth||420),maxH=Math.max(280,(window.innerHeight||800)*.6),
+    sc=Math.min(maxW/img.W,maxH/img.H),dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.style.width=Math.round(img.W*sc)+'px';cv.style.height=Math.round(img.H*sc)+'px';cv.width=Math.round(img.W*sc*dpr);cv.height=Math.round(img.H*sc*dpr);P.view={sc,dpr};}
+function trace(g,pts){g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();}
+// a hand-drawn line made smooth (corners cut twice), so the cut edge doesn't wobble with every jitter of the finger
+function smooth(pts){let a=pts;for(let k=0;k<2;k++){const o=[];for(let i=0;i<a.length;i++){const p=a[i],q=a[(i+1)%a.length];o.push([p[0]*.75+q[0]*.25,p[1]*.75+q[1]*.25],[p[0]*.25+q[0]*.75,p[1]*.25+q[1]*.75]);}a=o;}return a;}
+const area=pts=>{let s=0;for(let i=0;i<pts.length;i++){const p=pts[i],q=pts[(i+1)%pts.length];s+=p[0]*q[1]-q[0]*p[1];}return Math.abs(s/2);};
+// ---------- snap to shape (Oct 21): a loose line pulls in to the part it was drawn round ----------
+// The colours just outside the line are the background. Inside the line, background-coloured paper that reaches the line
+// is trimmed away (paper enclosed by the part, like an eye's white, stays). What's left is the part; its edge is the new line.
+function snap(line,img){img=img||P.img;const xs=line.map(p=>p[0]),ys=line.map(p=>p[1]),pad=Math.max(8,(Math.max(...xs)-Math.min(...xs))*.08),
+    X0=Math.max(0,Math.min(...xs)-pad),Y0=Math.max(0,Math.min(...ys)-pad),X1=Math.min(img.W,Math.max(...xs)+pad),Y1=Math.min(img.H,Math.max(...ys)+pad),
+    k=Math.min(1,600/Math.max(X1-X0,Y1-Y0)),w=Math.max(8,Math.round((X1-X0)*k)),h=Math.max(8,Math.round((Y1-Y0)*k));
+  const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d',{willReadFrequently:true});
+  g.drawImage(img.bmp,X0/img.W*(img.bmp.width||img.W),Y0/img.H*(img.bmp.height||img.H),(X1-X0)/img.W*(img.bmp.width||img.W),(Y1-Y0)/img.H*(img.bmp.height||img.H),0,0,w,h)
+  const px=g.getImageData(0,0,w,h).data,m=document.createElement('canvas');m.width=w;m.height=h;const mg=m.getContext('2d',{willReadFrequently:true});
+  const loc=line.map(p=>[(p[0]-X0)*k,(p[1]-Y0)*k]);mg.fillStyle='#fff';trace(mg,loc);mg.fill();const ins=mg.getImageData(0,0,w,h).data,IN=p=>ins[p*4]>127;
+  // the background: pixels in a thin band just outside the line
+  mg.clearRect(0,0,w,h);trace(mg,loc);mg.lineWidth=10;mg.strokeStyle='#fff';mg.stroke();const band=mg.getImageData(0,0,w,h).data,bg=[];
+  for(let p=0;p<w*h;p+=2)if(band[p*4]>127&&!IN(p))bg.push([px[p*4],px[p*4+1],px[p*4+2]]);if(bg.length<20){if(window.__snapWhy)__snapWhy.push(['bg',bg.length]);return null;}
+  const C=[bg[0]];while(C.length<4){let b=null,bd=-1;for(const v of bg){let mm=1e9;for(const q of C){const d=(v[0]-q[0])**2+(v[1]-q[1])**2+(v[2]-q[2])**2;if(d<mm)mm=d;}if(mm>bd){bd=mm;b=v;}}if(bd<400)break;C.push(b.slice());}
+  for(let it=0;it<6;it++){const S=C.map(()=>[0,0,0,0]);for(const v of bg){let b=0,mm=1e9;C.forEach((q,i)=>{const d=(v[0]-q[0])**2+(v[1]-q[1])**2+(v[2]-q[2])**2;if(d<mm){mm=d;b=i;}});S[b][0]+=v[0];S[b][1]+=v[1];S[b][2]+=v[2];S[b][3]++;}
+    S.forEach((q,i)=>{if(q[3])C[i]=[q[0]/q[3],q[1]/q[3],q[2]/q[3]];});}
+  {const sh=C.map(()=>0);for(const v of bg){let b=0,mm=1e9;C.forEach((q,i)=>{const d=(v[0]-q[0])**2+(v[1]-q[1])**2+(v[2]-q[2])**2;if(d<mm){mm=d;b=i;}});sh[b]++;}
+    const big=C.filter((q,i)=>sh[i]>=bg.length*.12);if(big.length)C.splice(0,C.length,...big);}   /* Oct 21: a cutting mat's grid lines aren't the background */
+  const lum=(r,g2,b)=>.3*r+.59*g2+.11*b,like=p=>{const r=px[p*4],g2=px[p*4+1],b=px[p*4+2],L=lum(r,g2,b);for(const q of C){if((r-q[0])**2+(g2-q[1])**2+(b-q[2])**2<34*34&&Math.abs(L-lum(q[0],q[1],q[2]))<22)return true;}return false;};   /* close in colour AND not clearly darker or lighter (a faint pen line counts) */
+  // what's left of the inside once everything passable that joins up with the line is trimmed: the biggest piece
+  // (a line drawing's bits, strings and all, are joined up first: what's left of an outline that isn't quite closed is thin)
+  function part(pass){const cut=new Uint8Array(w*h),st=[];for(let p=0;p<w*h;p++){if(!IN(p)||!pass(p))continue;const x=p%w,y=(p/w)|0;
+      if(x===0||y===0||x===w-1||y===h-1||!IN(p-1)||!IN(p+1)||!IN(p-w)||!IN(p+w)){cut[p]=1;st.push(p);}}
+    while(st.length){const p=st.pop(),x=p%w,y=(p/w)|0;for(const q of [x>0?p-1:-1,x<w-1?p+1:-1,y>0?p-w:-1,y<h-1?p+w:-1])if(q>=0&&!cut[q]&&IN(q)&&pass(q)){cut[q]=1;st.push(q);}}
+    const fg0=new Uint8Array(w*h);let total=0;for(let p=0;p<w*h;p++)if(IN(p)){total++;if(!cut[p])fg0[p]=1;}
+    const plain=pick(fg0,total),r=3,er=new Uint8Array(w*h),op=new Uint8Array(w*h);
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){let all=1;for(let dy=-r;dy<=r&&all;dy++)for(let dx=-r;dx<=r;dx++){const X2=x+dx,Y2=y+dy;if(X2<0||Y2<0||X2>=w||Y2>=h||!fg0[Y2*w+X2]){all=0;break;}}er[y*w+x]=all;}
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(!er[y*w+x])continue;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const X2=x+dx,Y2=y+dy;if(X2>=0&&Y2>=0&&X2<w&&Y2<h)op[Y2*w+X2]=1;}}
+    const opened=pick(op,total);return opened&&plain&&opened.n>=plain.n*.6?opened:plain;}
+  function pick(fg0,total){    const fg=new Uint8Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(!fg0[y*w+x])continue;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const X2=x+dx,Y2=y+dy;if(X2>=0&&Y2>=0&&X2<w&&Y2<h&&IN(Y2*w+X2))fg[Y2*w+X2]=1;}}
+    const lab=new Int32Array(w*h).fill(-1);let best=-1,bn=0;
+    for(let p0=0;p0<w*h;p0++){if(!fg[p0]||lab[p0]>=0)continue;let n=0;const s2=[p0];lab[p0]=p0;while(s2.length){const p=s2.pop(),x=p%w,y=(p/w)|0;n++;
+        for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X2=x+dx,Y2=y+dy;if(X2<0||Y2<0||X2>=w||Y2>=h)continue;const q=Y2*w+X2;if(fg[q]&&lab[q]<0){lab[q]=p0;s2.push(q);}}}if(n>bn){bn=n;best=p0;}}
+    if(best<0||bn<total*.04||bn>total*.97)return null;const keep=new Uint8Array(w*h);for(let p=0;p<w*h;p++)if(lab[p]===best)keep[p]=1;return {keep,n:bn,total};}
+  // two ways to snap: by colour (trim what looks like the background: photos, paintings), and by outline (trim up to the
+  // first dark line: cartoons, whose colours often carry on past the drawn line). The outline way is used only when the
+  // edge it finds really runs along dark lines (designer's cartoon test, Oct 21); otherwise the colour way, as before.
+  const Ls=[];for(let p=0;p<w*h;p+=3)if(IN(p))Ls.push(lum(px[p*4],px[p*4+1],px[p*4+2]));Ls.sort((a,b)=>a-b);const bright=Ls[Math.floor(Ls.length*.9)]||200;
+  // an outline is a THIN dark line: lighter on both sides of it, across or along (a dark mat or a jacket is not)
+  const LL=new Float32Array(w*h);for(let p=0;p<w*h;p++)LL[p]=lum(px[p*4],px[p*4+1],px[p*4+2]);
+  const side=(x,y,dx,dy)=>{let m=0;for(let t=1;t<=4;t++){const X2=x+dx*t,Y2=y+dy*t;if(X2<0||Y2<0||X2>=w||Y2>=h)break;if(LL[Y2*w+X2]>m)m=LL[Y2*w+X2];}return m;};
+  const inkM=new Uint8Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){const p=y*w+x,v=LL[p];if(v>=Math.min(110,bright*.5))continue;
+    if(v<.6*Math.min(side(x,y,-1,0),side(x,y,1,0))||v<.6*Math.min(side(x,y,0,-1),side(x,y,0,1)))inkM[p]=1;}
+  const inkAt=p=>inkM[p]===1;
+  // a third way, by contrast: a bright piece on a dark mat (or dark on light): the side of the brightness split that the
+  // band outside the line is mostly not, thin bits (a mat's grid lines) cleaned away (designer's cutting-mat photo, Oct 21)
+  function byContrast(){const h2=new Float64Array(256);let n=0;for(let p=0;p<w*h;p++)if(IN(p)){h2[Math.max(0,Math.min(255,LL[p]|0))]++;n++;}
+    let sum=0;for(let i=0;i<256;i++)sum+=i*h2[i];let sb=0,wb=0,bv=0,t=128;for(let i=0;i<256;i++){wb+=h2[i];if(!wb)continue;const wf=n-wb;if(!wf)break;sb+=i*h2[i];const mb=sb/wb,mf=(sum-sb)/wf,v=wb*wf*(mb-mf)**2;if(v>bv){bv=v;t=i;}}
+    let rd=0,rn=0;for(let p=0;p<w*h;p+=2)if(band[p*4]>127&&!IN(p)){rn++;if(LL[p]<t)rd++;}const brightObj=rn&&rd>rn*.5;
+    const ob=new Uint8Array(w*h);for(let p=0;p<w*h;p++)if(IN(p)&&(brightObj?LL[p]>=t:LL[p]<t))ob[p]=1;
+    let src=ob;if(brightObj){const r=3,er=new Uint8Array(w*h),op=new Uint8Array(w*h);
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){let all=1;for(let dy=-r;dy<=r&&all;dy++)for(let dx=-r;dx<=r;dx++){const X2=x+dx,Y2=y+dy;if(X2<0||Y2<0||X2>=w||Y2>=h||!ob[Y2*w+X2]){all=0;break;}}er[y*w+x]=all;}
+      for(let y=0;y<h;y++)for(let x=0;x<w;x++){if(!er[y*w+x])continue;for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const X2=x+dx,Y2=y+dy;if(X2>=0&&Y2>=0&&X2<w&&Y2<h)op[Y2*w+X2]=1;}}src=op;}
+    let total=0;for(let p=0;p<w*h;p++)if(IN(p))total++;return pick(src,total);}
+  // which cut-out is best: the one whose edge runs along the strongest change in brightness, and smoothly (a jagged edge
+  // that wanders along grid lines or shading scores less) - how a person would judge it
+  function score(k){if(!k)return -1;let edge=0,g=0;
+    for(let y=2;y<h-2;y++)for(let x=2;x<w-2;x++){const p=y*w+x;if(!k.keep[p]||(k.keep[p-1]&&k.keep[p+1]&&k.keep[p-w]&&k.keep[p+w]))continue;edge++;
+      let m=0;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const X2=x+dx,Y2=y+dy;if(X2<1||Y2<1||X2>=w-1||Y2>=h-1)continue;const q=Y2*w+X2,gx=Math.abs(LL[q+1]-LL[q-1]),gy=Math.abs(LL[q+w]-LL[q-w]);if(gx+gy>m)m=gx+gy;}g+=m;}
+    if(!edge)return -1;const round=Math.min(1,4*Math.PI*k.n/(edge*edge));return (g/edge)*Math.pow(Math.max(.02,round),.35);}
+  const cands=[['colour',part(like)],['outline',(()=>{const r=part(p=>!inkAt(p));return r&&r.n>=r.total*.2?r:null;})()],['contrast',byContrast()]];
+  let chosen=null,best=-1,way='';for(const [nm,k] of cands){const sc=score(k);if(window.__snapWhy)__snapWhy.push([nm,+sc.toFixed(1)]);if(sc>best){best=sc;chosen=k;way=nm;}}
+  if(!chosen){if(window.__snapWhy)__snapWhy.push(['part']);return null;}   // nothing clear to snap to: keep the line as drawn
+  const keep=chosen.keep;if(window.__snapWhy)__snapWhy.push(['chosen',way]);
+  return outlineOf(keep,w,h,X0,Y0,k);}
+// the edge of a cut-out (keep: its pixels in a w x h grid, the grid's corner at X0,Y0 in the photo, k grid pixels per photo
+// pixel): holes filled, walked round, about 120 points, smoothed. Also used by the fix-up brush (Add drawings).
+function outlineOf(keep,w,h,X0,Y0,k){
+  const out=new Uint8Array(w*h),q2=[];const pushO=p=>{if(!keep[p]&&!out[p]){out[p]=1;q2.push(p);}};
+  for(let x=0;x<w;x++){pushO(x);pushO((h-1)*w+x);}for(let y=0;y<h;y++){pushO(y*w);pushO(y*w+w-1);}
+  while(q2.length){const p=q2.pop(),x=p%w,y=(p/w)|0;if(x>0)pushO(p-1);if(x<w-1)pushO(p+1);if(y>0)pushO(p-w);if(y<h-1)pushO(p+w);}
+  const M=new Uint8Array((w+2)*(h+2));for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(!out[y*w+x])for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)M[(y+1+dy)*(w+2)+x+1+dx]=1;
+  // walk round its edge (Moore neighbour tracing, clockwise, from the first pixel met reading row by row)
+  const W2=w+2,H2=h+2,s0=M.findIndex(v=>v===1);if(s0<0)return null;const D=[[-1,0],[-1,-1],[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1]],pts=[];
+  const on=(x,y)=>x>=0&&y>=0&&x<W2&&y<H2&&M[y*W2+x]===1,sx=s0%W2,sy=(s0/W2)|0;let cx=sx,cy=sy,bx=sx-1,by=sy;
+  for(let guard=0;guard<W2*H2*2;guard++){pts.push([cx,cy]);let bi=D.findIndex(d=>cx+d[0]===bx&&cy+d[1]===by),moved=false;
+    for(let i=1;i<=8;i++){const kk=(bi+i)%8,nx=cx+D[kk][0],ny=cy+D[kk][1];if(on(nx,ny)){const pk=(kk+7)%8;bx=cx+D[pk][0];by=cy+D[pk][1];cx=nx;cy=ny;moved=true;break;}}
+    if(!moved||(cx===sx&&cy===sy))break;}
+  if(pts.length<8){if(window.__snapWhy)__snapWhy.push(['edge',pts.length]);return null;}const step=Math.max(1,Math.floor(pts.length/120)),res=[];   /* about 120 points, then smoothed: an edge cut with a steady hand */
+  for(let i=0;i<pts.length;i+=step)res.push([X0+(pts[i][0]-1+.5)/k,Y0+(pts[i][1]-1+.5)/k]);
+  return smooth(res);}
+function draw(){if(!P||!P.view)return;const cv=$('picCv'),g=cv.getContext('2d'),{sc,dpr}=P.view,img=P.img;
+  g.setTransform(sc*dpr,0,0,sc*dpr,0,0);g.drawImage(img.bmp,0,0,img.W,img.H);
+  if(!P.line||P.line.length<2)return;
+  if(!P.drawing){g.save();g.beginPath();g.rect(0,0,img.W,img.H);P.line.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.fillStyle='rgba(0,0,0,.45)';g.fill('evenodd');g.restore();}
+  if(!P.drawing&&P.drawn&&P.line!==P.drawn){g.beginPath();P.drawn.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.lineWidth=1.5/sc;g.strokeStyle='rgba(255,255,255,.7)';g.setLineDash([4/sc,5/sc]);g.stroke();g.setLineDash([]);}   /* the line as drawn, faint */
+  g.beginPath();P.line.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));if(!P.drawing)g.closePath();
+  g.lineWidth=3/sc;g.lineJoin=g.lineCap='round';g.strokeStyle='#e8553d';g.setLineDash(P.drawing?[]:[8/sc,6/sc]);g.stroke();g.setLineDash([]);}
+const at=e=>{const b=$('picCv').getBoundingClientRect();return [(e.clientX-b.left)/P.view.sc,(e.clientY-b.top)/P.view.sc];};
+function wire(){const cv=$('picCv');if(cv.dataset.wired)return;cv.dataset.wired='1';
+  cv.addEventListener('pointerdown',e=>{if(!P||!P.view)return;e.preventDefault();P.drawing=true;P.line=[at(e)];try{cv.setPointerCapture(e.pointerId);}catch(_){}draw();});
+  cv.addEventListener('pointermove',e=>{if(!P||!P.drawing)return;const q=at(e),l=P.line[P.line.length-1];if(Math.hypot(q[0]-l[0],q[1]-l[1])*P.view.sc<3)return;P.line.push(q);draw();});
+  const up=()=>{if(!P||!P.drawing)return;P.drawing=false;   // closed by a straight line back to the start; too small = start again
+    if(P.line.length<6||area(P.line)*P.view.sc*P.view.sc<400){P.line=P.drawn=null;draw();return;}
+    P.drawn=smooth(P.line);fit();};
+  // snap on: the line pulls in to the part (or stays as drawn when there's nothing clear to snap to)
+  const fit=()=>{if(!P||!P.drawn)return;P.line=P.drawn;if($('picSnap').checked){const sn=snap(P.drawn);if(sn)P.line=sn;else X().say(TXT('pic.noSnap'));}draw();};
+  $('picSnap').onchange=fit;
+  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  $('picUse').onclick=()=>use().catch(e=>{console.error(e);X().say(TXT('upload.problem')+e.message,true);});}
+
+// ---------- the look: a few flat colours, ink where they meet ----------
+function printLook(src){const W=src.width,H=src.height,d=src.getContext('2d').getImageData(0,0,W,H),a=d.data,N=W*H;
+  // flat artwork (a cartoon, a poster) is already printed-looking: kept as it is, only the outline and rim go round it
+  {const bins=new Map();let n=0;for(let p=0;p<N;p+=2){if(a[p*4+3]<200)continue;n++;const k=(a[p*4]>>4)<<8|(a[p*4+1]>>4)<<4|(a[p*4+2]>>4);bins.set(k,(bins.get(k)||0)+1);}
+    const top=[...bins.values()].sort((x,y)=>y-x).slice(0,12).reduce((x,y)=>x+y,0);if(n&&top/n>.8)return src;}
+  // soften the photo's grain first, so the flat colours come out as big areas, not speckle
+  const f=new Float32Array(N*3),t=new Float32Array(N*3);for(let p=0;p<N;p++){f[p*3]=a[p*4];f[p*3+1]=a[p*4+1];f[p*3+2]=a[p*4+2];}
+  const r=Math.max(1,Math.round(Math.min(W,H)/150));
+  for(let pass=0;pass<2;pass++){for(let y=0;y<H;y++)for(let x=0;x<W;x++){let s0=0,s1=0,s2=0,n=0;for(let k=-r;k<=r;k++){const xx=x+k;if(xx<0||xx>=W)continue;const q=(y*W+xx)*3;s0+=f[q];s1+=f[q+1];s2+=f[q+2];n++;}const q=(y*W+x)*3;t[q]=s0/n;t[q+1]=s1/n;t[q+2]=s2/n;}
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){let s0=0,s1=0,s2=0,n=0;for(let k=-r;k<=r;k++){const yy=y+k;if(yy<0||yy>=H)continue;const q=(yy*W+x)*3;s0+=t[q];s1+=t[q+1];s2+=t[q+2];n++;}const q=(y*W+x)*3;f[q]=s0/n;f[q+1]=s1/n;f[q+2]=s2/n;}}
+  // the flat colours: the picture's main colours (k-means on a sample of the part)
+  const inside=[];for(let p=0;p<N;p++)if(a[p*4+3]>200)inside.push(p);if(!inside.length)return src;
+  const step=Math.max(1,Math.floor(inside.length/4000)),S=[];for(let i=0;i<inside.length;i+=step){const q=inside[i]*3;S.push([f[q],f[q+1],f[q+2]]);}
+  const C=[S[0]];while(C.length<COLOURS){let best=null,bd=-1;for(const s of S){let m=1e9;for(const c of C){const dd=(s[0]-c[0])**2+(s[1]-c[1])**2+(s[2]-c[2])**2;if(dd<m)m=dd;}if(m>bd){bd=m;best=s;}}C.push(best.slice());}
+  const near=(v0,v1,v2)=>{let b=0,m=1e9;for(let k=0;k<C.length;k++){const c=C[k],dd=(v0-c[0])**2+(v1-c[1])**2+(v2-c[2])**2;if(dd<m){m=dd;b=k;}}return b;};
+  for(let it=0;it<8;it++){const sum=C.map(()=>[0,0,0,0]);for(const s of S){const k=near(s[0],s[1],s[2]);sum[k][0]+=s[0];sum[k][1]+=s[1];sum[k][2]+=s[2];sum[k][3]++;}
+    sum.forEach((m,k)=>{if(m[3])C[k]=[m[0]/m[3],m[1]/m[3],m[2]/m[3]];});}
+  // printed inks are a little bolder than a photo: a touch more colour, and the darkest one is the ink itself
+    const share=C.map(()=>0);for(const s of S){share[near(s[0],s[1],s[2])]++;}
+  // the darkest colour becomes the ink only when it's a small share (lines, pupils); a big dark area keeps its own colour
+  const lum=c=>.3*c[0]+.59*c[1]+.11*c[2],ink=C.map((c,k)=>{const L=lum(c);if(L<60&&share[k]<S.length*.15)return INK.slice();return c.map(v=>Math.max(0,Math.min(255,L+(v-L)*1.2)));});
+  const lab=new Int8Array(N).fill(-1);for(const p of inside){const q=p*3;lab[p]=near(f[q],f[q+1],f[q+2]);}
+  // tidy the flat colours: each pixel takes the colour most of its neighbours have (twice), so shading doesn't leave speckle
+  for(let pass=0;pass<2;pass++){const nl=new Int8Array(N).fill(-1),cnt=new Int32Array(C.length);
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const p=y*W+x;if(lab[p]<0)continue;cnt.fill(0);
+      for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=W||yy>=H)continue;const k=lab[yy*W+xx];if(k>=0)cnt[k]++;}
+      let b=lab[p],bc=-1;for(let k=0;k<C.length;k++)if(cnt[k]>bc){bc=cnt[k];b=k;}nl[p]=b;}
+    lab.set(nl);}
+  // ink lines where two flat colours meet and their brightness differs (like the key plate of a print), about 1.2 points wide
+  const edge=new Uint8Array(N),L=C.map(lum);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const p=y*W+x,k=lab[p];if(k<0)continue;
+    for(const [dx,dy] of [[1,0],[0,1]]){const xx=x+dx,yy=y+dy;if(xx>=W||yy>=H)continue;const k2=lab[yy*W+xx];if(k2>=0&&k2!==k&&Math.abs(L[k]-L[k2])>35){edge[p]=1;edge[yy*W+xx]=1;}}}
+  const out=document.createElement('canvas');out.width=W;out.height=H;const od=out.getContext('2d').createImageData(W,H),o=od.data,rr=1;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const p=y*W+x,k=lab[p];if(k<0)continue;let e=false;
+    for(let dy=-rr;dy<=rr&&!e;dy++)for(let dx=-rr;dx<=rr;dx++){const xx=x+dx,yy=y+dy;if(xx>=0&&yy>=0&&xx<W&&yy<H&&edge[yy*W+xx]){e=true;break;}}
+    const c=e?INK:ink[k];o[p*4]=c[0];o[p*4+1]=c[1];o[p*4+2]=c[2];o[p*4+3]=a[p*4+3];}
+  out.getContext('2d').putImageData(od,0,0);return out;}
+
+// ---------- the cut-out part -> a piece, where it would sit on a printed sheet ----------
+const unit=v=>{const l=Math.hypot(v[0],v[1])||1;return [v[0]/l,v[1]/l];};
+function make(mid,key,line,img){img=img||P.img;const sh=SHEETS2[mid],pb=sh.boxes.find(b=>b[0]===key),R=X().V2R,arm=sh.arms[key];
+  const xs=line.map(p=>p[0]),ys=line.map(p=>p[1]),f={x:Math.min(...xs),y:Math.min(...ys)};f.w=Math.max(...xs)-f.x;f.h=Math.max(...ys)-f.y;const ctr=[f.x+f.w/2,f.y+f.h/2];
+  // sized to fit the piece's printed box; hung like a drawing of that piece (a head on the neck, an arm from the shoulder)
+  const sc=Math.min(pb[3]/f.w,pb[4]/f.h)*.9;let As,Ap,d=[0,1];
+  if(key==='head'){As=sh.J.neck;Ap=[ctr[0],f.y+f.h];}
+  else if(key==='body'){As=sh.bodyPivot;Ap=[ctr[0],f.y+f.h];}
+  else if(key==='legL'||key==='legR'){As=sh.J[key==='legL'?'hipL':'hipR'];Ap=[ctr[0],f.y];}
+  else if(arm){As=arm.S;Ap=[ctr[0],f.y];d=unit([arm.W[0]-arm.S[0],arm.W[1]-arm.S[1]]);}
+  else if(key==='hand'&&sh.hand){As=sh.hand.wrist;Ap=[ctr[0],f.y];d=unit([sh.hand.wrist[0]-sh.hand.from[0],sh.hand.wrist[1]-sh.hand.from[1]]);}
+  else{As=[pb[1]+pb[3]/2,pb[2]+pb[4]/2];Ap=ctr;}
+  const r=[d[1],-d[0]],toSheet=([u,v])=>{const a=(u-Ap[0])*sc,b=(v-Ap[1])*sc;return [As[0]+a*r[0]+b*d[0],As[1]+a*r[1]+b*d[1]];};
+  const g0=(RIM+LINE)/sc,cs=[[f.x-g0,f.y-g0],[f.x+f.w+g0,f.y-g0],[f.x+f.w+g0,f.y+f.h+g0],[f.x-g0,f.y+f.h+g0]].map(toSheet),m=SCAN_CONFIG.frameBand+4,
+    x0=Math.min(...cs.map(c=>c[0]))-m,y0=Math.min(...cs.map(c=>c[1]))-m,x1=Math.max(...cs.map(c=>c[0]))+m,y1=Math.max(...cs.map(c=>c[1]))+m;
+  const box=[mid+'.'+key,x0,y0,x1-x0,y1-y0],Wc=Math.max(1,Math.round((x1-x0)*R)),Hc=Math.max(1,Math.round((y1-y0)*R));
+  // photo pixels -> this piece's pixels (the same turn and size as toSheet)
+  const o=toSheet([0,0]),ex=toSheet([1,0]),ey=toSheet([0,1]),T=[(ex[0]-o[0])*R,(ex[1]-o[1])*R,(ey[0]-o[0])*R,(ey[1]-o[1])*R,(o[0]-x0)*R,(o[1]-y0)*R];
+  const part=document.createElement('canvas');part.width=Wc;part.height=Hc;{const g=part.getContext('2d');g.setTransform(...T);trace(g,line);g.clip();g.drawImage(img.bmp,0,0,img.W,img.H);}
+  const look=printLook(part),cv=document.createElement('canvas');cv.width=Wc;cv.height=Hc;const g=cv.getContext('2d');
+  // the drawn pieces' edge: a dark outline, then the white paper rim, then the printed part inside the line drawn round it
+  g.setTransform(...T);g.lineJoin='round';trace(g,line);g.lineWidth=2*(RIM+LINE)/sc;g.strokeStyle=`rgb(${INK})`;g.stroke();g.fillStyle='#fff';g.fill();
+  trace(g,line);g.lineWidth=2*RIM/sc;g.strokeStyle='#fff';g.stroke();g.setTransform(1,0,0,1,0,0);g.drawImage(look,0,0);
+  return {key:mid+'.'+key,url:cv.toDataURL('image/png'),cv,box,ink:1,empty:false,picture:true,toSheet};}
+
+// ---------- the screen ----------
+const OWN={legL:'upload.freeLegL',legR:'upload.freeLegR',inst:'upload.freeInst'};
+const nameOf=(mid,k)=>{const b=SHEETS2[mid].boxes.find(x=>x[0]===k);return OWN[k]?TXT(OWN[k]):String(b&&b[5]||k).split(' · ')[0];};
+function cards(){const box=$('scanParts');box.innerHTML='';
+  for(const [k,r] of Object.entries(P.pieces)){const d=document.createElement('div');d.className='pv';
+    d.innerHTML=`<img alt="" src="${r.url}"><label style="display:flex;gap:4px;align-items:center;margin:4px 0 0"><input type="checkbox" checked data-key="${r.key}"> <b>${nameOf(P.mid,k)}</b></label>`;box.appendChild(d);}}
+async function use(){const {S2,say,tick}=X();if(!P)return;const key=$('picPiece').value;if(!key||!P.line){say(TXT('pic.help'));return;}
+  say(TXT('upload.cutting'));await tick();
+  P.pieces[key]=make(P.mid,key,P.line);const list=Object.values(P.pieces);S2.results=list;cards();
+  if(window.JOINTS)await JOINTS.show(P.mid,SHEETS2[P.mid],list);
+  const nm=nameOf(P.mid,key);$('scanApply').disabled=false;say(TXT('pic.added',{piece:nm.charAt(0).toUpperCase()+nm.slice(1)}));}
+async function ask(){const {S2,say}=X();if(!S2.img)return;say(TXT('upload.freeWho'));const w=$('scanWho');w.innerHTML='';
+  SHEET2.ids.forEach(id=>{const b=document.createElement('button');b.className='alt';b.textContent=SHEETMAKER.names[id];b.onclick=()=>{w.hidden=true;start(id);};w.appendChild(b);});
+  if(window.UIART)UIART.mapDress(w);w.hidden=false;}
+function start(mid){const {S2,say,sel}=X();
+  P={mid,img:S2.img,pieces:{},line:null,drawn:null,drawing:false};
+  S2.free={picture:true};S2.results=[];sel.value='v2_'+mid;   // not a sheet: the sliders leave it alone
+  $('picPiece').innerHTML=SHEETS2[mid].boxes.map(b=>`<option value="${b[0]}"${b[0]==='head'?' selected':''}>${nameOf(mid,b[0])}</option>`).join('');
+  $('scanParts').innerHTML='';if(window.JOINTS)JOINTS.clear();$('scanApply').disabled=true;
+  $('scanPic').hidden=false;wire();layout();draw();say(TXT('pic.help'));}
+function close(){P=null;const e=$('scanPic');if(e)e.hidden=true;}
+return {ask,start,close,_state:()=>P,_make:make,_look:printLook,_snap:l=>snap(l),snap,make,outlineOf};
+})();
+// ===== 5d. ADD DRAWINGS (Oct 21): one way in, whatever the photo is =====
+// Designer's sketch (canvas "oddbop Add drawings flow"): 1 Add drawings -> 2 Check the pieces -> 3 Put them together -> 4 on stage.
+// A printed sheet is read as before. Anything else comes here, with no error message in between:
+//  2. Check the pieces: the photo with every drawing the finder found outlined and named (free-paper.js). Tap one to rename
+//     it or leave it out; draw round anything it missed with a finger (snaps to shape, picture-piece.js). Each piece gets the
+//     drawn look (a line drawing, read like a sheet) or the printed look (painted or a photo), chosen by what's inside it.
+//  3. Put them together: Adjust joints (adjust-joints.js), with Back.
+//  4. Use these drawings, as every upload.
+window.ADD=(function(){
+const $=id=>document.getElementById(id);
+const X=()=>window.__scan;
+let A=null;   // {mid, img, blobs, assign: piece key or '' per drawing, look: 'drawn'|'printed' per drawing, sel, view, path, step}
+
+// ---------- 2. the photo, with the pieces ----------
+function layout(){const cv=$('addCv'),img=A.img,maxW=Math.min(420,cv.parentElement.clientWidth||420),maxH=Math.max(300,(window.innerHeight||800)*.62),
+    sc=Math.min(maxW/img.W,maxH/img.H),dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.style.width=Math.round(img.W*sc)+'px';cv.style.height=Math.round(img.H*sc)+'px';cv.width=Math.round(img.W*sc*dpr);cv.height=Math.round(img.H*sc*dpr);A.view={sc,dpr};}
+const names=()=>FREEPAPER.names(A.mid),nameOf=k=>{const n=names().find(x=>x[0]===k);return n?n[1]:k;};
+function outline(g,bl,pad){if(bl.line){g.beginPath();bl.line.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();return;}
+  const x=bl.x0-pad,y=bl.y0-pad,w=bl.x1-bl.x0+2*pad,h=bl.y1-bl.y0+2*pad,r=Math.min(w,h)*.12;g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h);}
+function draw(){if(!A||!A.view)return;const cv=$('addCv'),g=cv.getContext('2d'),{sc,dpr}=A.view,img=A.img,pad=6/sc;
+  g.setTransform(sc*dpr,0,0,sc*dpr,0,0);g.drawImage(img.bmp,0,0,img.W,img.H);g.fillStyle='rgba(255,255,255,.25)';g.fillRect(0,0,img.W,img.H);
+  g.font=`${12/sc}px sans-serif`;g.textBaseline='middle';
+  A.blobs.forEach((bl,n)=>{const on=n===A.sel,k=A.assign[n];outline(g,bl,pad);
+    g.lineWidth=(on?3.5:2)/sc;g.strokeStyle=on?'#e8553d':k?'#555':'#aaa';g.setLineDash(k?[]:[6/sc,5/sc]);g.stroke();g.setLineDash([]);
+    const t=k?nameOf(k):TXT('add.left'),tw=g.measureText(t).width+14/sc,tx=Math.max(0,bl.x0-pad),ty=Math.max(9/sc,bl.y0-pad-10/sc);
+    g.fillStyle=on?'#e8553d':k?'#fff':'#eee';g.beginPath();g.roundRect?g.roundRect(tx,ty-9/sc,tw,18/sc,9/sc):g.rect(tx,ty-9/sc,tw,18/sc);g.fill();
+    g.lineWidth=1/sc;g.strokeStyle=on?'#e8553d':'#999';g.stroke();g.fillStyle=on?'#fff':'#222';g.fillText(t,tx+7/sc,ty);});
+  if(A.stroke&&A.stroke.length){const r=BRUSH/sc;g.beginPath();A.stroke.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));if(A.stroke.length===1)g.lineTo(A.stroke[0][0]+.1,A.stroke[0][1]);   /* the brush stroke as it's painted */
+    g.lineWidth=2*r;g.lineJoin=g.lineCap='round';g.strokeStyle=A.brush==='add'?'rgba(232,85,61,.45)':'rgba(255,255,255,.75)';g.stroke();}
+  const ml=(l,on)=>{g.beginPath();g.moveTo(l[0][0],l[0][1]);g.lineTo(l[1][0],l[1][1]);g.lineWidth=(on?4:3)/sc;g.strokeStyle='#e8553d';g.setLineDash(on?[]:[7/sc,5/sc]);g.stroke();g.setLineDash([]);
+    for(const p of l){g.beginPath();g.arc(p[0],p[1],5/sc,0,7);g.fillStyle='#e8553d';g.fill();}};   /* a marked mouth: a line across the lips */
+  A.blobs.forEach(bl=>{if(bl.mouth)ml(bl.mouth,false);});if(A.mline)ml(A.mline,true);
+  if(A.path&&A.path.length>1){g.beginPath();A.path.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.lineWidth=3/sc;g.lineJoin=g.lineCap='round';g.strokeStyle='#e8553d';g.stroke();}}
+function panel(){const on=A.sel>=0&&A.sel<A.blobs.length;$('addSel').hidden=!on;if(!on){setBrush(null);return;}const k=A.assign[A.sel];
+  $('addPiece').innerHTML=names().map(([v,t])=>`<option value="${v}"${v===k?' selected':''}>${t}</option>`).join('')+`<option value=""${k?'':' selected'}>${TXT('add.leaveOut')}</option>`;
+  $('addLook').textContent=TXT(A.look[A.sel]==='printed'?'add.lookPrinted':'add.lookDrawn');
+  const mb=$('addMouth');if(mb){mb.hidden=!(A.mid==='vocals'&&k==='head');mb.setAttribute('aria-pressed',!!A.mark);}}
+const setPiece=(n,k)=>{A.assign=A.assign.map((v,i)=>i===n?k:(k&&v===k?'':v));panel();draw();};   // a piece can only be one drawing
+// a smooth line from a finger's wobbly one (corners cut twice)
+function smooth(pts){let a=pts;for(let k=0;k<2;k++){const o=[];for(let i=0;i<a.length;i++){const p=a[i],q=a[(i+1)%a.length];o.push([p[0]*.75+q[0]*.25,p[1]*.75+q[1]*.25],[p[0]*.25+q[0]*.75,p[1]*.25+q[1]*.75]);}a=o;}return a;}
+const area=pts=>{let s=0;for(let i=0;i<pts.length;i++){const p=pts[i],q=pts[(i+1)%pts.length];s+=p[0]*q[1]-q[0]*p[1];}return Math.abs(s/2);};
+// painted or a photo, or a line drawing? Inside the part: how much is neither paper nor ink (in-between greys, or colour)
+function lookOf(bl){if(cutOut(bl))return 'printed';const img=A.img,Y=img.Y,D=img.RGB,W=img.W,step=Math.max(1,Math.round(Math.max(bl.x1-bl.x0,bl.y1-bl.y0)/120));let n=0,fill=0;
+  for(let y=Math.floor(bl.y0);y<bl.y1;y+=step)for(let x=Math.floor(bl.x0);x<bl.x1;x+=step){if(!bl.clip.has(x,y))continue;const i=y*W+x,L=Y[i]/Math.max(1,bl.clip.paper),
+    r=D[i*4],g2=D[i*4+1],b=D[i*4+2],ch=Math.max(r,g2,b)-Math.min(r,g2,b);n++;if((L>.3&&L<.82)||(ch>45&&L>.25))fill++;}
+  return n&&fill/n>.3?'printed':'drawn';}
+// a paper cut-out on a darker mat (designer's test, Oct 21): just outside its line is much darker than the piece itself.
+// The piece is then the paper, kept as it is (with its outline and rim), not the lines drawn on it.
+function cutOut(bl){if(!bl.line||bl.line.length<8)return false;const img=A.img,l=bl.line,n=l.length;let s=0,c=0;
+  const inside=(x,y)=>{let r=false;for(let i=0,j=n-1;i<n;j=i++){const a=l[i],b=l[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])r=!r;}return r;};
+  const d=Math.max(6,Math.max(bl.x1-bl.x0,bl.y1-bl.y0)*.03);
+  for(let i=0;i<n;i+=Math.max(1,Math.floor(n/60))){const a=l[(i+n-1)%n],b=l[(i+1)%n],t=[b[0]-a[0],b[1]-a[1]],tl=Math.hypot(t[0],t[1])||1,nx=t[1]/tl,ny=-t[0]/tl;
+    for(const sg of [1,-1]){const x=Math.round(l[i][0]+nx*d*sg),y=Math.round(l[i][1]+ny*d*sg);if(x<0||y<0||x>=img.W||y>=img.H||inside(x,y))continue;s+=img.Y[y*img.W+x];c++;break;}}
+  return c>10&&s/c<bl.clip.paper*.6;}
+const at=e=>{const b=$('addCv').getBoundingClientRect();return [(e.clientX-b.left)/A.view.sc,(e.clientY-b.top)/A.view.sc];};
+function hit(q){let best=-1,ba=1e18;A.blobs.forEach((bl,n)=>{const pad=10/A.view.sc;if(q[0]<bl.x0-pad||q[0]>bl.x1+pad||q[1]<bl.y0-pad||q[1]>bl.y1+pad)return;
+  const a=(bl.x1-bl.x0)*(bl.y1-bl.y0);if(a<ba){ba=a;best=n;}});return best;}   // the smallest piece under the finger
+function wire(){const cv=$('addCv');if(cv.dataset.wired)return;cv.dataset.wired='1';
+  cv.addEventListener('pointerdown',e=>{if(!A||!A.view)return;e.preventDefault();try{cv.setPointerCapture(e.pointerId);}catch(_){}
+    if(A.brush&&A.sel>=0){A.stroke=[at(e)];draw();return;}   /* the brush: paint onto the selected piece */
+    if(A.mark&&A.sel>=0){const q=at(e);A.mline=[q,q.slice()];draw();return;}   /* marking the mouth: a straight line */
+    A.path=[at(e)];A.len=0;});
+  cv.addEventListener('pointermove',e=>{if(A&&A.mline){A.mline[1]=at(e);draw();return;}
+    if(A&&A.stroke){const q=at(e),l=A.stroke[A.stroke.length-1];if(Math.hypot(q[0]-l[0],q[1]-l[1])*A.view.sc>=2){A.stroke.push(q);draw();}return;}
+    if(!A||!A.path)return;const q=at(e),l=A.path[A.path.length-1],d=Math.hypot(q[0]-l[0],q[1]-l[1])*A.view.sc;if(d<3)return;A.len+=d;A.path.push(q);draw();});
+  const up=()=>{if(A&&A.mline){const l=A.mline;A.mline=null;if(Math.hypot(l[1][0]-l[0][0],l[1][1]-l[0][1])*A.view.sc>15&&A.blobs[A.sel]){A.blobs[A.sel].mouth=l;setMark(false);X().say(TXT('add.mouthDone'));}draw();return;}
+    if(A&&A.stroke){const st=A.stroke;A.stroke=null;paint(st);return;}
+    if(!A||!A.path)return;const path=A.path;A.path=null;
+    if(A.len<14){A.sel=hit(path[0]);panel();draw();return;}   // a tap: pick the piece under it
+    if(path.length<6||area(path)*A.view.sc*A.view.sc<400){draw();return;}
+    let line=smooth(path);if($('addSnap').checked){const sn=PICTURE.snap(line,A.img);if(sn)line=sn;}   // drawn round: a new piece
+    // what it was drawn round is now one piece: found bits inside it go, and it takes the name of the biggest of them
+    const inside=(x,y)=>{let c=false;for(let i=0,j=line.length-1;i<line.length;j=i++){const a=line[i],b=line[j];if((a[1]>y)!==(b[1]>y)&&x<(b[0]-a[0])*(y-a[1])/(b[1]-a[1])+a[0])c=!c;}return c;};
+    let k='',big=-1;const keep=[];A.blobs.forEach((b,n)=>{const cx=(b.x0+b.x1)/2,cy=(b.y0+b.y1)/2,ar=(b.x1-b.x0)*(b.y1-b.y0);
+      if(inside(cx,cy)&&inside(b.x0,b.y0)+inside(b.x1,b.y0)+inside(b.x0,b.y1)+inside(b.x1,b.y1)>=2){if(A.assign[n]&&ar>big){big=ar;k=A.assign[n];}}else keep.push(n);});
+    A.blobs=keep.map(n=>A.blobs[n]);A.assign=keep.map(n=>A.assign[n]);A.look=keep.map(n=>A.look[n]);
+    if(!k){const used=new Set(A.assign);k=(names().find(([v])=>!used.has(v))||[''])[0];}
+    const bl=FREEPAPER.blobFromLine(A.img,line);A.blobs.push(bl);A.assign.push(k);A.look.push(lookOf(bl));A.sel=A.blobs.length-1;panel();draw();};
+  cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+  $('addPiece').onchange=()=>setPiece(A.sel,$('addPiece').value);
+  $('addOut').onclick=()=>setPiece(A.sel,'');
+  $('addBrushAdd').onclick=()=>setBrush(A.brush==='add'?null:'add');
+  $('addBrushRub').onclick=()=>setBrush(A.brush==='rub'?null:'rub');
+  $('addMouth').onclick=()=>setMark(!A.mark);
+  $('addNext').onclick=()=>next().catch(e=>{console.error(e);X().say(TXT('upload.problem')+e.message,true);});
+  $('addBack').onclick=()=>step(2);}
+
+// ---------- the fix-up brush (Oct 21): paint to add to the selected piece or rub bits of it out (designer: the hand-made edge
+// is part of the look). The piece's shape is redrawn into a grid, the stroke painted in (or out), and its new edge traced.
+const BRUSH=16;   // screen pixels: the brush's radius
+function setBrush(m){if(!A)return;A.brush=m;if(m)setMark(false);const a=$('addBrushAdd'),r=$('addBrushRub');if(a)a.setAttribute('aria-pressed',m==='add');if(r)r.setAttribute('aria-pressed',m==='rub');
+  if(m)X().say(TXT('add.brushHelp'));}
+function paint(stroke){const bl=A.blobs[A.sel];if(!bl)return draw();const r=BRUSH/A.view.sc,img=A.img,pad=r+8,
+    xs=stroke.map(p=>p[0]).concat([bl.x0,bl.x1]),ys=stroke.map(p=>p[1]).concat([bl.y0,bl.y1]),
+    X0=Math.max(0,Math.min(...xs)-pad),Y0=Math.max(0,Math.min(...ys)-pad),X1=Math.min(img.W,Math.max(...xs)+pad),Y1=Math.min(img.H,Math.max(...ys)+pad),
+    k=Math.min(1,600/Math.max(X1-X0,Y1-Y0)),w=Math.max(8,Math.round((X1-X0)*k)),h=Math.max(8,Math.round((Y1-Y0)*k));
+  const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d',{willReadFrequently:true});g.fillStyle='#fff';
+  if(bl.line){g.beginPath();bl.line.forEach((p,i)=>{const x=(p[0]-X0)*k,y=(p[1]-Y0)*k;i?g.lineTo(x,y):g.moveTo(x,y);});g.closePath();g.fill();}
+  else{const id=g.createImageData(w,h);for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(bl.clip.has(X0+(x+.5)/k,Y0+(y+.5)/k)){const q=(y*w+x)*4;id.data[q]=id.data[q+1]=id.data[q+2]=id.data[q+3]=255;}g.putImageData(id,0,0);}
+  g.globalCompositeOperation=A.brush==='add'?'source-over':'destination-out';g.strokeStyle='#fff';g.lineWidth=2*r*k;g.lineJoin=g.lineCap='round';
+  g.beginPath();stroke.forEach((p,i)=>{const x=(p[0]-X0)*k,y=(p[1]-Y0)*k;i?g.lineTo(x,y):g.moveTo(x,y);});if(stroke.length===1)g.lineTo((stroke[0][0]-X0)*k+.1,(stroke[0][1]-Y0)*k);g.stroke();
+  const d=g.getImageData(0,0,w,h).data,m=new Uint8Array(w*h);for(let p=0;p<w*h;p++)m[p]=d[p*4+3]>127?1:0;
+  // the biggest piece of it (a stroke that rubs it in two keeps the bigger half)
+  const lab=new Int32Array(w*h).fill(-1);let best=-1,bn=0;
+  for(let p0=0;p0<w*h;p0++){if(!m[p0]||lab[p0]>=0)continue;let n=0;const st=[p0];lab[p0]=p0;while(st.length){const p=st.pop(),x=p%w,y=(p/w)|0;n++;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const X2=x+dx,Y2=y+dy;if(X2<0||Y2<0||X2>=w||Y2>=h)continue;const q=Y2*w+X2;if(m[q]&&lab[q]<0){lab[q]=p0;st.push(q);}}}if(n>bn){bn=n;best=p0;}}
+  if(best<0||bn<30)return draw();const keep=new Uint8Array(w*h);for(let p=0;p<w*h;p++)if(lab[p]===best)keep[p]=1;
+  const line=PICTURE.outlineOf(keep,w,h,X0,Y0,k);if(line){const old=A.blobs[A.sel];A.blobs[A.sel]=FREEPAPER.blobFromLine(img,line);A.blobs[A.sel].mouth=old.mouth;A.look[A.sel]=lookOf(A.blobs[A.sel]);panel();}draw();}
+
+// ---------- the singer's jaw (Oct 21, designer: "mark the mouth, it cuts down to the chin and moves up and down") ----------
+function setMark(on){if(!A)return;A.mark=!!on;if(on){A.brush=null;['addBrushAdd','addBrushRub'].forEach(id=>{const b=$(id);if(b)b.setAttribute('aria-pressed',false);});X().say(TXT('add.mouthHelp'));}
+  const mb=$('addMouth');if(mb)mb.setAttribute('aria-pressed',!!A.mark);}
+// The head picture is cut along the mouth line: below it, down to the chin and a little wider than the lips, is the jaw, its own
+// piece that drops while singing. Where the jaw opens, the head shows a dark mouth (the jaw covers it when closed).
+function jawSplit(r,line){const T=r.toSheet;if(!T)return null;const R=X().V2R,[,bx,by]=r.box,cv=r.cv,W=cv.width,H=cv.height,
+    a=T(line[0]),b=T(line[1]),P=[(a[0]-bx)*R,(a[1]-by)*R],Q=[(b[0]-bx)*R,(b[1]-by)*R],dx=Q[0]-P[0],dy=Q[1]-P[1],len=Math.hypot(dx,dy)||1,
+    side=(x,y)=>((x-P[0])*dy-(y-P[1])*dx)/len,Mx=(P[0]+Q[0])/2,My=(P[1]+Q[1])/2,along=(x,y)=>((x-Mx)*dx+(y-My)*dy)/len,hw=len*.62,
+    g=cv.getContext('2d'),id=g.getImageData(0,0,W,H),d=id.data;
+  let cx=0,cy=0,n=0;for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(d[(y*W+x)*4+3]>128){cx+=x;cy+=y;n++;}if(!n)return null;
+  // the face is on the side where most of the picture is; the jaw on the other
+  // Oct 21 (designer): only the chin moves: the part under the mouth, a little wider than the lips, narrowing toward the chin
+  const up=Math.sign(side(cx/n,cy/n))||1;let jh=0;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(d[(y*W+x)*4+3]<20)continue;const s=side(x,y)*up;if(s<0&&Math.abs(along(x,y))<=hw)jh=Math.max(jh,-s);}
+  const inJaw=(x,y)=>{const s=-side(x,y)*up;return s>0&&Math.abs(along(x,y))<=hw*(1-.3*Math.min(1,s/(jh||1)));};
+  let x0=W,y0=H,x1=-1,y1=-1;jh=0;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(d[(y*W+x)*4+3]<20)continue;const s=side(x,y)*up;if(inJaw(x,y)){jh=Math.max(jh,-s);if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}}
+  if(jh<4*R||x1<x0)return null;const drop=Math.max(4*R,jh*.55);   /* a good puppet drop: about half the jaw */
+  // the picture itself, not its paper rim and outline: more than the rim's width in from the transparent edge
+  const rim=Math.ceil(5.5*R),solid=new Uint8Array(W*H);{const t=new Uint8Array(W*H);for(let q=0;q<W*H;q++)t[q]=d[q*4+3]<20?1:0;
+    const dist=new Float32Array(W*H).fill(1e9);for(let q=0;q<W*H;q++)if(t[q])dist[q]=0;
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){const q=y*W+x;if(x>0)dist[q]=Math.min(dist[q],dist[q-1]+1);if(y>0)dist[q]=Math.min(dist[q],dist[q-W]+1);}
+    for(let y=H-1;y>=0;y--)for(let x=W-1;x>=0;x--){const q=y*W+x;if(x<W-1)dist[q]=Math.min(dist[q],dist[q+1]+1);if(y<H-1)dist[q]=Math.min(dist[q],dist[q+W]+1);}
+    for(let q=0;q<W*H;q++)solid[q]=dist[q]>rim?1:0;}
+  const jw=x1-x0+1,jhh=y1-y0+1,jc=document.createElement('canvas');jc.width=jw;jc.height=jhh;const jg=jc.getContext('2d'),ji=jg.createImageData(jw,jhh);
+  let sx=0,sy=0,m=0;
+  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const q=(y*W+x)*4;if(d[q+3]<20)continue;const s=side(x,y)*up;if(!inJaw(x,y))continue;
+    const o=((y-y0)*jw+(x-x0))*4;ji.data[o]=d[q];ji.data[o+1]=d[q+1];ji.data[o+2]=d[q+2];ji.data[o+3]=d[q+3];sx+=x;sy+=y;m++;
+    if(-s<=drop&&solid[y*W+x]){d[q]=59;d[q+1]=20;d[q+2]=24;d[q+3]=255;}else d[q+3]=0;}   // the head: a dark mouth just under the line (inside the picture), nothing below it
+  jg.putImageData(ji,0,0);g.putImageData(id,0,0);
+  {let a2=0,b2=0,c2=0;for(let j=0;j<jhh;j+=2)for(let i=0;i<jw;i+=2)if(ji.data[(j*jw+i)*4+3]>128){a2+=i;b2+=j;c2++;}if(c2){sx=(a2/c2+x0)*m;sy=(b2/c2+y0)*m;}}   /* same middle as the scanner's */
+  const head=Object.assign({},r,{url:cv.toDataURL('image/png'),al:null});
+  return {head,mouth:{key:'vocals.mouth',cv:jc,url:jc.toDataURL('image/png'),box:['vocals.mouth',bx+x0/R,by+y0/R,jw/R,jhh/R],spot:[bx+sx/m/R,by+sy/m/R],jaw:drop/R,picture:true,empty:false,ink:1}};}
+
+// ---------- the player as on stage, back on a sheet (Oct 21, designer: every part shows and can be changed; Edit) ----------
+// Exactly the scanner's placement, backwards: a piece's hanging point on stage -> where it is on the sheet, its picture at the
+// same scale. A piece that isn't changed then goes back on exactly as it was. Pieces that hang off others (the strum hand,
+// the neck hand, the drum stands) stay as they are.
+function stagePieces(mid,skip){const sh=SHEETS2[mid],m=members.find(q=>q.id===mid);if(!m||!sh)return {results:[],pins:{},W:{}};const L=m.layers;
+  const neckY=SLOTS.head[2]+L.head.y,hipY=(SLOTS.legL[2]+L.legL.y+SLOTS.legR[2]+L.legR.y)/2,J=sh.J,
+    kk=(hipY-neckY)/((J.hipL?(J.hipL[1]+J.hipR[1])/2:sh.bodyPivot[1])-J.neck[1]),k=kk>.05&&kk<1?kk:.205,
+    RB=[SLOTS.body[1]+L.body.x,SLOTS.body[2]+L.body.y],back=(x,y)=>[sh.bodyPivot[0]+(x-RB[0])/k,sh.bodyPivot[1]+(y-RB[1])/k];
+  const results=[],pins={},W={};
+  const one=(key,P)=>{const ly=L[key],d=SLOTS[key];if(!ly||!ly.img||!ly.v2||!(ly.s>0)||!(ly.img.width>0))return null;
+    const im=ly.img,mx=Math.max(im.width,im.height),Z=d[3]*ly.s/k,wd=Z*im.width/mx,ht=Z*im.height/mx,
+      cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;cv.getContext('2d').drawImage(im,0,0);
+    const r={key:mid+'.'+key,cv,url:null,box:[mid+'.'+key,P[0]-d[4]*wd,P[1]-d[5]*ht,wd,ht],ink:1,empty:false,stage:true};
+    if(key==='mouth'||key==='mouthO'){const dd=cv.getContext('2d').getImageData(0,0,cv.width,cv.height).data;let sx=0,sy=0,n=0;   /* the scanner puts a mouth's middle (of its ink) on its spot */
+      for(let j=0;j<cv.height;j+=2)for(let i=0;i<cv.width;i+=2)if(dd[(j*cv.width+i)*4+3]>128){sx+=i;sy+=j;n++;}
+      r.spot=n?[r.box[1]+sx/n*wd/cv.width,r.box[2]+sy/n*ht/cv.height]:P.slice();if(key==='mouth'&&ly.jaw){r.jaw=ly.jaw/k;r.picture=true;}}   /* Oct 21: the mouth (a picture face's jaw) stays where it is on the face */
+    results.push(r);return {r,ht,d};};
+  for(const key of SETS[mid]){if(skip.has(key)||['hand','grip','snareSt','hatSt'].includes(key))continue;const ly=L[key],d=SLOTS[key];if(!ly)continue;
+    const P=back(d[1]+ly.x,d[2]+ly.y),o=one(key,P);if(!o)continue;
+    pins[key]=P;if(sh.arms[key]&&typeof V2H!=='undefined'&&V2H[key]!=null)W[key]=[P[0],P[1]+(V2H[key]-o.d[5])*o.ht];}
+  // Oct 21 (designer): the hands show too. The strum hand hangs on the end of its arm; the neck fingers sit on the instrument
+  if(!skip.has('hand')&&sh.hand&&L.hand){const a=Object.keys(sh.arms).find(q=>{const w=sh.arms[q].W;return w[0]===sh.hand.wrist[0]&&w[1]===sh.hand.wrist[1];});
+    if(a&&W[a]&&one('hand',W[a].slice()))pins.hand=W[a].slice();}
+  if(!skip.has('grip')&&L.grip&&L.inst){const il=L.inst,g=L.grip,a=-(il.a||0)*Math.PI/180,c=Math.cos(a),sn=Math.sin(a);   /* the guitar is shown upright here: undo its tilt */
+    one('grip',back(SLOTS.inst[1]+il.x+g.x*c-g.y*sn,SLOTS.inst[2]+il.y+g.x*sn+g.y*c));}
+  return {results,pins,W};}
+// Edit on a player's card: straight to Put them together with the player as they are
+async function arrange(mid){const {S2,say,sel}=X();$('scan').hidden=false;$('scanWho').hidden=true;if(window.PICTURE)PICTURE.close();
+  const st=stagePieces(mid,new Set());if(!st.results.length){say(TXT('add.nothingChanged'));return;}
+  A={mid,img:null,blobs:[],assign:[],look:[],sel:-1,step:3,arrange:true};S2.free={redo:()=>Promise.resolve()};S2.results=st.results;sel.value='v2_'+mid;
+  $('scanParts').innerHTML=st.results.map(r=>`<input type="checkbox" hidden checked data-key="${r.key}">`).join('');
+  if(window.JOINTS){JOINTS.clear();step(3);$('addBack').hidden=true;await JOINTS.show(mid,SHEETS2[mid],st.results);JOINTS.setup(mid,st.pins,st.W);}
+  $('scanApply').disabled=false;say(TXT('add.arrange'));$('scanJoints').scrollIntoView({block:'start',behavior:'smooth'});}
+
+// ---------- 3. the pieces, then putting them together ----------
+async function build(){const {S2,say,tick,sel}=X();say(TXT('upload.cutting'));await tick();
+  const drawn=await FREEPAPER.pieces(A.mid,A.blobs,A.assign,n=>A.look[n]==='drawn'),results=[];
+  A.blobs.forEach((bl,n)=>{const k=A.assign[n];if(!k)return;
+    if(A.look[n]==='printed'){const line=bl.line||[[bl.x0,bl.y0],[bl.x1,bl.y0],[bl.x1,bl.y1],[bl.x0,bl.y1]];results.push(PICTURE.make(A.mid,k,line,A.img));}
+    else if(drawn.by[n]&&!drawn.by[n].empty)results.push(drawn.by[n]);});
+  const hn=A.assign.indexOf('head'),hb=A.blobs[hn],hi=results.findIndex(r=>r.key===A.mid+'.head');
+  if(A.mid==='vocals'&&hb&&hb.mouth&&hi>=0){const j=jawSplit(results[hi],hb.mouth);if(j){results[hi]=j.head;results.push(j.mouth);}}
+  const have=new Set(results.map(r=>r.key.split('.')[1])),extra=stagePieces(A.mid,have);A.stage=extra;results.push(...extra.results);
+  S2.results=results;sel.value='v2_'+A.mid;A.sock=drawn.sock;
+  // the cards under the pins hold the tick boxes Use these drawings reads (hidden: the pins view shows the pieces)
+  $('scanParts').innerHTML=results.map(r=>`<input type="checkbox" hidden checked data-key="${r.key}">`).join('');return results;}
+async function next(){const {say}=X();if(!A.assign.some(Boolean)){say(TXT('add.nothing'),true);return;}
+  const results=await build();if(!results.length){say(TXT('upload.noneFound',{sheet:SHEETMAKER.names[A.mid]}),true);return;}
+  if(window.JOINTS){JOINTS.clear();step(3);await JOINTS.show(A.mid,SHEETS2[A.mid],results);if(A.stage)JOINTS.setup(A.mid,A.stage.pins,A.stage.W);if(A.sock&&A.sock.shL)JOINTS.preset(A.mid,A.sock);}
+  $('scanApply').disabled=false;say(TXT('joints.help'));}
+function step(n){A.step=n;$('addCheck').hidden=n!==2;$('addBack').hidden=n!==3;$('scanParts').hidden=true;
+  if(n===2){$('scanJoints').hidden=true;$('scanApply').disabled=true;layout();draw();panel();}}
+// after a photo with no printed sheet: which player are these for?
+function ask(){const {S2,say}=X();if(!S2.img)return;say(TXT('add.who'));const w=$('scanWho');w.innerHTML='';
+  SHEET2.ids.forEach(id=>{const b=document.createElement('button');b.className='alt';b.textContent=SHEETMAKER.names[id];
+    b.onclick=()=>{w.hidden=true;start(id).catch(e=>{console.error(e);say(TXT('upload.problem')+e.message,true);});};w.appendChild(b);});
+  if(window.UIART)UIART.mapDress(w);w.hidden=false;}
+async function start(mid){const {S2,say,tick}=X();say(TXT('upload.freeFinding'));await tick();
+  const found=FREEPAPER.find(S2.img),blobs=found.blobs;
+  A={mid,img:S2.img,blobs,assign:FREEPAPER.guess(mid,blobs),look:blobs.map(()=>'drawn'),sel:-1,step:2};
+  // a picture, not drawings on paper (designer's cartoon test, Oct 21): what the finder found is mostly painted or photo,
+  // so it found bits of the picture (a jacket, buttons), not pieces. Nothing is found then: the user draws round the parts.
+  if(blobs.length){let all=0,printed=0;blobs.forEach(b=>{const ar=(b.x1-b.x0)*(b.y1-b.y0);all+=ar;if(lookOf(b)==='printed')printed+=ar;});
+    if(printed>=all*.5){A.blobs=[];A.assign=[];A.look=[];A.picture=true;}}
+  S2.free={redo:()=>A&&A.step===3?next():Promise.resolve()};   // the sliders: cut the pieces again
+  wire();step(2);
+  const n=A.blobs.length;say(A.picture?TXT('add.picture'):n?TXT('add.found',{n,s:n===1?'':'s'}):TXT('add.none'));}
+function close(){A=null;['addCheck','addSel'].forEach(id=>{const e=$(id);if(e)e.hidden=true;});const b=$('addBack');if(b)b.hidden=true;const p=$('scanParts');if(p)p.hidden=false;}
+return {ask,start,close,arrange,_state:()=>A};
 })();
 /* Oct 12 (remote test 3: "the steps were not obvious at first"; designer: a quick tutorial like the main screen's, with
    arrows pointing at the right spots). A short tour of Edit band: the page dims, a light frames the button for each step,
