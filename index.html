@@ -604,6 +604,7 @@ body.in-app #mineDone{top:150px}
     <button id="mineDraw" class="mbig"><span class="mbt" data-t="mine.draw">Draw on paper</span><span class="mbs" data-t="mine.drawSub">Any paper, any pen. Then take a photo.</span></button>
     <button id="mineFace" class="mbig alt"><span class="mbt" data-t="mine.face">Photo of a face</span><span class="mbs" data-t="mine.faceSub">Put a real face on them. It stays on this phone.</span></button>
     <div id="mineInst" class="minst"><span class="msmall" id="mineInstQ"></span><div class="mchips"></div></div>
+    <div id="mineFront" class="minst" hidden=""><span class="msmall" data-t="add.frontQ">On the bass drum:</span><div class="mchips"><button class="alt" type="button" data-front="name" data-t="add.frontName">Band name</button><button class="alt" type="button" data-front="plain" data-t="add.frontPlain">Plain</button><button class="alt" type="button" data-front="logo" data-t="add.frontLogo">Our logo</button></div><button class="mlink" id="mineLogoNew" hidden="" data-t="mine.logoNew">New logo photo</button><span class="msmall" id="mineLogoMsg" hidden=""></span></div>
     <div class="msizer"><span class="msmall" data-t="mine.sizeOnStage">Size on stage</span><button class="alt" id="minePSmall" aria-label="Smaller">−</button><b id="minePSize"></b><button class="alt" id="minePBig" aria-label="Bigger">+</button></div>
     <div class="mlinks"><button class="mlink" id="minePrint" data-t="mine.print">Need a guide? Print a sheet</button><button class="mlink" id="mineAdjust" data-t="mine.adjust">Adjust their pose</button><button class="mlink" id="mineReset" data-t="mine.reset">Back to ours</button></div>
     <button class="alt mclose" id="mineClose" data-t="mine.close">Close</button></div>
@@ -633,7 +634,7 @@ body.in-app #mineDone{top:150px}
     <label class="inl" title="A bold border around the outside of each drawing, so it stands out on stage. Off: your lines exactly as drawn."><input id="scanBold" type="checkbox" checked=""> Bold outlines</label></div>
   <div id="addCheck" hidden=""><div class="hint" style="font-size:13px" data-t="add.checkHelp">Tap a piece to change it. Draw round anything we missed.</div>
     <div id="addInst" hidden="" style="margin:6px 0"><div class="row" style="align-items:center;gap:8px"><span class="hint" style="font-size:13px" data-t="add.instQ">Their instrument:</span><button class="alt" id="addInstHouse" aria-pressed="true"><img id="addInstHouseImg" alt="" style="height:34px;vertical-align:middle;margin-right:6px"><span data-t="add.instHouse">Ours</span></button><button class="alt" id="addInstOwn" aria-pressed="false" data-t="add.instOwn">Draw my own</button></div>
-      <div id="addFront" class="row" hidden="" style="align-items:center;gap:8px"><span class="hint" style="font-size:13px" data-t="add.frontQ">On the bass drum:</span><button class="alt" id="addFront_name" aria-pressed="true" data-t="add.frontName">Band name</button><button class="alt" id="addFront_plain" aria-pressed="false" data-t="add.frontPlain">Plain</button></div></div>
+      <div id="addFront" class="row" hidden="" style="align-items:center;gap:8px"><span class="hint" style="font-size:13px" data-t="add.frontQ">On the bass drum:</span><button class="alt" id="addFront_name" aria-pressed="true" data-t="add.frontName">Band name</button><button class="alt" id="addFront_plain" aria-pressed="false" data-t="add.frontPlain">Plain</button><button class="alt" id="addFront_logo" aria-pressed="false" data-t="add.frontLogo">Our logo</button></div></div>
     <div id="addGuide" hidden="" style="display:flex;gap:12px;align-items:center;margin:6px 0"><span id="addGuideFig"></span><span style="display:flex;flex-direction:column;gap:2px"><span id="addGuideNum" class="hint" style="font-size:13px"></span><b id="addGuideAsk" style="font-size:20px"></b><span class="hint" style="font-size:13px" data-t="add.gHelp">Lit up = our guess. Tap the right drawing, or draw round it.</span></span><button class="alt" id="addTurn" style="margin-left:auto" data-t="add.turn">↻ Turn</button></div>
     <canvas id="addCv" width="10" height="10"></canvas>
     <div id="addGuideBtns" class="row"><button class="alt" id="addKeep" data-t="add.gKeep">Not drawn: keep ours</button><button class="alt" id="addPrev" data-t="add.gPrev">Previous part</button></div>
@@ -651,7 +652,7 @@ body.in-app #mineDone{top:150px}
 <div class="grid" id="grid"></div>
 </div>
 <div id="stage" hidden=""><canvas id="stageCv"></canvas><div id="mineDone" hidden="" role="status"><span id="mineDoneT"></span><span class="mdb"><button class="alt" id="mineUndo" data-t="mine.undo">Undo</button><button class="alt" id="mineFix" data-t="mine.fix">Adjust</button><button id="mineAnother" data-t="mine.another">Do another player</button><button class="alt" id="mineOk" aria-label="Close">✕</button></span><span class="mdb msize"><span data-t="mine.size">Size</span><button class="alt" id="mineSmall" aria-label="Smaller">−</button><button class="alt" id="mineBig" aria-label="Bigger">+</button></span></div>
-  <div id="stCtl" class="stctl"><button id="stPlay" aria-label="Play or pause">▶</button><div class="stmid"><div id="stSong" data-t="song.demoBeat">Demo beat</div><div class="strow"><input id="stPos" type="range" min="0" max="1000" value="0" aria-label="Position in the song"><span id="stTime"></span></div></div><label class="btn alt" id="stSongBtn" data-t-lead="stage.songButton">🎵 Song<input id="stFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""></label></div><div id="startCard" hidden=""><div class="stcard"><button id="goHelp" class="alt" aria-label="How it works">?</button>
+  <div id="stCtl" class="stctl"><button id="stPlay" aria-label="Play or pause">▶</button><div class="stmid"><div id="stSong" data-t="song.demoBeat">Demo beat</div><div class="strow"><input id="stPos" type="range" min="0" max="1000" value="0" aria-label="Position in the song"><span id="stTime"></span></div></div><label class="btn alt" id="stSongBtn" data-t-lead="stage.songButton">🎵 Song</label></div><div id="startCard" hidden=""><div class="stcard"><button id="goHelp" class="alt" aria-label="How it works">?</button>
 <button id="goSong" data-t="menu.pickSong">Pick song</button><button id="goDemo" data-t="menu.playDemo">Play demo</button>
 <div class="strowb"><button class="alt" id="goEdit" data-t="menu.editBand">Edit band</button><button class="alt" id="goListen" data-t="menu.listenLive">Listen live</button></div><div class="strowb" id="homeRow" hidden=""><button class="alt" id="goHome" data-t="menu.addHome">Add to home screen</button></div><div id="stFollow" aria-hidden="true"></div><div id="stSocial" aria-label="Follow us"></div></div></div><div id="homeBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="homeT"><div class="hbcard"><h3 id="homeT" data-t="home.title">Put the band on your home screen</h3><p data-t="home.intro">It opens like an app, full screen, and your band stays safe on this device.</p><ol></ol><p class="hbnote" hidden="" data-t-html="home.startsFresh">Already drawn players? The home-screen band starts fresh. First tap <b>Edit band → Back up my band</b> here, then <b>Open a backup</b> from the new icon.</p><button id="homeOk" data-t="home.gotIt">Got it</button></div></div><div id="songBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="songT"><div class="hbcard spcard"><h3 id="songT" data-t="songs.title">Pick a song</h3><div id="spList"></div><label class="btn alt spmore" id="spFile"><span data-t="songs.fromPhone">A song on this phone</span><input id="spFileIn" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""></label><button class="alt spmore" id="spLive"><span data-t="songs.live">Your own music</span><small data-t="songs.liveSub">play it on another device</small></button><button class="alt spmore" id="spPC" hidden=""><span data-t="songs.computer">Music on this computer</span><small data-t="songs.computerSub">Spotify, YouTube, any app</small></button><button class="alt" id="spClose" data-t="songs.close">Close</button></div></div><div id="pcBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="pcT"><div class="hbcard"><h3 id="pcT" data-t="pc.title">Play along to this computer</h3><p data-t="pc.intro"></p><ol><li data-t-html="pc.step1"></li><li data-t-html="pc.step2"></li><li data-t-html="pc.step3"></li></ol><p class="hbnote" id="pcMac" hidden="" data-t="pc.macNote"></p><div class="pcrow"><button class="alt" id="pcNo" data-t="pc.cancel">Not now</button><button id="pcGo" data-t="pc.go">Start listening</button></div></div></div><div id="howBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="howT"><div class="howcard"><button id="howX" aria-label="Close"></button><div class="howhead" aria-hidden="true"></div><div class="howpic" aria-hidden="true"></div><h3 id="howT"></h3><p id="howP"></p><div class="howdots" aria-hidden="true"><i></i><i></i><i></i></div><div class="howrow"><button class="alt" id="howBack" data-t="help.back">Back</button><button id="howNext" data-t="help.next">Next</button></div></div></div><input id="startFile" type="file" accept=".m4a,.mp3,.wav,.aac,.flac,.ogg,.oga,.opus,.aif,.aiff,.caf,.weba" hidden=""><div id="stNameBox" hidden=""><input id="stNameIn" maxlength="30" placeholder="Band name (empty = none)" autocomplete="off"><button id="stNameOk">OK</button></div><button id="recDot" hidden="" aria-label="Stop recording"><b class="rtxt">● REC</b> <span>0:00</span><i class="recbar"><b></b></i></button><div id="recPick" hidden="" role="menu" aria-label="Record"><div class="rptitle" data-t="rec.menuTitle">Record</div><button role="menuitem" data-rec="15" data-t="rec.clip15">15 s clip</button><button role="menuitem" data-rec="30" data-t="rec.clip30">30 s clip</button><button role="menuitem" data-rec="song" data-t="rec.wholeSong">Whole song</button><div class="rpnote" data-t="rec.menuNote">Keeps going while you move the players</div></div><div id="recBox" hidden=""><div class="rbcard"><video id="recVid" playsinline="" controls="" loop=""></video><div class="rbrow"><button id="recShare" hidden="" data-t="clip.share">Share</button><button id="recSave" data-t="clip.save">Save</button><button class="alt" id="recDel" data-t="clip.delete">Delete</button></div><div id="recInfo"></div></div></div><div id="stTip" hidden="" data-t="tip.sideways">Turn your phone sideways for a bigger band ↻</div><div class="stbar"><button class="alt" id="stName" style="display:none">✏️ Name</button><button class="alt" id="stScene" style="display:none">🎭 Scene</button><button class="alt" id="stReset" style="display:none">↺ Positions</button><button class="alt" id="stRec" aria-haspopup="true" data-t="stage.record">● Record</button><button class="alt" id="stPip" hidden="" title="Pop the band out into a small window" data-t="stage.popOut">⧉ Pop out</button><button class="alt" id="stFull" title="Full screen (F)" data-t="stage.fullScreen">⛶ Full screen</button><button id="stExit" data-t="stage.menu">☰ Menu</button></div></div>
 <audio id="player" controls="" style="width:100%;margin-top:10px;display:none"></audio>
@@ -774,8 +775,6 @@ const STAGE_SET = {
 const SHEET_LOG = {"546":{"mid":"guitar","boxes":[["guitar.legL",113.2,523.8,140.4],["guitar.legR",264.1,546.6,140.4],["guitar.body",52,305.5,208],["guitar.head",161.7,196.4,98.8],["guitar.arm2",436.6,464.6,110.5],["guitar.inst",270.8,136,234],["guitar.grip",436.6,380.3,74],["guitar.arm",270.3,380.3,156]],"made":"2026-10-03"},"609":{"mid":"bass","boxes":[["bass.legL",105.8,462.6,91.8],["bass.legR",245.7,562.1,91.8],["bass.body",265,219.3,136],["bass.head",180.7,281.3,74],["bass.arm2",207.9,462.6,89.3],["bass.inst",391.7,367.7,168.3],["bass.grip",307.4,404.2,74],["bass.arm",210.4,365.6,86.7]],"made":"2026-10-04"},"935":{"mid":"keys","boxes":[["keys.legL",191.5,539.9,118.8],["keys.legR",320.6,551.8,118.8],["keys.body",66.4,353.6,176],["keys.head",292.2,249.6,83.6],["keys.inst",362,343.5,198],["keys.armL",188.4,249.8,93.5],["keys.armR",252.7,384,99]],"made":"2026-10-03"}};
 
 const SHEET_SET = {
-  region:[52,136,560,738],   // where boxes may go on the page: left, top, right, bottom
-  gap:10, minBox:74, maxBox:250,   // space between boxes; smallest / largest box
   dpi:200,                   // print sharpness of the PDF
   ids:['bass','drums','vocals','guitar','keys'],   // order is part of the sheet code; only ever add to the end
   strip:{ y:36, x0:140, step:14, cell:10, n:16 }   // the row of small black squares (sheet code) along the top
@@ -1016,7 +1015,6 @@ window.WTXT={
   'upload.noneFound': 'No drawings found on the {sheet} sheet. If it is filled in, try moving the Line darkness slider.',
   'upload.cornerCut': 'One black corner square is cut off at the edge of the photo.',
   'upload.cornerGuessed': ' It was worked out this time, but next time keep all four squares in the photo.',
-  'upload.cutOff': 'If a drawing comes out cut off, print a fresh sheet and try again.',
   'upload.noCode': 'Couldn\'t read this sheet\'s code. Which player is this sheet for?',
   'upload.noCorners': 'Couldn\'t find all four black corner squares. Make sure all four are in the photo, the page is flat, and the light is even.',
   'upload.boxesOff': 'Found the corner squares but the box outlines don\'t line up. Check you photographed the whole page, flat and in focus.',
@@ -1024,7 +1022,6 @@ window.WTXT={
   'upload.problem': 'Problem: ',
   'upload.colourTip': 'Tip: colour your next drawing in. Colour really pops on stage!',
   'upload.newInPlace': '{player}: {n} new drawing{s} in place.',
-  'upload.applied': 'Applied {n} piece{s} to the band.',
   'upload.nothingTicked': 'Nothing was ticked, so nothing changed.',
   'upload.heic': 'This looks like an iPhone HEIC photo that this browser cannot read. Try the "Take photo" button, or send yourself the photo as a JPEG.',
   'upload.tryJpeg': 'Try a JPEG or PNG.',
@@ -1032,12 +1029,7 @@ window.WTXT={
   'upload.couldNotApply': 'Could not apply: ',
 
   // ---- Drawings on plain paper (Oct 21): no printed sheet
-  'upload.freeOffer': 'Drawn on plain paper? Read the drawings',
-  'upload.freeWho': 'Which player are these drawings for?',
   'upload.freeFinding': 'Looking for your drawings…',
-  'upload.freeFound': 'Found {n} drawing{s}. Check each one says the right piece (or Leave out), then press Use these drawings.',
-  'upload.freeNone': 'Couldn\'t find any drawings. Use plain paper, dark lines and even light, with a little space around each drawing.',
-  'upload.freeLeaveOut': 'Leave out',
   // Oct 23 (designer: "they'll just draw a figure like any other and we do the animation"): the same part names for every
   // player, left and right as you look at the drawing; the band decides what each arm plays
   'upload.freeLegL': 'leg on the left',
@@ -1047,13 +1039,7 @@ window.WTXT={
   'upload.freeInst': 'instrument',
 
   // ---- A picture as one piece (Oct 21): a painting or picture, paint kept
-  'upload.picOffer': 'Use part of this picture as one piece',
-  'pic.piece': 'Piece:',
-  'pic.help': 'Draw round the part you want with your finger, a little outside it: with Snap to shape on, the line pulls in to the part. Then press Use this part. Draw round more parts for other pieces.',
-  'pic.use': 'Use this part',
   'pic.snap': 'Snap to shape',
-  'pic.noSnap': 'Couldn\'t find a clear shape inside your line (the colours around it are too alike), so your line is used as drawn.',
-  'pic.added': '{piece} is ready. Draw round another part for another piece, or press Use these drawings.',
 
   // ---- Add drawings (Oct 21): check the pieces, then put them together
   'add.who': 'No printed sheet, so we\'ll find your drawings. Which player are these for?',
@@ -1095,7 +1081,6 @@ window.WTXT={
   'mine.print': 'Need a guide? Print a sheet',
   'mine.adjust': 'Adjust their pose',
   'mine.reset': 'Back to ours',
-  'mine.resetDone': '{name} is back to our drawings.',
   'mine.close': 'Close',
   'mine.tipsTitle': 'Draw the {name}',
   'mine.faceTitle': 'Photo of a face',
@@ -1105,6 +1090,13 @@ window.WTXT={
   'mine.faceTip1': 'Close up and straight on, in good light.',
   'mine.faceTip2': 'Next you draw round the face with your finger.',
   'mine.faceTip3': 'It stays on this phone and shows in our printed look.',
+  'mine.logoTitle': 'Your logo',
+  'mine.logoTip1': 'Draw it big and bold on plain paper, with a dark pen.',
+  'mine.logoTip2': 'Just the logo in the photo, flat and in good light.',
+  'mine.logoTip3': 'It goes on the front of the bass drum, as drawn.',
+  'mine.logoNew': 'New logo photo',
+  'mine.logoOn': 'Your logo is on the bass drum!',
+  'mine.logoNone': 'We couldn\'t find a drawing in that photo. Try again closer, in good light.',
   'mine.takePhoto': 'Take photo',
   'mine.choosePhoto': 'Choose a photo',
   'mine.back': 'Back',
@@ -1125,6 +1117,8 @@ window.WTXT={
   'add.frontQ': 'On the bass drum:',
   'add.frontName': 'Band name',
   'add.frontPlain': 'Plain',
+  'add.frontLogo': 'Our logo',
+  'add.logoPart': 'logo',
   'add.gTap': 'Tap the {part}',
   'add.gHelp': 'Lit up = our guess. Tap the right drawing, or draw round it.',
   'add.gRight': "That's right: next part",
@@ -1634,7 +1628,7 @@ const TURNS=/^(arm|inst|fore|grip|head|leg|hand)/;   // pieces that get an angle
 // Arms: you draw each arm as ONE straight piece (shoulder at the top, hand at the bottom). The band cuts it at the elbow
 // and bends it there. ELBOW = where the cut is, as a share of the picture's height (the 'elbow' ring on the drawing sheets).
 // Each arm's 'elbow' slider (eb) sets how far the elbow is bent, in degrees: 0 = straight, + one way, - the other.
-const ARMS=new Set(['arm','arm2','armV','armL','armR','armS','armH','fore']),ELBOW=.42,HAND=.85,ELBOW2=.475;   // ELBOW2: new-sheet arms bend halfway between shoulder (.1) and hand (.85)
+const ARMS=new Set(['arm','arm2','armV','armL','armR','armS','armH','fore']),ELBOW=.42,HAND=.85;
 // arms drawn on a new sheet: where the hand sits along the picture (shoulder at .1); they bend halfway between the two
 const V2H={arm:.85,arm2:.85,armL:.85,armR:.85,armS:.6,armH:.6,armV:.85,fore:.65};
 const adjOf=l=>{const o={x:l.x,y:l.y,s:l.s,a:l.a};if(l.eb!=null)o.eb=l.eb;if(l.v2)o.v2=+l.v2||1;if(l.jaw)o.jaw=l.jaw;if(l.hand)o.hand=1;if(l.stick)o.stick=1;return o;};   /* Oct 23: stick = a drummer's arm drawn without a stick: ours goes in the hand */   // PATCH01: v2 = version of the new sheet the piece was placed from   // v2: piece drawn on a new sheet   // arms also keep their elbow bend (even 0)   // a piece's nudges, as saved
@@ -2075,11 +2069,6 @@ window.DISG=(()=>{
     // Oct 18 (designer: 'distracting when the mic goes down to the side and there is no mouth'): what counts as 'covered' is how
     // close the mic really is to the mouth, so the mouth hides only while the mic is in front of it
     return {cover:m.dgC*(1-m.dgR),rest:m.dgR,z:r.z};}
-  // two-bone reach: shoulder S, upper arm l1, forearm l2 to the point T; bend chooses the elbow side. Angles as the stage uses them
-  // (0 = hanging straight down; the point at angle R is S + len·(-sin R, cos R)).
-  function reach(S,T,l1,l2,bend){const dx=T.x-S.x,dy=T.y-S.y,d=Math.max(Math.abs(l1-l2)+1e-3,Math.min(l1+l2-1e-3,Math.hypot(dx,dy))),
-      base=Math.atan2(-dx,dy),a=Math.acos(Math.max(-1,Math.min(1,(l1*l1+d*d-l2*l2)/(2*l1*d)))),R1=base-(bend>=0?a:-a),
-      E={x:S.x-Math.sin(R1)*l1,y:S.y+Math.cos(R1)*l1};return [R1,Math.atan2(-(T.x-E.x),T.y-E.y)];}
   // the mic arm's [upper turn, extra forearm bend] for this frame: only the stepping-back pose changes it now (the fold is drawn)
   function fore(m,arm,o){const s=m.dgS,rest=s&&isFinite(s.rest)?s.rest:0;let out=arm;const {ar,eb}=o;
     if(rest>.01){   // Oct 18 v2 (designer couldn't see v1): the arm drops right down by his side, mic at the hip, swinging a little with the beat
@@ -2152,7 +2141,7 @@ window.DISG=(()=>{
       let x0=w,x1=-1,y0=h,y1=-1;for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>60){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
       if(x1>=x0)r={u:(x0+x1+1)/2/w,v:(y0+y1+1)/2/h,t:y0/h};}catch(e){}   /* t: top of the ink (Oct 21: a jaw's top edge is the mouth line) */
     INK.set(im,r);return r;}
-  return {on:ON,step,fore,strip,inkCentre,mouthAlpha,headOf,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null,micOf,reach};})();
+  return {on:ON,step,fore,strip,inkCentre,mouthAlpha,state:m=>m&&m.dgS?{cover:+m.dgS.cover.toFixed(2),rest:+m.dgS.rest.toFixed(2),z:+(m.dgS.z||0).toFixed(2)}:null};})();
 // ===== the singer's mic, held in the hand (Oct 22, designer: "3 mic options", a hairbrush among them) =====
 // Design 1 (Oct 25): the designer's ball mic, held like the others (it used to be our mic drawn on the end of the mic arm). Designs 2 and 3 (src/art/house/
 // vocals-N-mic) and later others are a mic on its own, stored in S.art['vocals.mic'] as a reference ('@h:vocals.2.mic').
@@ -2188,18 +2177,8 @@ function inkBoxOf(c){const w=c.width,h=c.height,k=Math.min(1,160/Math.max(w,h)),
   if(x1<0)return null;for(let y=Math.floor(y1-(y1-y0)*.12);y<=y1;y++)for(let x=x0;x<=x1;x++)if(d[(y*t.width+x)*4+3]>60){bx+=x;bn++;}   // the hand: the bottom of the drawing
   return {x0:x0/k,y0:y0/k,x1:(x1+1)/k,y1:(y1+1)/k,hx:(bn?bx/bn+.5:(x0+x1+1)/2)/k};}
 // the mic arm as one picture, and how big to draw it so the arm comes out the size of the singer's other arm
-/* Oct 22 (designer: "mic draws as a separate entity"): a singer who drew their own mic arm draws it without a mic; with our
-   mic picked, ours is cut from the end of our mic-arm drawing and put in their hand */
-const OURS={src:null,img:null};
-function oursMic(){const u=window.HOUSE&&HOUSE.vocals&&HOUSE.vocals.art('fore',1),src=u&&typeof artURL==='function'?artURL(u):null;if(!src)return null;
-  if(OURS.src===src)return OURS.img;OURS.src=src;OURS.img=null;const im=new Image();im.onload=()=>{try{const w=im.width,h=im.height,t=document.createElement('canvas'),k=Math.min(1,160/Math.max(w,h));
-      t.width=Math.round(w*k);t.height=Math.round(h*k);const g=t.getContext('2d');g.drawImage(im,0,0,t.width,t.height);const d=g.getImageData(0,0,t.width,t.height).data;let y0=t.height,y1=-1;
-      for(let y=0;y<t.height;y++)for(let x=0;x<t.width;x++)if(d[(y*t.width+x)*4+3]>60){if(y<y0)y0=y;y1=y;}
-      if(y1<0)return;const top=(y0+(y1-y0)*.66)/k,c=document.createElement('canvas');c.width=w;c.height=Math.max(1,Math.round(h-top));c.getContext('2d').drawImage(im,0,top,w,h-top,0,0,w,h-top);
-      const o=new Image();o.onload=()=>{if(OURS.src===src)OURS.img=o;};o.src=c.toDataURL('image/png');}catch(e){}};im.src=src;return null;}
-const ownFore=()=>{const u=typeof S!=='undefined'&&S.art&&S.art['vocals.fore'];return typeof u==='string'&&!u.startsWith('@b:')&&!u.startsWith('@h:');};
-function arm(m){if(C.src===undefined)init();let mi=C.img&&C.img.complete&&C.img.naturalWidth?C.img:null;
-  if(!mi&&!C.src&&ownFore())mi=oursMic();   // their own mic arm, our mic
+function arm(m){if(C.src===undefined)init();   // (no mic picked = the ball mic, mic 1, so there is always a mic picture)
+  let mi=C.img&&C.img.complete&&C.img.naturalWidth?C.img:null;
   if(!mi)return null;const a=armOf(m);if(!a)return null;
   const key=a.im.src||a.im,ly=a.ly,sv=ly.s||1;
   if(C.out&&C.out.key===key&&C.out.mic===mi){const z=(a.slot[3]*sv)/Math.max(a.im.width,a.im.height);return {cv:C.out.cv,D:z*Math.max(C.out.cv.width,C.out.cv.height)};}
@@ -2222,7 +2201,7 @@ function set(u){if(typeof S!=='undefined'){if(u)S.art['vocals.mic']=u;else delet
   const im=new Image();im.onload=()=>{if(C.src===src){C.img=im;C.out=null;}};im.src=src;}
 function init(){set(typeof S!=='undefined'&&S.art?S.art['vocals.mic']:null);}
 if(typeof ARTSET!=='undefined'){ARTSET['vocals.mic']=u=>{set(u);if(typeof save==='function')save();};ARTCLEAR['vocals.mic']=()=>set(null);}   // backups and the scanner set it like any piece
-return {set,init,on:()=>!!C.img,arm,_stand:standUp};
+return {set,arm};
 })();
 // ===== the drummer's sticks (Oct 23, designer: "three pairs of sticks, associated with the kit, which we'll have three of") =====
 // Kit design N (our drums 1, 2, 3) comes with sticks N: src/art/house/drums-N-stick (one stick, lying down: grip on the left,
@@ -2232,7 +2211,60 @@ window.STICKS=(function(){const C={};
   function design(){const u=typeof S!=='undefined'&&S.art&&S.art['drums.kick'];const m=typeof u==='string'&&u.match(/^@h:drums\.(\d)\./);return m?+m[1]:1;}
   function img(){const n=design(),src=(((window.HOUSEART||{}).drums||{})[n]||{}).stick||(((window.HOUSEART||{}).drums||{})[1]||{}).stick;if(!src)return null;
     if(!C[src]){const im=new Image();im.src=src;C[src]=im;}const im=C[src];return im.complete&&im.naturalWidth?im:null;}
-  return {img,design};})();
+  return {img};})();
+/* Oct 26 (designer: "your logo on the bass drum"): a band's own logo on the front of the bass drum, as a third choice beside
+   the band name and plain. It comes in two ways, both the designer's choice ("both"):
+   - drawn on the paper with the drummer, and tapped as one more part ("Your logo") in Tap each part (add-drawings.js);
+   - its own photo, from the drummer's panel in Edit band (make-mine.js: On the bass drum > Our logo).
+   It is cut out like any drawing (same reading of the ink, the paper taken away) but it is printed ON the drum, so it gets no
+   white gap or dark line round it and no bold outline, and shapes aren't filled with paper: only what was drawn shows
+   (designer: "ink, like the drawings"). It is kept like the drawn mic: in the band's drawings as 'drums.logo', so it stays on
+   this device, goes into backups, and Undo / Back to ours treat it like any piece. The drawing itself is in cutouts.js
+   (drumFront). */
+window.LOGO=(function(){
+const C={src:undefined,img:null};   // src undefined = not read from the saved band yet
+function set(u){if(typeof S!=='undefined'&&S.art){if(u)S.art['drums.logo']=u;else delete S.art['drums.logo'];}
+  const src=u&&typeof artURL==='function'?artURL(u):null;C.src=u||null;C.img=null;if(!src)return;
+  const im=new Image();im.onload=()=>{if(C.src===(u||null))C.img=im;};im.src=src;}
+function init(){if(C.src===undefined)set(typeof S!=='undefined'&&S.art?S.art['drums.logo']:null);}
+// the logo's picture, once loaded (null: none, or still loading)
+function img(){init();return C.img&&C.img.complete&&C.img.naturalWidth?C.img:null;}
+function has(){init();return !!C.src;}
+/* Cut a logo out of a photo (img = the scanner's reading of it: Y, RGB, W, H). region = a found drawing or a line drawn
+   round it (with its outline, clip), or null for "everything drawn in the photo". Returns a PNG address, cropped to the ink
+   and at most 640 pixels across, or null when nothing was drawn there. */
+function cut(img,region){const X=window.__scan;if(!X||!img)return null;const {S2,extract2,solveH,inkNow,V2R}=X;
+  let x0,y0,x1,y1,clip=null;
+  if(region){x0=region.x0;y0=region.y0;x1=region.x1;y1=region.y1;clip=region.clip||null;}
+  else{   /* a photo of just the logo: everything the finder sees as drawn, together (a logo's letters are separate drawings) */
+    const bl=window.FREEPAPER?FREEPAPER.find(img).blobs:[];
+    if(bl.length){x0=Math.min(...bl.map(b=>b.x0));y0=Math.min(...bl.map(b=>b.y0));x1=Math.max(...bl.map(b=>b.x1));y1=Math.max(...bl.map(b=>b.y1));}
+    else{x0=0;y0=0;x1=img.W;y1=img.H;}}
+  const pad=Math.max(4,(x1-x0+y1-y0)*.02);x0=Math.max(0,x0-pad);y0=Math.max(0,y0-pad);x1=Math.min(img.W,x1+pad);y1=Math.min(img.H,y1+pad);
+  if(!(x1-x0>4&&y1-y0>4))return null;
+  /* the reader works in sheet units (V2R pixels each): the logo's box is laid out there at up to 640 pixels across */
+  const k=Math.min(1,640/Math.max(x1-x0,y1-y0))/V2R,q=[[0,0],[(x1-x0)*k,0],[(x1-x0)*k,(y1-y0)*k],[0,(y1-y0)*k]],
+    ph=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+  const keep={img:S2.img,h:S2.h,clip:S2.clip,cal:S2.cal};let r=null;
+  try{S2.img=img;S2.h=solveH(q,ph);S2.clip=clip;if(!region)S2.cal=null;   /* a logo photo on its own: no printed sheet's settings */
+    r=extract2(['drums.logo',0,0,q[2][0],q[2][1]],Object.assign({},inkNow(),{fillShapes:false,bold:false}));}
+  finally{S2.img=keep.img;S2.h=keep.h;S2.clip=keep.clip;S2.cal=keep.cal;}
+  if(!r||r.empty||!r.cv)return null;return crop(r.cv);}
+// the picture cut down to where it is drawn
+function crop(cv){const w=cv.width,h=cv.height,d=cv.getContext('2d').getImageData(0,0,w,h).data;let a=w,b=h,c=-1,e=-1;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>30){if(x<a)a=x;if(x>c)c=x;if(y<b)b=y;if(y>e)e=y;}
+  if(c<0)return null;const o=document.createElement('canvas');o.width=c-a+1;o.height=e-b+1;o.getContext('2d').drawImage(cv,a,b,o.width,o.height,0,0,o.width,o.height);
+  const u=o.toDataURL('image/png');cv.width=cv.height=0;o.width=o.height=0;return u;}
+/* a photo chosen or taken for the logo (Edit band > the drummer > Our logo). Returns true when a logo was found and put on */
+async function fromPhoto(file){const X=window.__scan;if(!X||!file)return false;const img=await X.loadPhoto(file);const u=cut(img,null);if(!u)return false;
+  use(typeof keep==='function'?keep(u):u);return true;}
+// put a logo on the drum (the band's front set to it) and save
+function use(u){set(u);if(typeof S!=='undefined')S.drumFront='logo';if(typeof save==='function')save();}
+if(typeof ARTSET!=='undefined'){ARTSET['drums.logo']=u=>{set(u);if(typeof save==='function')save();};ARTCLEAR['drums.logo']=()=>set(null);}   // backups set it like any piece
+/* a logo kept in the browser's database arrives a moment after start (browser-memory.js), after set() found nothing to show */
+if(typeof ARTDB!=='undefined')ARTDB.refresh.push(()=>{const u=typeof S!=='undefined'&&S.art&&S.art['drums.logo'];if(u&&!C.img)set(u);});
+return {set,img,has,cut,use,fromPhoto,_state:()=>C};
+})();
 /* Oct 25 (designer: kit 3 with a white gap and a black line "reads much cleaner ... apply the same rule to all cut out
    pieces from all sources"): every piece on stage is drawn like the face photos: the piece, a white paper gap round it,
    then a dark line round that. Done here, once per picture and size, so it covers everything the same way: our band, drawn
@@ -2245,15 +2277,22 @@ window.EDGE=(function(){
   function grown(src,w,h,r,col){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');
     const n=Math.max(12,Math.min(40,Math.round(r*3)));for(let i=0;i<n;i++){const a=i/n*Math.PI*2;g.drawImage(src,Math.cos(a)*r,Math.sin(a)*r);}
     g.drawImage(src,0,0);g.globalCompositeOperation='source-in';g.fillStyle=col;g.fillRect(0,0,w,h);return c;}
+  /* Oct 26 (speed, S2): where the edged piece actually has paper in its picture (x0,y0,x1,y1 in picture pixels), found on a
+     small copy and widened by two of its cells so nothing drawn is ever cut off. Drawing only that box skips the see-through
+     margins (a thin arm is mostly margin: its ink is 8-22% of the picture's width). null = draw the whole picture. */
+  function box(c){try{const w=c.width,h=c.height,k=Math.min(1,200/Math.max(w,h)),sw=Math.max(1,Math.round(w*k)),sh=Math.max(1,Math.round(h*k)),
+      t=document.createElement('canvas');t.width=sw;t.height=sh;const g=t.getContext('2d');g.drawImage(c,0,0,sw,sh);const d=g.getImageData(0,0,sw,sh).data;t.width=t.height=0;
+      let x0=sw,y0=sh,x1=-1,y1=-1;for(let y=0;y<sh;y++)for(let x=0;x<sw;x++)if(d[(y*sw+x)*4+3]>0){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
+      if(x1<0)return null;const p=2;return [Math.max(0,(x0-p)/k),Math.max(0,(y0-p)/k),Math.min(w,(x1+1+p)/k),Math.min(h,(y1+1+p)/k)];}catch(e){return null;}}
   function make(im,D){const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;if(!w||!h)return im;
     const ppu=Math.max(w,h)/Math.max(1e-6,D),g1=GAP*ppu,g2=(GAP+LINE)*ppu;   // picture pixels per stage unit
     const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');
     /* Oct 26 (code review): the two scratch canvases are emptied straight away (width 0), and dropped edge copies too; iPad
        Safari counts canvas memory and blanks canvases once the total is too high */
-    const a=grown(im,w,h,g2,INK),b=grown(im,w,h,g1,'#fff');g.drawImage(a,0,0);g.drawImage(b,0,0);g.drawImage(im,0,0,w,h);a.width=a.height=0;b.width=b.height=0;return c;}
+    const a=grown(im,w,h,g2,INK),b=grown(im,w,h,g1,'#fff');g.drawImage(a,0,0);g.drawImage(b,0,0);g.drawImage(im,0,0,w,h);a.width=a.height=0;b.width=b.height=0;c._ib=box(c);return c;}
   function of(im,D,k){if(!im||SKIP.has(k)||!(D>0))return im;if(im.complete===false||(im.naturalWidth===0&&!(im.width>0)))return im;
     let m=C.get(im);if(!m){m=new Map();C.set(im,m);}const key=Math.round(D*4);if(!m.has(key)){if(m.size>3){m.forEach(v=>{if(v!==im&&v.getContext){v.width=v.height=0;}});m.clear();}m.set(key,make(im,D));}return m.get(key);}
-  return {of,SKIP};})();
+  return {of};})();
 // ===== 3b. PAPER CUTOUT PUPPETS: each piece has one job and one pivot =====
 // An arm hinged at the shoulder S, swung (and stretched a little) so its hand lands on H.
 // The hand sits 85% of the way down the picture; the hinge is at 10%.
@@ -2282,13 +2321,19 @@ function bendStrips(x,len,wid,bend,fine){const t=x.getTransform(),k=Math.hypot(t
   const r=len*k/th+wid*k/2,err=.25,n=r>err?th/(2*Math.acos(Math.max(-1,1-err/r))):14;
   const sharp=fine&&th>1.2;   /* Oct 25 (designer: "fanned points" at sharp elbows): a sharp bend gets many fine strips, so the outside of the bend closes up. Oct 26 (code review): only for the squared-up guitar/bass arms (fine), or every sharply bent arm would cost up to 48 strips a frame */
   return Math.max(2,Math.min(sharp?48:14,2*Math.ceil(n/(sharp?.4:1)/2)));}
+/* Oct 26 (speed, S1): one band of an arm picture (its rows r0 to r1), placed with the picture's row 0 at oy in the piece's own
+   units, after moving to (tx,ty), turning by a and scaling by (kx,ky). Drawn by cutting that band out of the picture as it is
+   drawn (a "source slice") rather than drawing the whole picture through a clipping window, which made the browser work out
+   a fresh clip shape for every strip of every arm, every frame. T0 = the canvas position to start from (and go back to). */
+function armRows(x,T0,im,w,h,tx,ty,a,kx,ky,ox,oy,r0,r1){const b=im._ib,a0=Math.max(b?b[1]:0,r0),a1=Math.min(b?b[3]:h,r1),c0=b?b[0]:0,c1=b?b[2]:w;if(!(a1-a0>.01)||!(c1-c0>.01))return;   /* (S2) only the part with paper on it */
+  x.setTransform(T0);x.translate(tx,ty);x.rotate(a);x.scale(kx,ky);x.drawImage(im,c0,a0,c1-c0,a1-a0,ox+c0,oy+a0,c1-c0,a1-a0);}
 function drawArm(x,im,X,Y,R1,R2,z,sx,sy,px,py,el,bendy,from,handAt,fs=1,fold=null,fine=false){   // returns the elbow point. Oct 22: handAt = a hand drawn on the arm starts at this share of the picture: it is never stretched (the arm is); from = draw only that hand
  const w=im.width||150,h=im.height||150,ye=h*(el-py),ov=h*.03;
  if(bendy){   // Oct 5: new-sheet arms bend smoothly over a short stretch around the elbow (no hinge cut, nothing sticks out)
    const sc=z*sy,zl=h*.16,y0=h*el-zl/2,n=bendStrips(x,zl*sc,w*z*sx,R2-R1,fine),seg=zl/n;let cx=X-Math.sin(R1)*(y0-h*py)*sc,cy=Y+Math.cos(R1)*(y0-h*py)*sc,ex=cx,ey=cy;
    /* Oct 23: fs = the forearm drawn shorter, as if it comes toward us (the snare arm, reaching forward to a drum close to the body) */
-   const strip=(px0,py0,a,r0,len,s2=sc)=>{if(from)return;x.save();x.translate(px0,py0);x.rotate(a);x.scale(z*sx,s2);x.beginPath();x.rect(-w,0,2*w,len);x.clip();x.drawImage(im,-w*px,-r0,w,h);x.restore();};
-   if(!from){x.save();x.translate(X,Y);x.rotate(R1);x.scale(z*sx,sc);x.beginPath();x.rect(-w,-2*h,2*w,2*h+(y0-h*py)+1.5);x.clip();x.drawImage(im,-w*px,-h*py,w,h);x.restore();}
+   const T0=x.getTransform(),strip=(px0,py0,a,r0,len,s2=sc)=>{if(from)return;armRows(x,T0,im,w,h,px0,py0,a,z*sx,s2,-w*px,-r0,r0,r0+len);};
+   if(!from)armRows(x,T0,im,w,h,X,Y,R1,z*sx,sc,-w*px,-h*py,0,y0+1.5);
    for(let i=0;i<n;i++){const a=R1+(R2-R1)*(i+.5)/n,s2=sc*(1+(fs-1)*Math.max(0,(i+.5)/n*2-1));strip(cx,cy,a,y0+i*seg,seg+1.5,s2);cx-=Math.sin(a)*seg*s2;cy+=Math.cos(a)*seg*s2;if(i===n/2-1){ex=cx;ey=cy;}}
    const fin=handAt?Math.max(y0+zl,handAt*h):0;
    /* Oct 25 (designer: the hand under the neck, fingers on it, the arm bending smoothly): fold = {at, ang}: the forearm and palm
@@ -2298,17 +2343,18 @@ function drawArm(x,im,X,Y,R1,R2,z,sx,sy,px,py,el,bendy,from,handAt,fs=1,fold=nul
      if(from){/* Oct 26 (designer: a corner "cut out" on the outside of the fold): the knuckle band (a thin slice of the picture at the
         crease) is fanned round the crease from the palm's angle to the fingers', so the outside of the fold is a rounded knuckle */
        const t=h*.03,nf=Math.min(16,Math.max(2,Math.ceil(Math.abs(fold.ang)*(w/2)/(t*1.5))+1));
-       for(let i=0;i<=nf;i++){const a=R2+fold.ang*i/nf;x.save();x.translate(kx,ky);x.rotate(a);x.scale(z*sx,sc);x.beginPath();x.rect(-w,-t,2*w,2*t);x.clip();x.drawImage(im,-w*px,-fold.at*h,w,h);x.restore();}
-       x.save();x.translate(kx,ky);x.rotate(R2+fold.ang);x.scale(z*sx,sc);x.beginPath();x.rect(-w,-h*.045,2*w,2*h);   /* ...and the fingers start a little before it, so the fold has no gap */x.clip();x.drawImage(im,-w*px,-fold.at*h,w,h);x.restore();}
+       for(let i=0;i<=nf;i++)armRows(x,T0,im,w,h,kx,ky,R2+fold.ang*i/nf,z*sx,sc,-w*px,-fold.at*h,fold.at*h-t,fold.at*h+t);
+       armRows(x,T0,im,w,h,kx,ky,R2+fold.ang,z*sx,sc,-w*px,-fold.at*h,fold.at*h-h*.045,h);   /* ...and the fingers start a little before it, so the fold has no gap */}
+     x.setTransform(T0);
      return {x:ex,y:ey};}
    if(!fin)strip(cx,cy,R2,y0+zl,2*h,sc*fs);
    else{strip(cx,cy,R2,y0+zl,fin-(y0+zl)+1.5);const o=(fin-(y0+zl))*sc;cx-=Math.sin(R2)*o;cy+=Math.cos(R2)*o;   /* the hand, at its drawn size */
-     x.save();x.translate(cx,cy);x.rotate(R2);x.scale(z*sx,z);x.beginPath();x.rect(-w,0,2*w,2*h);x.clip();x.drawImage(im,-w*px,-fin,w,h);x.restore();
+     armRows(x,T0,im,w,h,cx,cy,R2,z*sx,z,-w*px,-fin,fin,h);x.setTransform(T0);
      const rh=(HAND*h-fin)*z;return {x:ex,y:ey,wx:cx-Math.sin(R2)*rh,wy:cy+Math.cos(R2)*rh};}
-   const rest=(HAND*h-(y0+zl))*sc;return {x:ex,y:ey,wx:cx-Math.sin(R2)*rest,wy:cy+Math.cos(R2)*rest};}
-  x.save();x.translate(X,Y);x.rotate(R1);x.scale(z*sx,z*sy);x.beginPath();x.rect(-w,-2*h,2*w,2*h+ye+ov);x.clip();x.drawImage(im,-w*px,-h*py,w,h);x.restore();
+   x.setTransform(T0);const rest=(HAND*h-(y0+zl))*sc;return {x:ex,y:ey,wx:cx-Math.sin(R2)*rest,wy:cy+Math.cos(R2)*rest};}
+  const T1=x.getTransform();armRows(x,T1,im,w,h,X,Y,R1,z*sx,z*sy,-w*px,-h*py,0,h*py+ye+ov);
   const ex=X-Math.sin(R1)*ye*z*sy,ey=Y+Math.cos(R1)*ye*z*sy;
-  x.save();x.translate(ex,ey);x.rotate(R2);x.scale(z*sx,z*sy);x.beginPath();x.rect(-w,-ov,2*w,2*h);x.clip();x.drawImage(im,-w*px,-h*el,w,h);x.restore();return {x:ex,y:ey};}
+  armRows(x,T1,im,w,h,ex,ey,R2,z*sx,z*sy,-w*px,-h*el,h*el-ov,h);x.setTransform(T1);return {x:ex,y:ey};}
 const STAND_BASE={snareSt:[80,140],hatSt:[122,140]},INKB=new WeakMap();
 /* Oct 22 (designer: "the hands should reach the correct point on the instrument: the neck and the strings"): where a
    lying-down guitar or bass picture has its body (the wide end) and its head (the narrow end), as shares of its size.
@@ -2507,15 +2553,18 @@ function drawLayers(x,m,t){
       if(k==='arm'){const l2=(HAND-el)*h*z*sy;m._wr=E.wx!=null?{x:E.wx,y:E.wy,r:R2}:{x:E.x-Math.sin(R2)*l2,y:E.y+Math.cos(R2)*l2,r:R2};}
       if(peek){x.save();x.strokeStyle='#e8553d';x.lineWidth=1;x.beginPath();x.arc(E.x,E.y,2.5,0,7);x.stroke();x.restore();}   // the elbow, while adjusting
       continue;}
-    x.save();if(fade<1)x.globalAlpha*=fade;x.translate(X,Y);x.rotate(R);x.scale(z*sx,z*sy);x.drawImage(im,-w*d[4],-h*d[5],w,h);
-    if(k==='kick'&&m.id==='drums'&&typeof S!=='undefined'&&S.drumFront==='name')drumFront(x,im,w,h,d);   /* Oct 22 (designer): the band's name on the bass drum */
+    x.save();if(fade<1)x.globalAlpha*=fade;x.translate(X,Y);x.rotate(R);x.scale(z*sx,z*sy);{const b=im._ib;if(b)x.drawImage(im,b[0],b[1],b[2]-b[0],b[3]-b[1],-w*d[4]+b[0],-h*d[5]+b[1],b[2]-b[0],b[3]-b[1]);else x.drawImage(im,-w*d[4],-h*d[5],w,h);}   /* (S2) only the part with paper on it */
+    if(k==='kick'&&m.id==='drums'&&typeof S!=='undefined'&&(S.drumFront==='name'||S.drumFront==='logo'))drumFront(x,im,w,h,d);   /* Oct 22 (designer): the band's name on the bass drum; Oct 26: or their logo */
     x.restore();}}
 // Oct 22: the band's name on the front of the bass drum, in the oddbop hand font, fitted inside the drum head (drawn in the
 // drum picture's own frame, so it thumps with it)
 /* Oct 22 (house designs): fitted to where the drum is drawn in its picture (its ink box), not the picture's middle, so a
    design drawn small or off centre in its picture still gets the name on its front */
-function drumFront(x,im,w,h,d){const nm=String((S.bandName!=null?S.bandName:(typeof STAGE_SET!=='undefined'&&STAGE_SET.bandName)||'')).trim().slice(0,30);if(!nm)return;
-  const ib=typeof inkBox==='function'?inkBox(im):[0,0,1,1],cx=w*((ib[0]+ib[2])/2-d[4]),cy=(ib[3]-ib[1])*h>(ib[2]-ib[0])*w*1.03?h*(ib[1]-d[5])+(ib[2]-ib[0])*w/2:h*((ib[1]+ib[3])/2-d[5]),   /* Oct 25 (designer's kit 2: the drum stands on legs): a drum taller than it is wide has legs below, so the name centres on the round front (as wide as the drum, from its top) */R=Math.min((ib[2]-ib[0])*w,(ib[3]-ib[1])*h)*.3,words=nm.toUpperCase().split(/\s+/),lines=[];
+function drumFront(x,im,w,h,d){const lgOn=S.drumFront==='logo'&&window.LOGO&&LOGO.has(),lg=lgOn?LOGO.img():null,nm=lgOn?'':String((S.bandName!=null?S.bandName:(typeof STAGE_SET!=='undefined'&&STAGE_SET.bandName)||'')).trim().slice(0,30);if(!nm&&!lg)return;   /* a logo still loading: nothing until it is there; 'logo' with no logo kept (undone): the name */
+  const ib=typeof inkBox==='function'?inkBox(im):[0,0,1,1],cx=w*((ib[0]+ib[2])/2-d[4]),cy=(ib[3]-ib[1])*h>(ib[2]-ib[0])*w*1.03?h*(ib[1]-d[5])+(ib[2]-ib[0])*w/2:h*((ib[1]+ib[3])/2-d[5]),   /* Oct 25 (designer's kit 2: the drum stands on legs): a drum taller than it is wide has legs below, so the name centres on the round front (as wide as the drum, from its top) */R=Math.min((ib[2]-ib[0])*w,(ib[3]-ib[1])*h)*.3;
+  /* Oct 26: their logo, as drawn, fitted inside the drum head (the same space the name fills), never stretched */
+  if(lg){const lw=lg.naturalWidth,lh=lg.naturalHeight,f=Math.min(R*1.75/lw,R*1.6/lh);x.drawImage(lg,cx-lw*f/2,cy-lh*f/2,lw*f,lh*f);return;}
+  const words=nm.toUpperCase().split(/\s+/),lines=[];
   for(const wd of words){const l=lines[lines.length-1];if(l&&(l+' '+wd).length<=Math.max(8,Math.ceil(nm.length/2)))lines[lines.length-1]=l+' '+wd;else lines.push(wd);}
   let fs=R*.6;x.font=`800 ${fs}px 'oddbop hand',system-ui,sans-serif`;const wide=Math.max(...lines.map(l=>x.measureText(l).width));fs=Math.min(fs,fs*R*1.7/Math.max(1,wide),R*1.6/lines.length);
   x.font=`800 ${fs}px 'oddbop hand',system-ui,sans-serif`;x.fillStyle='#1c1c20';x.textAlign='center';x.textBaseline='middle';
@@ -2803,7 +2852,6 @@ const SCAN_CONFIG = {
   page:   { w:612, h:792 },            // paper size. US Letter = 612 x 792. A4 = 595 x 842
   // Centres of the 4 black corner squares, in clockwise order: top-left, top-right, bottom-right, bottom-left
   marks:  { centres:[[33,33],[579,33],[579,759],[33,759]] },
-  outSize: 512,                        // each saved piece is a square this many pixels wide (keep a multiple of 8)
   workMax: 2800,                       // photos bigger than this are shrunk first (keeps phones fast)
   frameBand: 2.5,                      // points: the printed box outline is ignored this close to the edge
   ink: {
@@ -2816,167 +2864,8 @@ const SCAN_CONFIG = {
     colourMin: 0.08,                   // 0 to 1. How colourful a mark must be to count. Higher = pale colours are ignored (Oct 12: was 0.16; highlighter pale blue and pink came out white or with holes, remote test 3)
     colourBoost: 1.25                  // makes scanned colours a little bolder (1 = as photographed)
   },
-  // One entry per printed page. Each box is: ['member.piece', left, top, size]
-  // qr: the text in the sheet's QR code. A list means any of them is accepted (v2 = older printed sheets, v3 = current).
-  // Older v2 sheets simply have no head / leg / finger boxes; those boxes read as empty and are skipped.
-  // 'member.piece' must match the names used by the player (for example drums.snare).
-  sheets: {
-    // ---- current sheets (Day 9 / v5): laid out like the finished player, hinge rings shown ----
-    bass: { label:'Bass', qr:['PUPPET-v5-bass'], boxes:[
-      ['bass.legL', 110.9, 517.8, 135.0],
-      ['bass.legR', 256.3, 546.1, 135.0],
-      ['bass.body', 52.0, 307.5, 200.0],
-      ['bass.head', 157.4, 202.2, 95.0],
-      ['bass.arm2', 422.6, 470.1, 131.2],
-      ['bass.inst', 262.7, 128.0, 247.5],
-      ['bass.grip', 422.6, 385.8, 74.0],
-      ['bass.arm', 262.3, 385.8, 150.0],
-    ]},
-    drums: { label:'Drums', qr:['PUPPET-v5-drums'], boxes:[
-      ['drums.legL', 98.3, 580.5, 124.2],
-      ['drums.legR', 236.2, 594.9, 124.2],
-      ['drums.body', 52.0, 267.1, 165.6],
-      ['drums.head', 232.2, 229.4, 78.7],
-      ['drums.snareSt', 96.0, 443.7, 126.5],
-      ['drums.hatSt', 382.9, 464.8, 177.1],
-      ['drums.snare', 449.7, 349.6, 104.9],
-      ['drums.kick', 232.8, 444.7, 139.8],
-      ['drums.hat', 227.9, 318.4, 115.0],
-      ['drums.armS', 353.2, 353.9, 80.5],
-      ['drums.armH', 353.2, 257.4, 86.2],
-    ]},
-    vocals: { label:'Vocals', qr:['PUPPET-v5-vocals'], boxes:[
-      ['vocals.legL', 136.9, 576.0, 162.0],
-      ['vocals.legR', 309.4, 484.3, 162.0],
-      ['vocals.body', 52.0, 142.9, 240.0],
-      ['vocals.head', 386.6, 214.7, 114.0],
-      ['vocals.armV', 126.6, 393.2, 172.5],
-      ['vocals.mouth', 302.3, 308.9, 74.0],
-      ['vocals.mouthO', 302.3, 224.6, 74.0],
-      ['vocals.fore', 386.6, 339.0, 135.0],
-    ]},
-    guitar: { label:'Guitar', qr:['PUPPET-v5-guitar'], boxes:[
-      ['guitar.legL', 121.4, 538.6, 140.4],
-      ['guitar.legR', 272.1, 538.6, 140.4],
-      ['guitar.body', 52.0, 317.3, 208.0],
-      ['guitar.head', 161.7, 208.2, 98.8],
-      ['guitar.arm2', 436.6, 456.6, 110.5],
-      ['guitar.inst', 270.8, 128.0, 234.0],
-      ['guitar.grip', 436.6, 372.3, 74.0],
-      ['guitar.arm', 270.3, 372.3, 156.0],
-    ]},
-    keys: { label:'Keys', qr:['PUPPET-v5-keys'], boxes:[
-      ['keys.legL', 160.9, 521.0, 145.8],
-      ['keys.legR', 317.3, 571.5, 145.8],
-      ['keys.body', 90.7, 162.9, 216.0],
-      ['keys.head', 318.5, 205.3, 102.6],
-      ['keys.inst', 317.0, 318.2, 243.0],
-      ['keys.armL', 60.1, 390.2, 114.8],
-      ['keys.armR', 185.2, 389.2, 121.5],
-    ]},
-    // ---- Day 8 sheets (printed before the shoulder hinges / drum stands) ----
-    bass_v4: { label:'Bass (Day 8 sheet)', qr:['PUPPET-v4-bass'], boxes:[
-      ['bass.legL', 110.9, 517.8, 135.0],
-      ['bass.legR', 256.3, 546.1, 135.0],
-      ['bass.body', 52.0, 307.5, 200.0],
-      ['bass.head', 157.4, 202.2, 95.0],
-      ['bass.arm2', 422.6, 470.1, 131.2],
-      ['bass.inst', 262.7, 128.0, 247.5],
-      ['bass.grip', 422.6, 385.8, 74.0],
-      ['bass.arm', 262.3, 385.8, 150.0],
-    ]},
-    drums_v4: { label:'Drums (Day 8 sheet)', qr:['PUPPET-v4-drums'], boxes:[
-      ['drums.legL', 52.0, 509.0, 151.2],
-      ['drums.legR', 394.0, 586.8, 151.2],
-      ['drums.body', 57.6, 297.1, 201.6],
-      ['drums.head', 200.1, 180.4, 106.4],
-      ['drums.snare', 394.0, 448.8, 127.7],
-      ['drums.kick', 213.5, 509.0, 170.2],
-      ['drums.hat', 316.8, 190.2, 140.0],
-      ['drums.armS', 384.8, 340.5, 98.0],
-      ['drums.armH', 269.5, 348.6, 105.0],
-    ]},
-    vocals_v4: { label:'Vocals (Day 8 sheet)', qr:['PUPPET-v4-vocals'], boxes:[
-      ['vocals.legL', 136.9, 576.0, 162.0],
-      ['vocals.legR', 309.4, 484.3, 162.0],
-      ['vocals.body', 52.0, 142.9, 240.0],
-      ['vocals.head', 386.6, 214.7, 114.0],
-      ['vocals.armV', 126.6, 393.2, 172.5],
-      ['vocals.mouth', 302.3, 308.9, 74.0],
-      ['vocals.mouthO', 302.3, 224.6, 74.0],
-      ['vocals.fore', 386.6, 339.0, 135.0],
-    ]},
-    guitar_v4: { label:'Guitar (Day 8 sheet)', qr:['PUPPET-v4-guitar'], boxes:[
-      ['guitar.legL', 121.4, 538.6, 140.4],
-      ['guitar.legR', 272.1, 538.6, 140.4],
-      ['guitar.body', 52.0, 317.4, 208.0],
-      ['guitar.head', 161.7, 208.3, 98.8],
-      ['guitar.arm2', 436.6, 456.6, 110.5],
-      ['guitar.inst', 270.8, 128.0, 234.0],
-      ['guitar.grip', 436.6, 372.3, 74.0],
-      ['guitar.arm', 270.3, 372.3, 156.0],
-    ]},
-    keys_v4: { label:'Keys (Day 8 sheet)', qr:['PUPPET-v4-keys'], boxes:[
-      ['keys.legL', 160.9, 520.9, 145.8],
-      ['keys.legR', 317.3, 571.5, 145.8],
-      ['keys.body', 90.7, 162.8, 216.0],
-      ['keys.head', 318.5, 205.3, 102.6],
-      ['keys.inst', 317.0, 318.2, 243.0],
-      ['keys.armL', 60.1, 390.2, 114.8],
-      ['keys.armR', 185.2, 389.1, 121.5],
-    ]},
-    // ---- older grid sheets (printed before Day 8) ----
-    drums_grid: { label:'Drums (older grid sheet)', qr:['PUPPET-v3-drums','PUPPET-v2-drums'], boxes:[
-      ['drums.body', 54.0, 120.0, 160],
-      ['drums.snare', 226.0, 120.0, 160],
-      ['drums.kick', 398.0, 120.0, 160],
-      ['drums.hat', 54.0, 292.0, 160],
-      ['drums.armS', 226.0, 292.0, 160],
-      ['drums.armH', 398.0, 292.0, 160],
-      ['drums.head', 54.0, 464.0, 160],
-      ['drums.legL', 226.0, 464.0, 160],
-      ['drums.legR', 398.0, 464.0, 160],
-    ]},
-    bass_grid: { label:'Bass (older grid sheet)', qr:['PUPPET-v3-bass','PUPPET-v2-bass'], boxes:[
-      ['bass.body', 54.0, 120.0, 160],
-      ['bass.inst', 226.0, 120.0, 160],
-      ['bass.arm', 398.0, 120.0, 160],
-      ['bass.arm2', 54.0, 292.0, 160],
-      ['bass.head', 226.0, 292.0, 160],
-      ['bass.legL', 398.0, 292.0, 160],
-      ['bass.legR', 54.0, 464.0, 160],
-      ['bass.grip', 226.0, 464.0, 160],
-    ]},
-    guitar_grid: { label:'Guitar (older grid sheet)', qr:['PUPPET-v3-guitar','PUPPET-v2-guitar'], boxes:[
-      ['guitar.body', 54.0, 120.0, 160],
-      ['guitar.inst', 226.0, 120.0, 160],
-      ['guitar.arm', 398.0, 120.0, 160],
-      ['guitar.arm2', 54.0, 292.0, 160],
-      ['guitar.head', 226.0, 292.0, 160],
-      ['guitar.legL', 398.0, 292.0, 160],
-      ['guitar.legR', 54.0, 464.0, 160],
-      ['guitar.grip', 226.0, 464.0, 160],
-    ]},
-    keys_grid: { label:'Keys (older grid sheet)', qr:['PUPPET-v3-keys','PUPPET-v2-keys'], boxes:[
-      ['keys.body', 54.0, 120.0, 160],
-      ['keys.inst', 226.0, 120.0, 160],
-      ['keys.armL', 398.0, 120.0, 160],
-      ['keys.armR', 54.0, 292.0, 160],
-      ['keys.head', 226.0, 292.0, 160],
-      ['keys.legL', 398.0, 292.0, 160],
-      ['keys.legR', 54.0, 464.0, 160],
-    ]},
-    vocals_grid: { label:'Vocals (older grid sheet)', qr:['PUPPET-v3-vocals','PUPPET-v2-vocals'], boxes:[
-      ['vocals.body', 54.0, 120.0, 160],
-      ['vocals.armV', 226.0, 120.0, 160],
-      ['vocals.mouth', 398.0, 120.0, 160],
-      ['vocals.mouthO', 54.0, 292.0, 160],
-      ['vocals.fore', 226.0, 292.0, 160],
-      ['vocals.head', 398.0, 292.0, 160],
-      ['vocals.legL', 54.0, 464.0, 160],
-      ['vocals.legR', 226.0, 464.0, 160],
-    ]},
-  }
+  // The sheets themselves (one per player) are the new drawing sheets, SHEETS2 in sheet-maker.js; scanner.js lists them.
+  sheets: {}
 };
 </script>
 <script id="stage-show">
@@ -3326,7 +3215,7 @@ function wake(){bar.classList.remove('dim');ctl.classList.remove('dim');document
 // Step 5.1: music controls. Works with both ways a file plays (streamed by the page's audio player, or decoded into memory).
 let seeking=false;
 {const pl=document.getElementById('player'),bP=document.getElementById('stPlay'),pos=document.getElementById('stPos'),tm=document.getElementById('stTime'),
-   song=document.getElementById('stSong'),sf=document.getElementById('stFile'),row=pos.parentNode,
+   song=document.getElementById('stSong'),row=pos.parentNode,
    fmt=s=>!isFinite(s)?'0:00':Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0'),
    kind=()=>L.mode==='file'?(L.via==='buffer'?'buf':'el'):L.mode,
    dur=()=>kind()==='el'?(pl.duration||0):kind()==='buf'&&L.buf?L.buf.duration:0,
@@ -3334,9 +3223,7 @@ let seeking=false;
    playing=()=>kind()==='el'?!pl.paused:kind()==='buf'?!!L.bs:false;
  bP.onclick=()=>{wake();const k=kind();if(k==='el'){if(pl.paused)pl.play().catch(()=>{});else pl.pause();}
    else if(k==='buf'){if(L.bs)L.pauseBuf();else L.playBuf(L.boff);}else{if(window.unlockAudio)unlockAudio();if(window.playDemo)playDemo();}};   // Oct 9 (designer): nothing playing yet: Play starts Paper boy, the loop
- document.getElementById('stSongBtn').addEventListener('click',()=>{wake();window.__picking=Date.now();if(window.unlockAudio)unlockAudio();});
- sf.onchange=e=>{window.__picking=Date.now()-55000;if(window.__onFile)window.__onFile(e);};   // keep the guard ~5 s more while the song loads
- window.addEventListener('focus',()=>{if(window.__picking)setTimeout(()=>{if(Date.now()-window.__picking>3000)window.__picking=Date.now()-55000;},1000);});
+ document.getElementById('stSongBtn').addEventListener('click',()=>{wake();if(window.unlockAudio)unlockAudio();});   // the button opens the song list (song-list.js)
  const go=v=>{const d=dur();if(!d)return;const t=v/1000*d,k=kind();if(k==='el')pl.currentTime=t;else if(k==='buf'){L.srcN=(L.srcN||0)+1;if(L.bs)L.playBuf(t);else L.boff=t;}};
  pos.addEventListener('pointerdown',()=>{seeking=true;wake();});pos.addEventListener('input',()=>{wake();tm.textContent=fmt(pos.value/1000*dur())+' / '+fmt(dur());});
  pos.addEventListener('change',()=>{go(+pos.value);seeking=false;wake();});
@@ -3548,8 +3435,8 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
   function open(){
     if(!document.body.classList.contains('show'))showMode(true);
     card.hidden=false;stage.classList.add('starting');document.body.classList.add('starting');}
-  document.getElementById('goSong').onclick=()=>{window.__picking=Date.now();if(window.unlockAudio)unlockAudio();sf.click();close();fs();};   // picker first: going full screen uses up the tap that a file picker needs
-  sf.onchange=e=>{window.__picking=Date.now()-55000;if(window.__onFile)window.__onFile(e);};
+  // Pick song opens the song list (song-list.js). This hidden song picker has no button any more; the test tools hand it a song.
+  sf.onchange=e=>{if(window.__onFile)window.__onFile(e);};
   document.getElementById('goDemo').onclick=()=>{if(window.playDemo)playDemo();close();fs();};   // the demo track, looping
   card.addEventListener('click',e=>{if(!inner.contains(e.target)){fs();close();}});   // a click anywhere off the menu goes back to the show
   document.getElementById('goEdit').onclick=()=>{close();showMode(false);};
@@ -3589,13 +3476,13 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
    b.onclick=()=>{if(window.unlockAudio)unlockAudio();close();go();};list.appendChild(b);return b;};
  row(TXT('songs.paperBoy'),TXT('songs.loop')+' · '+TXT('songs.paperBoyBy'),()=>{if(window.playDemo)playDemo();}).dataset.song='paper-boy';
  for(const s of window.SONGS||[])row(s.name,s.by,()=>window.playSong(s)).dataset.song=s.id;
- document.getElementById('spFile').addEventListener('click',()=>{window.__picking=Date.now();if(window.unlockAudio)unlockAudio();});
- fin.onchange=e=>{window.__picking=Date.now()-55000;close();if(window.__onFile)window.__onFile(e);};
+ document.getElementById('spFile').addEventListener('click',()=>{if(window.unlockAudio)unlockAudio();});
+ fin.onchange=e=>{close();if(window.__onFile)window.__onFile(e);};
  document.getElementById('spLive').onclick=()=>{close();const gl=document.getElementById('goListen');if(gl&&gl.onclick)gl.onclick();};
  document.getElementById('spClose').onclick=close;
  box.addEventListener('click',e=>{if(e.target===box)close();});
  document.getElementById('goSong').onclick=open;
- // the stage's Song button was a file picker; it now opens the list (the list has "A song on this phone")
+ // the stage's Song button opens the list too (the list has "A song on this phone")
  document.getElementById('stSongBtn').addEventListener('click',e=>{e.preventDefault();open();});
  window.SONGLIST={open,close};}
 /* Oct 14 (designer: "can we request access for system audio ... and it listen along to what's playing on the computer";
@@ -3647,7 +3534,7 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
 {const sv=document.getElementById('goSaveBand'),op=document.getElementById('goOpenBand'),fin=document.getElementById('bandFileIn');
  const tip=(t,ms)=>{const tp=document.getElementById('stTip');if(!tp)return;if(!tp.dataset.rest)tp.dataset.rest=tp.textContent;
    tp.textContent=t;tp.hidden=false;clearTimeout(tp._b);tp._b=setTimeout(()=>{tp.hidden=true;tp.textContent=tp.dataset.rest;},ms||4500);};
- const ownKeys=()=>members.flatMap(m=>SETS[m.id].map(k=>m.id+'.'+k)).concat(['vocals.mic']).filter(key=>{const u=S.art[key];return typeof u==='string'&&u.startsWith('@s:');});
+ const ownKeys=()=>members.flatMap(m=>SETS[m.id].map(k=>m.id+'.'+k)).concat(['vocals.mic','drums.logo']).filter(key=>{const u=S.art[key];return typeof u==='string'&&u.startsWith('@s:');});
  /* Oct 9 (newcomer test: "took a long time, wasn't obvious it was saving to a file"). The backup is now about 4x smaller:
     each drawing is stored with 16 shades per colour (looks the same on stage) and nothing hidden under see-through parts.
     It is made ahead of time, a moment after each change, so the button answers at once. On phones and tablets it opens
@@ -3730,11 +3617,12 @@ window.STARTUI=(function(){const card=document.getElementById('startCard'),stage
      tip(TXT('band.notABand',{why:why+"; "+String(f.name).slice(0,24)+", "+Math.round(f.size/1024)+" KB"+(peek?', "'+peek+'"':'')}),9000);return;}
    if(!confirm(TXT('band.openConfirm',{name:String(d.bandName||f.name).slice(0,40)})))return;
    const art={},adj={};
-   for(const m of members)for(const k of SETS[m.id].concat(m.id==='vocals'?['mic']:[])){const key=m.id+'.'+k,u=d.art&&d.art[key];   /* Oct 22: + their drawn mic */
+   for(const m of members)for(const k of SETS[m.id].concat(m.id==='vocals'?['mic']:m.id==='drums'?['logo']:[])){const key=m.id+'.'+k,u=d.art&&d.art[key];   /* Oct 22: + their drawn mic */
      if(typeof u==='string'&&/^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(u)&&u.length<8e6){art[key]=u;
        const a=d.adj&&d.adj[key];if(a&&typeof a==='object'){const o={};['x','y','s','a','eb','v2'].forEach(q=>{if(a[q]!=null&&isFinite(+a[q]))o[q]=+a[q];});adj[key]=o;}}}
    members.forEach(m=>{if(m.example)m.example();});   // every player back to this file's default…
-   for(const key in art){ARTSET[key](art[key]);if(adj[key])ADJSET[key](adj[key]);}   // …and the saved band's own pieces on top
+   if(window.LOGO)LOGO.set(null);   /* Oct 26: a logo from before is not part of this band unless it has one */
+   for(const key in art){ARTSET[key](art[key]);if(adj[key]&&ADJSET[key])ADJSET[key](adj[key]);}   // …and the saved band's own pieces on top
    if(d.house&&typeof d.house==='object')for(const key in d.house){const u=d.house[key];   /* Oct 22: house designs they picked */
      if(typeof u!=='string'||!/^@h:[a-z]+\.[23]\.[A-Za-z]+$/.test(u)||!artURL(u))continue;
      if(key==='vocals.mic'){if(window.MICS)MICS.set(u);continue;}
@@ -4114,7 +4002,7 @@ window.UIART=(function(){
       input[type=text],input:not([type]),textarea{cursor:text!important}
       #stageCv{cursor:${c('normal','default')}}#stageCv[data-cur=grab]{cursor:${c('over a player','grab')}}#stageCv[data-cur=grabbing]{cursor:${c('dragging a player','grabbing')}}}`;
     document.head.appendChild(st);}
-  return {apply,dress,mapDress,pic,pointers,WORDS};})();
+  return {apply,mapDress,pic,pointers};})();
 try{UIART.apply();UIART.pointers();UIART.pic('made-with',true);UIART.pic('logo-oddbop',true);['wall','lights','front','beam','floor-lines','floor-paper','floor-envelope'].forEach(n=>UIART.pic('scene-club-'+n));}catch(e){console.error(e);}   // Oct 8: end card and Club pictures load early
 if(!document.querySelector('#bootMsg code'))document.body.classList.add('ready');   /* PATCH05: the band has started; hide the start-up message */
 </script>
@@ -4212,106 +4100,12 @@ function v2frame(sh,k,box,P,sft){const d=SLOTS[k],fx=d[4],fy=d[5],arm=sh.arms[k]
 const SHEETMAKER=(function(){
 const SS=SHEET_SET,NAMES={bass:TXT('player.bass'),drums:TXT('player.drums'),vocals:TXT('player.vocals'),guitar:TXT('player.guitar'),keys:TXT('player.keys')};
 const FONT='px Helvetica, Arial, sans-serif',grey=v=>`rgb(${v},${v},${v})`;
-// which piece hangs off which, and the name of its matching ring on the parent piece
-const PARENT={head:['body','head'],legL:['body','leg'],legR:['body','leg'],arm:['body','arm'],arm2:['body','arm'],armS:['body','arm'],armH:['body','arm'],
-  armV:['body','arm'],armL:['body','arm'],armR:['body','arm'],fore:['body','mic arm'],snareSt:['snare','stand'],hatSt:['hat','stand']};
-
-// 1. Pose: draw the player at rest with placeholder pieces, recording where every piece lands
-function snapshot(m){const keep={},env=m.env,p=m.p,pl=m.pl,pr=m.pr;let rec;
-  SETS[m.id].forEach(k=>{keep[k]=m.layers[k].img;m.layers[k].img=null;});
-  m.env=0;m.p={k:0,s:0,h:0,c:0};m.pl=m.pr=null;m.rec={};
-  const c=document.createElement('canvas');c.width=640;c.height=560;const x=c.getContext('2d');x.scale(4,4);
-  try{drawLayers(x,m,0);}finally{rec=m.rec;m.rec=null;SETS[m.id].forEach(k=>m.layers[k].img=keep[k]);m.env=env;m.p=p;m.pl=pl;m.pr=pr;}
-  return {rec,preview:c};}
-// centre and size of each piece's upright square, in stage pixels
-function assembled(m,rec){const out={};
-  for(const k of SETS[m.id]){const r=rec[k];if(!r)continue;const d=SLOTS[k],dx=(.5-d[4])*r.D*r.sx,dy=(.5-d[5])*r.D*r.sy,c=Math.cos(r.r),s=Math.sin(r.r);
-    out[k]={cx:r.x+dx*c-dy*s,cy:r.y+dx*s+dy*c,D:r.D};}
-  return out;}
-// 2. Arrange: scale the figure up as far as it will go, then push overlapping boxes apart (an "exploded" view)
-function arrange(A){const [L,T,R,B]=SS.region,G=SS.gap,names=Object.keys(A);
-  const clash=(a,b)=>Math.abs(a.x-b.x)<(a.s+b.s)/2+G-.5&&Math.abs(a.y-b.y)<(a.s+b.s)/2+G-.5;
-  for(let k10=34;k10>7;k10--){const k=k10/10,bx={};
-    for(const n of names)bx[n]={s:Math.min(SS.maxBox,Math.max(SS.minBox,A[n].D*k)),tx:A[n].cx*k,ty:A[n].cy*k};
-    const xs=names.map(n=>bx[n].tx),ys=names.map(n=>bx[n].ty),ox=(L+R)/2-(Math.min(...xs)+Math.max(...xs))/2,oy=(T+B)/2-(Math.min(...ys)+Math.max(...ys))/2;
-    names.forEach(n=>{bx[n].tx+=ox;bx[n].ty+=oy;});
-    for(let at=0;at<12;at++){let seed=at+1;const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647)*6-3;   // same result every time
-      names.forEach(n=>{bx[n].x=bx[n].tx+rnd()*at;bx[n].y=bx[n].ty+rnd()*at;});
-      for(let it=0;it<2500;it++){let moved=0;
-        for(let i=0;i<names.length;i++)for(let j=i+1;j<names.length;j++){const a=bx[names[i]],b=bx[names[j]],need=(a.s+b.s)/2+G,
-          ddx=b.x-a.x,ddy=b.y-a.y,ovx=need-Math.abs(ddx)+.3,ovy=need-Math.abs(ddy)+.3;
-          if(ovx>0&&ovy>0){moved=1;if(ovx<ovy){const g=ddx>=0?1:-1;a.x-=g*ovx/2;b.x+=g*ovx/2;}else{const g=ddy>=0?1:-1;a.y-=g*ovy/2;b.y+=g*ovy/2;}}}
-        const pull=it<900?.01:0;
-        names.forEach(n=>{const b=bx[n],h=b.s/2;b.x+=(b.tx-b.x)*pull;b.y+=(b.ty-b.y)*pull;b.x=Math.min(Math.max(b.x,L+h),R-h);b.y=Math.min(Math.max(b.y,T+h),B-h);});
-        if(!moved&&it>900)break;}
-      let ok=true;for(let i=0;i<names.length&&ok;i++)for(let j=i+1;j<names.length;j++)if(clash(bx[names[i]],bx[names[j]])){ok=false;break;}
-      if(!ok)continue;
-      // keep the figure readable: a piece that sits clearly above another in the player must stay above it on paper (and the same left/right)
-      let flips=0;for(let i=0;i<names.length;i++)for(let j=i+1;j<names.length;j++){const a=bx[names[i]],b=bx[names[j]],lim=(a.s+b.s)/4;
-        if(Math.abs(a.ty-b.ty)>lim&&Math.sign(a.ty-b.ty)!==Math.sign(a.y-b.y))flips++;
-        if(Math.abs(a.tx-b.tx)>lim*1.5&&Math.sign(a.tx-b.tx)!==Math.sign(a.x-b.x))flips++;}
-      if(flips)continue;
-      const out={};names.forEach(n=>{const b=bx[n];out[n]={left:b.x-b.s/2,top:b.y-b.s/2,s:b.s};});return out;}}
-  return null;}
-function layoutFor(id){const m=members.find(x=>x.id===id),{rec,preview}=snapshot(m),r=arrange(assembled(m,rec));if(!r)return null;
-  const f=v=>Math.round(v*10)/10;
-  return {m,rec,preview,boxes:SETS[id].filter(k=>r[k]).map(k=>[id+'.'+k,f(r[k].left),f(r[k].top),f(r[k].s)])};}
-// matching hinge rings: where each child piece joins its parent, as 0..1 spots inside the parent's box
-function hinges(m,rec){const out={};
-  for(const ch in PARENT){const [par,name]=PARENT[ch],c=rec[ch],p=rec[par];if(!c||!p)continue;
-    const st=/St$/.test(ch),X=st?p.x:c.x,Y=st?p.y-.15*p.D:c.y,dx=X-p.x,dy=Y-p.y,co=Math.cos(-p.r),si=Math.sin(-p.r),
-      lx=(dx*co-dy*si)/p.D+SLOTS[par][4],ly=(dx*si+dy*co)/p.D+SLOTS[par][5];
-    if(lx>.02&&lx<.98&&ly>.02&&ly<.98)(out[par]=out[par]||[]).push([lx,ly,name]);}
-  return out;}
-// 3. Guides: soft grey outline of a placeholder shape (its edges and inner details)
-function ghost(im,px){const c=document.createElement('canvas');c.width=c.height=px;const x=c.getContext('2d',{willReadFrequently:true});
-  x.fillStyle='#fff';x.fillRect(0,0,px,px);x.drawImage(im,0,0,px,px);
-  const d=x.getImageData(0,0,px,px),D=d.data,n=px*px,g=new Float32Array(n),b=new Float32Array(n),e=new Uint8Array(n),t=new Uint8Array(n);
-  for(let i=0;i<n;i++)g[i]=D[i*4]*.3+D[i*4+1]*.59+D[i*4+2]*.11;
-  for(let y=1;y<px-1;y++)for(let xx=1;xx<px-1;xx++){const i=y*px+xx;b[i]=(g[i]+g[i-1]+g[i+1]+g[i-px]+g[i+px])/5;}
-  for(let y=2;y<px-2;y++)for(let xx=2;xx<px-2;xx++){const i=y*px+xx;if(Math.abs(b[i+1]-b[i-1])+Math.abs(b[i+px]-b[i-px])>18)e[i]=1;}
-  const r=Math.max(1,Math.round(px/220));
-  for(let y=0;y<px;y++)for(let xx=0;xx<px;xx++){let v=0;for(let k=-r;k<=r&&!v;k++){const q=xx+k;if(q>=0&&q<px&&e[y*px+q])v=1;}t[y*px+xx]=v;}
-  const o=x.createImageData(px,px),O=o.data;
-  for(let y=0;y<px;y++)for(let xx=0;xx<px;xx++){let v=0;for(let k=-r;k<=r&&!v;k++){const q=y+k;if(q>=0&&q<px&&t[q*px+xx])v=1;}
-    if(v){const i=(y*px+xx)*4;O[i]=O[i+1]=O[i+2]=200;O[i+3]=255;}}
-  x.clearRect(0,0,px,px);x.putImageData(o,0,0);return c;}
 // 4. Sheet code: a row of 16 small squares. 2 always-black start squares, 3 for the player, 10 for the code, 1 check square.
 function bitsFor(id,code){const i=SS.ids.indexOf(id),b=[1,1];for(let k=2;k>=0;k--)b.push(i>>k&1);for(let k=9;k>=0;k--)b.push(code>>k&1);
   b.push(b.slice(2).reduce((a,c)=>a^c,0));return b;}
 function decode(b){if(b.length!==SS.strip.n||!b[0]||!b[1]||b.slice(2,15).reduce((a,c)=>a^c,0)!==b[15])return null;
   const i=b[2]*4+b[3]*2+b[4];if(i>=SS.ids.length)return null;let code=0;for(let k=5;k<15;k++)code=code*2+b[k];return {mid:SS.ids[i],code};}
-function codeFor(id,boxes){S.sheetLog=S.sheetLog||{};   // (code 1000 is kept for the new sheets)
-const txt=id+JSON.stringify(boxes);let h=7;for(let i=0;i<txt.length;i++)h=(h*31+txt.charCodeAt(i))>>>0;
-  let c=h%1024;for(let n=0;n<1024;n++,c=(c+1)%1024){if(c===SHEET2.code)continue;const e=S.sheetLog[c];if(!e||(e.mid===id&&JSON.stringify(e.boxes)===JSON.stringify(boxes)))return c;}
-  return h%1024;}
-// 5. Draw one page
-function renderPage(id,L,code){const PG=SCAN_CONFIG.page,P=SS.dpi/72,c=document.createElement('canvas');c.width=Math.round(PG.w*P);c.height=Math.round(PG.h*P);
-  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.scale(P,P);x.textBaseline='alphabetic';
-  x.fillStyle='#000';SCAN_CONFIG.marks.centres.forEach(([cx,cy])=>x.fillRect(cx-12,cy-12,24,24));
-  const st=SS.strip;bitsFor(id,code).forEach((b,i)=>{if(b)x.fillRect(st.x0+i*st.step-st.cell/2,st.y-st.cell/2,st.cell,st.cell);});
-  x.fillStyle=grey(150);x.font='7'+FONT;x.fillText('sheet code '+code,st.x0+st.n*st.step,st.y+2.5);
-  x.fillStyle='#000';x.font='bold 20'+FONT;x.fillText(NAMES[id]+' — oddbop',56,72);
-  x.fillStyle=grey(75);x.font='9'+FONT;
-  ['Draw over the soft grey shapes with a dark marker, or draw your own.','Boxes are laid out like the finished player. A grey ring is a hinge;',
-   'a labelled ring on another piece shows where it joins (arm, leg, head, stand).','Draw each arm straight, in one piece: it bends at the ring marked "elbow".',
-   'Thick, closed outlines work best. Leave a box empty to keep the placeholder.']
-   .forEach((t,i)=>x.fillText(t,56,86+i*9.5));
-  x.globalAlpha=.55;x.drawImage(L.preview,462,46,88,77);x.globalAlpha=1;
-  x.fillStyle=grey(140);x.font='6.5'+FONT;x.textAlign='center';x.fillText('finished look',506,128);x.textAlign='left';
-  const hm=hinges(L.m,L.rec);
-  for(const [key,l,t,s] of L.boxes){const k=key.split('.')[1],d=SLOTS[k];
-    x.drawImage(ghost(L.m.layers[k].ph,Math.round(s*P)),l,t,s,s);
-    x.strokeStyle=grey(168);x.lineWidth=.9;x.strokeRect(l,t,s,s);
-    x.fillStyle=grey(173);x.font=(s>90?7:6)+FONT;x.fillText(d[0],l+5,t+s-5);
-    const ring=(fx,fy,txt)=>{const cx=l+fx*s,cy=t+fy*s;x.strokeStyle=grey(184);x.lineWidth=1.1;x.beginPath();x.arc(cx,cy,4.5,0,7);
-      x.moveTo(cx-7,cy);x.lineTo(cx+7,cy);x.moveTo(cx,cy-7);x.lineTo(cx,cy+7);x.stroke();
-      if(txt){x.fillStyle=grey(184);x.font='5.5'+FONT;x.fillText(txt,cx+6,cy-3);}};
-    if(/St$/.test(k))ring(.5,.02);else ring(d[4],d[5]);       // a stand's ring is at its top, where it joins the drum
-    if(ARMS.has(k))ring(.5,ELBOW,'elbow');   // arms bend here
-    (hm[k]||[]).forEach(h=>ring(h[0],h[1],h[2]));}
-  return c;}
-// 5b. Draw a new sheet (SHEETS2): soft grey hints, the boxes as the only hard lines, light joint circles and dots
+// 5. Draw a new sheet (SHEETS2): soft grey hints, the boxes as the only hard lines, light joint circles and dots
 // ex (the example page): {pieces:{key:Image}}. It has no corner squares or code, so it can't be scanned by mistake.
 function renderPage2(id,code,ex){const PG=SCAN_CONFIG.page,P=SS.dpi/72,c=document.createElement('canvas');c.width=Math.round(PG.w*P);c.height=Math.round(PG.h*P);
   /* Oct 23 (designer: "mouth open and closed as drawings can be an advanced setting"): the singer's "mouth open!" box is
@@ -4393,15 +4187,11 @@ function pdfFrom(pages){const PG=SCAN_CONFIG.page,enc=new TextEncoder(),parts=[]
   const xref=len,n=3+3*N;add(`xref\n0 ${n}\n0000000000 65535 f \n`);for(let i=1;i<n;i++)add(String(offs[i]).padStart(10,'0')+' 00000 n \n');
   add(`trailer\n<< /Size ${n} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
   return new Blob(parts,{type:'application/pdf'});}
-async function makePDF(ids,say,opt){const pages=[],exs=[];S.sheetLog=S.sheetLog||{};
+async function makePDF(ids,say,opt){const pages=[],exs=[];
   const addPage=async c=>{const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.9));pages.push({bytes:new Uint8Array(await blob.arrayBuffer()),w:c.width,h:c.height});};
   for(const id of ids){say(TXT('print.layingOut',{player:NAMES[id]}));await new Promise(r=>setTimeout(r,20));
-    if(SHEET2.ids.includes(id)){await addPage(renderPage2(id,SHEET2.code));   // new sheet
-      const art=opt&&opt.example?await exampleArt(id):null;if(art)exs.push([id,art]);
-      continue;}
-    const L=layoutFor(id);if(!L)throw new Error("the "+NAMES[id]+" pieces don't fit on one page (try making some smaller)");
-    const code=codeFor(id,L.boxes);S.sheetLog[code]={mid:id,boxes:L.boxes,made:new Date().toISOString().slice(0,10)};   // so the scanner knows this sheet later
-    await addPage(renderPage(id,L,code));}
+    await addPage(renderPage2(id,SHEET2.code));   // every player has a new sheet
+    const art=opt&&opt.example?await exampleArt(id):null;if(art)exs.push([id,art]);}
   // Oct 12: the filled-in example(s) at the end: one player full size; several players together on one page (designer)
   if(exs.length===1)await addPage(renderPage2(exs[0][0],SHEET2.code,{pieces:exs[0][1]}));
   else if(exs.length)await addPage(renderExamples(exs));
@@ -4420,7 +4210,7 @@ function renderExamples(exs){const PG=SCAN_CONFIG.page,P=SS.dpi/72,c=document.cr
     x.strokeStyle=grey(200);x.lineWidth=.8;x.strokeRect(x0,y0,cw,ch);
     x.fillStyle='#000';x.font='bold 12'+FONT;x.textAlign='center';x.fillText(NAMES[id],x0+cw/2,y0+ch+15);x.textAlign='left';});
   return c;}
-return {layoutFor,decode,bitsFor,names:NAMES,makePDF,renderPage,renderPage2,exampleArt};
+return {decode,names:NAMES,makePDF,renderPage2};
 })();
 
 (function(){const $=id=>document.getElementById(id),say=t=>$('shMsg').textContent=t;
@@ -4598,7 +4388,7 @@ function setup(mid,pins,W){if(!st||st.mid!==mid)return;const L=limbsOf(st.base);
   for(const [k,p] of Object.entries(pins||{})){if(!L[k])continue;st.pin[k]=p.slice();if(!L[k].sock.startsWith('W:'))st.sock[L[k].sock]=p.slice();}   /* a hand's pin: the end of its arm */
   for(const [a,w] of Object.entries(W||{}))st.W[a]=w.slice();if(!$('scanJoints').hidden)frame();}
 const touched=k=>!!st&&(RIDES(k)?touched('head'):(st.moved.has(k)||(st.rot[k]||0)!==0||(st.size[k]||1)!==1));
-return {show,clear,sheetFor,moved,preset,finalize,setup,touched,instAt:p=>{if(st){st.instAt=p?p.slice():null;if(!$('scanJoints').hidden)frame();}},_state:()=>st,_handle:k=>handleAt(k)};
+return {show,clear,sheetFor,moved,preset,finalize,setup,touched,instAt:p=>{if(st){st.instAt=p?p.slice():null;if(!$('scanJoints').hidden)frame();}},_state:()=>st};
 })();
 
 // ===== 5. SHEET SCANNER: photo of a printed sheet -> artwork pieces =====
@@ -4615,17 +4405,13 @@ const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 function checkConfig(){
   const bad=[];
   try{
-    const qrs=new Set();
     for(const [id,sh] of Object.entries(CFG.sheets)){
-      if(!sh.boxes)continue;   // sheets made by the page itself are worked out when needed
-      if(sh.qr)for(const q of [].concat(sh.qr)){if(qrs.has(q))bad.push(id+': QR text is used twice');qrs.add(q);}
       for(const [key,x,y,s,hh] of sh.boxes){
         const [m,k]=key.split('.');
         if((typeof SETS==='undefined'||!SETS[m]||!SETS[m].includes(k))&&key!=='vocals.mic')bad.push(`${id}: the player has no piece called "${key}"`);
         if(typeof ARTSET==='undefined'||!ARTSET[key])bad.push(`${id}: no art slot ready for "${key}"`);
         if(x<0||y<0||x+s>CFG.page.w||y+(hh==null?s:hh)>CFG.page.h)bad.push(`${id}: box ${key} falls off the page`);
       }}
-    if(CFG.outSize%8)bad.push('outSize should be a multiple of 8');
   }catch(e){bad.push('settings could not be read: '+e.message);}
   return bad;
 }
@@ -4885,45 +4671,6 @@ function paperEstimate(g,cr,N){const B=64,n=N/B,cnt=n*n,pv=new Float32Array(cnt*
     for(let i=0;i<N;i++){const fx=clamp((i+.5)/B-.5,0,n-1.001),x0=fx|0,tx=fx-x0,a=((y0*n+x0)*4),b=a+4,c=a+n*4,d=c+4,p=j*N+i;
       for(let q=0;q<4;q++)maps[q][p]=Math.max(8,pv[a+q]*(1-tx)*(1-ty)+pv[b+q]*tx*(1-ty)+pv[c+q]*(1-tx)*ty+pv[d+q]*tx*ty);}}
   return maps;}
-function extract(box,ink){
-  const N=CFG.outSize,[key,bx,by,bs]=box,{Y,RGB,W,H}=S2.img,h=S2.h,col=ink.keepColour&&RGB,
-    g=new Float32Array(N*N),cr=RGB&&[new Float32Array(N*N),new Float32Array(N*N),new Float32Array(N*N)],t3=[0,0,0];
-  for(let j=0;j<N;j++)for(let i=0;i<N;i++){const [u,v]=proj(h,bx+(i+.5)/N*bs,by+(j+.5)/N*bs),p=j*N+i;g[p]=samp(Y,W,H,u,v);
-    if(cr){samp3(RGB,W,H,u,v,t3);cr[0][p]=t3[0];cr[1][p]=t3[1];cr[2][p]=t3[2];}}
-  // brightness compared with the paper around it (1 = paper, 0 = black)
-  const pe=cr?paperEstimate(g,cr,N):null,bg=pe?pe[0]:paperMap(g,N,8),nm=new Float32Array(N*N);for(let p=0;p<N*N;p++)nm[p]=Math.min(1.2,g[p]/bg[p]);
-  // colour compared with the paper (white-balanced per channel), and how colourful each spot is
-  let cn=null,chroma=null;
-  if(col){cn=cr.map((ch,c)=>{const m=pe[c+1],o=new Float32Array(N*N);for(let p=0;p<N*N;p++)o[p]=Math.min(1.1,ch[p]/m[p]);return o;});
-    chroma=new Float32Array(N*N);for(let p=0;p<N*N;p++){const r=cn[0][p],gg=cn[1][p],b=cn[2][p];chroma[p]=Math.max(r,gg,b)-Math.min(r,gg,b);}}
-  // pen = very dark. Colour = clearly colourful. Grey guides, labels and rings are neither, so they drop out.
-  const band=Math.ceil(CFG.frameBand/bs*N),pen=new Uint8Array(N*N),cmask=new Uint8Array(N*N);
-  for(let j=band;j<N-band;j++)for(let i=band;i<N-band;i++){const p=j*N+i;pen[p]=nm[p]<ink.threshold?1:0;if(col&&chroma[p]>ink.colourMin)cmask[p]=1;}
-  dropSpecks(pen,N,ink.minSpeck);if(col)dropSpecks(cmask,N,ink.minSpeck);
-  let cnt=0;for(let i=0;i<pen.length;i++)cnt+=pen[i]|cmask[i];
-  // closed shapes: whatever the outside can't reach is "inside" (coloured outlines count as walls too)
-  let outside=null;
-  if(ink.fillShapes){const wall=new Uint8Array(N*N);for(let p=0;p<N*N;p++)wall[p]=pen[p]|cmask[p];
-    const sealed=dilate(wall,N,ink.sealGap),st=new Int32Array(N*N);outside=new Uint8Array(N*N);let sp=0;
-    const push=p=>{if(!sealed[p]&&!outside[p]){outside[p]=1;st[sp++]=p;}};
-    for(let i=0;i<N;i++){push(i);push((N-1)*N+i);push(i*N);push(i*N+N-1);}
-    while(sp){const p=st[--sp],x=p%N,y=(p/N)|0;if(x>0)push(p-1);if(x<N-1)push(p+1);if(y>0)push(p-N);if(y<N-1)push(p+N);}
-    if(SOLIDFILL.test(key.split('.')[1]))solidFill(outside,pen,cmask,N,N,N,band);}
-  const near=dilate(pen,N,2),nearC=col?dilate(cmask,N,1):null,img=new ImageData(N,N),o=img.data,boost=ink.colourBoost||1;
-  const bold=(p,out)=>{const r=cn[0][p],gg=cn[1][p],b=cn[2][p],L=(r+gg+b)/3;out[0]=clamp((L+(r-L)*boost)*255,0,255);
-    out[1]=clamp((L+(gg-L)*boost)*255,0,255);out[2]=clamp((L+(b-L)*boost)*255,0,255);return out;};
-  const c3=[0,0,0];
-  for(let p=0;p<N*N;p++){
-    const inside=outside&&!outside[p],a=near[p]?clamp((ink.threshold+.13-nm[p])/.2,0,1):0,q=p*4;
-    let R=255,G=255,Bc=255,A=inside?255:0;
-    if(col){ // colour: marks keep their own colour; enclosed paper becomes clean white
-      const ac=nearC[p]?clamp((chroma[p]-ink.colourMin)/.1,0,1):0,m=Math.max(a,ac);
-      if(m>0){bold(p,c3);if(inside){R=255*(1-m)+c3[0]*m;G=255*(1-m)+c3[1]*m;Bc=255*(1-m)+c3[2]*m;}else{R=c3[0];G=c3[1];Bc=c3[2];A=m*255;}}
-    }else if(a>0){if(inside){R=255*(1-a)+28*a;G=255*(1-a)+28*a;Bc=255*(1-a)+32*a;A=255;}else{R=28;G=28;Bc=32;A=a*255;}}
-    o[q]=R;o[q+1]=G;o[q+2]=Bc;o[q+3]=A;}
-  const cv=document.createElement('canvas');cv.width=cv.height=N;cv.getContext('2d').putImageData(img,0,0);
-  return {key,url:cv.toDataURL('image/png'),ink:cnt/(N*N),empty:cnt/(N*N)<ink.emptyBelow};
-}
 
 
 // ---------- 4b. the new sheets (SHEET2): oblong boxes, printed marks removed by position, open ends at joints closed ----------
@@ -5364,14 +5111,13 @@ function v2apply(list){
 
 // ---------- 5. screen ----------
 const sel=$('scanSheet');
-// Sheets made by the page's own sheet maker come first. Their boxes are worked out from the layout when needed.
-CFG.sheets=Object.assign(Object.fromEntries(SHEET_SET.ids.map(id=>['live_'+id,{label:SHEETMAKER.names[id]+' (printed from this page)',live:id}])),CFG.sheets);
-SHEET2.ids.forEach(id=>{for(const [sk,sv] of Object.entries(CFG.sheets))if(sv.live===id||(sv.boxes&&sv.boxes.length&&String(sv.boxes[0][0]).startsWith(id+'.')))delete CFG.sheets[sk];   // old layouts of this player are gone
-  CFG.sheets['v2_'+id]={label:SHEETMAKER.names[id]+' (new sheet)',v2:true,boxes:SHEETS2[id].boxes.map(b=>[id+'.'+b[0],b[1],b[2],b[3],b[4]])};});   // Oct 4: new sheets
-function ensureBoxes(sh){if(sh&&sh.live){const L=SHEETMAKER.layoutFor(sh.live);if(L)sh.boxes=L.boxes;}return sh;}
-const firstFixed=()=>Object.values(CFG.sheets).find(s=>s.boxes&&!s.live);
-// Read the row of small squares printed along the top of sheets made by this page. It tells us which way up the page is,
-// which player it is, and its code (we remember each printed code's boxes).
+// One entry per player: the new drawing sheet (SHEETS2). Older printed sheets (Day 8, v5, grid, and sheets laid out by the
+// page itself) are no longer read; a photo of one goes to Add drawings like any other photo.
+CFG.sheets={};
+SHEET2.ids.forEach(id=>{CFG.sheets['v2_'+id]={label:SHEETMAKER.names[id]+' (new sheet)',v2:true,boxes:SHEETS2[id].boxes.map(b=>[id+'.'+b[0],b[1],b[2],b[3],b[4]])};});   // Oct 4: new sheets
+const firstSheet=()=>Object.values(CFG.sheets)[0];
+// Read the row of small squares printed along the top of the sheets. It tells us which way up the page is,
+// which player it is, and its code (every new sheet carries code 1000).
 function readStrip(m,img){const st=SHEET_SET.strip,tpl=CFG.marks.centres.map(([x,y])=>[x,y]);
   let cut=.5;   // Oct 13: on a faded photo the black code squares come out grey, so the cut sits halfway between the corner squares' grey and the paper
   {const q=m.corners.map(p=>[p.x,p.y]);cut=Math.max(.5,(1+calibrate(solveH(tpl,q),img).black)/2);}
@@ -5380,13 +5126,6 @@ function readStrip(m,img){const st=SHEET_SET.strip,tpl=CFG.marks.centres.map(([x
       bits.push(v/5<m.paper*cut?1:0);}
     const dec=SHEETMAKER.decode(bits);if(dec)return Object.assign({h},dec);}
   return null;}
-function sheetFromCode(st){if(CFG.sheets['v2_'+st.mid])return {key:'v2_'+st.mid,note:''};   // Oct 4: a player with a new sheet is always read with it (old layouts removed)
-  const key='code_'+st.code,reg=(typeof S!=='undefined'&&S.sheetLog||{})[st.code],nm=SHEETMAKER.names[st.mid];let note='';
-  if(reg&&reg.mid===st.mid)CFG.sheets[key]={label:`${nm} (sheet code ${st.code})`,boxes:reg.boxes};
-  else{const L=SHEETMAKER.layoutFor(st.mid);CFG.sheets[key]={label:`${nm} (code ${st.code}, rebuilt)`,boxes:L.boxes};
-    note=!document.body.classList.contains('dev')?TXT('upload.cutOff'):"Note: this sheet's code isn't remembered in this browser (printed on another device, or browser data was cleared), so its boxes were worked out from today's layout. If pieces come out cut off, print fresh sheets here.";}
-  let o=sel.querySelector(`option[value="${key}"]`);if(!o){o=document.createElement('option');o.value=key;sel.appendChild(o);}o.textContent=CFG.sheets[key].label;
-  return {key,note};}
 sel.innerHTML='<option value="">Which sheet is this?</option>'+Object.entries(CFG.sheets).map(([id,s])=>`<option value="${id}">${s.label}</option>`).join('');
 const inkNow=()=>({...CFG.ink,threshold:+$('scanThr').value,fillShapes:$('scanFill').checked,keepColour:$('scanColour').checked,bold:$('scanBold').checked});
 $('scanThr').value=CFG.ink.threshold;$('scanFill').checked=CFG.ink.fillShapes;$('scanColour').checked=CFG.ink.keepColour;$('thrV').textContent=CFG.ink.threshold;
@@ -5394,20 +5133,21 @@ $('scanThr').value=CFG.ink.threshold;$('scanFill').checked=CFG.ink.fillShapes;$(
 function pieceName(key){const [m,k]=key.split('.');return (typeof SLOTS!=='undefined'&&SLOTS[k]?SLOTS[k][0]:k);}
 async function process(){
   if(S2.free)return S2.free.redo?S2.free.redo():undefined;   // Oct 21: not a printed sheet (Add drawings, plain paper, a picture)
-  const sh=ensureBoxes(CFG.sheets[sel.value]);if(!S2.img||!sh||!sh.boxes){return;}
+  const sh=CFG.sheets[sel.value];if(!S2.img||!sh||!sh.boxes){return;}
   if(S2.hFor!==sel.value&&S2.marks){S2.h=orient(S2.marks.corners,S2.marks.paper,S2.img,sh.boxes).h;S2.hFor=sel.value;}  // sheets differ, so re-check which way up
   say(TXT('upload.cutting'));await tick();
   S2.cal=calibrate(S2.h,S2.img);   // Oct 13: how this photo shows the printed black (see soften)
   const ink=inkNow(),box=$('scanParts');box.innerHTML='';S2.results=[];
-  for(const b of sh.boxes){const r=sh.v2?extract2(b,ink):extract(b,ink);S2.results.push(r);await tick();
+  for(const b of sh.boxes){const r=extract2(b,ink);S2.results.push(r);await tick();
     const d=document.createElement('div');d.className='pv'+(r.empty?' empty':'');
     d.innerHTML=`<img alt="" src="${r.url}"><label style="display:flex;gap:4px;align-items:center;margin:4px 0 0"><input type="checkbox" data-key="${r.key}" ${r.empty?'':'checked'}> <b>${pieceName(r.key)}</b></label><div class="hint devonly">${r.empty?'looks empty, skipped':'ink '+(r.ink*100).toFixed(1)+'%'}</div>`;
     box.appendChild(d);}
   drawPage(sh);
   const n=S2.results.filter(r=>!r.empty).length;
   // Oct 22: a new-style sheet goes on to Check the pieces and Put them together, the same way as any photo (add-drawings.js)
-  if(sh.v2&&window.ADD&&n){ADD.fromSheet(String(sh.boxes[0][0]).split('.')[0]);return;}
-  if(window.JOINTS){if(sh.v2){const mid=String(sh.boxes[0][0]).split('.')[0];JOINTS.show(mid,SHEETS2[mid],S2.results);}else JOINTS.clear();}   // Oct 20: Adjust joints
+  const mid=String(sh.boxes[0][0]).split('.')[0];
+  if(window.ADD&&n){ADD.fromSheet(mid);return;}
+  if(window.JOINTS)JOINTS.show(mid,SHEETS2[mid],S2.results);   // Oct 20: Adjust joints
   say(n?TXT('upload.found',{n,s:n===1?'':'s',sheet:document.body.classList.contains('dev')?sh.label:sh.label.replace(/ \(.*$/,'')}):TXT('upload.noneFound',{sheet:sh.label}));
   $('scanApply').disabled=!n;
 }
@@ -5433,22 +5173,19 @@ async function run(file){
        1000; any other code counts only if this browser printed it. Otherwise it isn't a printed sheet: Add drawings. */
     if(strip&&strip.code!==SHEET2.code&&!((typeof S!=='undefined'&&S.sheetLog)||{})[strip.code]&&window.ADD){ADD.ask();return;}
     const cut=TXT('upload.cornerCut');
-    if(strip){S2.marks=m;S2.h=strip.h;const {key,note}=sheetFromCode(strip);sel.value=key;S2.hFor=key;await process();
-      if(note)say($('scanMsg').textContent+' '+note);darkTip(m);
+    if(strip){S2.marks=m;S2.h=strip.h;const key='v2_'+strip.mid;sel.value=key;S2.hFor=key;await process();darkTip(m);
       if(window.ADD){const w=$('scanWho');w.innerHTML='';const b=document.createElement('button');b.className='alt';b.id='scanNotSheet';b.textContent=TXT('add.notSheet');   /* Oct 21: a way out if it isn't one */
         b.onclick=()=>{w.hidden=true;if(window.JOINTS)JOINTS.clear();$('scanParts').innerHTML='';ADD.ask();};w.appendChild(b);w.hidden=false;}if(m.guessed)say($('scanMsg').textContent+' '+cut+TXT('upload.cornerGuessed'));return;}
     if(m.guessed){say(cut+" Step back a little so all four black squares are in the photo, then try again.",true);S2.img=null;return;}   // Oct 4: don't guess the sheet from a photo we can't line up
-    // which sheet? try the QR code if this browser can read it, otherwise use the menu
-    if('BarcodeDetector' in window){try{const r=await new BarcodeDetector({formats:['qr_code']}).detect(img.bmp);
-      const hit=Object.entries(CFG.sheets).find(([,s])=>r[0]&&[].concat(s.qr).includes(r[0].rawValue));if(hit)sel.value=hit[0];}catch(e){}}
-    const ps=ensureBoxes(CFG.sheets[sel.value]),probe=((ps&&ps.boxes)?ps:firstFixed()).boxes;
+    // which sheet? the menu (designer mode), otherwise the first sheet's boxes are used to line the photo up
+    const probe=(CFG.sheets[sel.value]||firstSheet()).boxes;
     S2.marks=m;const o=orient(m.corners,m.paper,img,probe);S2.h=o.h;S2.hFor=sel.value;
     if(o.score<.03){say(TXT('upload.boxesOff'),true);}
-    if(!sel.value){drawPage(firstFixed());
+    if(!sel.value){drawPage(firstSheet());
       // Oct 4 fix: players don't see the sheet menu, so ask which player with plain buttons (uses today's layout for that player)
       say(TXT('upload.noCode'));const w=$('scanWho');w.innerHTML='';
       SHEET_SET.ids.forEach(id=>{const b=document.createElement('button');b.className='alt';b.textContent=SHEETMAKER.names[id];
-        b.onclick=()=>{w.hidden=true;sel.value=(CFG.sheets['v2_'+id]?'v2_':'live_')+id;process().catch(e=>say(TXT('upload.problem')+e.message,true));};w.appendChild(b);});if(window.UIART)UIART.mapDress(w);
+        b.onclick=()=>{w.hidden=true;sel.value='v2_'+id;process().catch(e=>say(TXT('upload.problem')+e.message,true));};w.appendChild(b);});if(window.UIART)UIART.mapDress(w);
       w.hidden=false;return;}
     await process();darkTip(m);
   }catch(e){console.error(e);say(TXT('upload.wentWrong')+e.message,true);}
@@ -5469,7 +5206,7 @@ function colourShare(list){let ink=0,col=0;
     for(let i=0;i<d.length;i+=16){if(d[i+3]<128)continue;ink++;const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);if(mx-mn>50&&mx>60)col++;}}
   return ink?col/ink:0;}
 $('scanApply').onclick=()=>{
-  const shv=CFG.sheets[sel.value];
+  const shv=CFG.sheets[sel.value];   // (every sheet is a new sheet now: the old square-box way of applying is gone)
   if(shv&&shv.v2){try{let list=[];$('scanParts').querySelectorAll('input[data-key]').forEach(cb=>{if(!cb.checked)return;const r=S2.results.find(x=>x.key===cb.dataset.key);if(r)list.push(r);});
       if(window.JOINTS)list=list.filter(r=>!r.stage||JOINTS.touched(r.key.split('.')[1]));   /* Oct 21: parts already on stage stay as they are unless changed */
       if(!list.length){say(TXT(S2.results.some(r=>r.stage)?'add.nothingChanged':'upload.nothingTicked'));return;}
@@ -5480,23 +5217,13 @@ $('scanApply').onclick=()=>{
       $('scan').hidden=true;$('scanParts').innerHTML='';$('scanApply').disabled=true;say(TXT('upload.start'));
       if(window.wsNote)wsNote(TXT('upload.newInPlace',{player:SHEETMAKER.names[mid],n,s:n===1?'':'s'})+(colourShare(list)<.08?' '+TXT('upload.colourTip'):''),before,mid);
       if(window.SPOTLIGHT)SPOTLIGHT.next(mid);   /* Oct 9: back on the show, he is shown big first */if(window.MINE)MINE.done(mid);   /* Oct 22 (flow v3): straight onto the stage */}catch(e){console.error(e);say(TXT('upload.couldNotApply')+e.message,true);}return;}
-  try{let n=0;const before=[],who=new Set();
-    $('scanParts').querySelectorAll('input[data-key]').forEach(cb=>{if(!cb.checked)return;const r=S2.results.find(x=>x.key===cb.dataset.key);
-      if(r&&ARTSET[r.key]){before.push([r.key,(typeof S!=='undefined'&&S.art)?artHold(S.art[r.key]):undefined]);ARTSET[r.key](r.url);n++;who.add(r.key.split('.')[0]);}});
-    msg(n?TXT('upload.applied',{n,s:n===1?'':'s'}):TXT('upload.nothingTicked'));
-    if(!n){say(TXT('upload.nothingTicked'));return;}
-    // step E.2: close the panel, show the player(s) that changed, offer Undo
-    const ids=[...who],nm=ids.map(id=>(members.find(m=>m.id===id)||{name:id}).name).join(' and ');
-    $('scan').hidden=true;$('scanParts').innerHTML='';$('scanApply').disabled=true;say(TXT('upload.start'));
-    if(window.wsNote)wsNote(`${nm}: ${n} new drawing${n===1?'':'s'} in place.`,before,ids[0]);
-    if(window.SPOTLIGHT)SPOTLIGHT.next(ids[0]);
-  }catch(e){say(TXT('upload.couldNotApply')+e.message,true);}};
+};
 $('scanBtn').onclick=()=>{const p=$('scan');p.hidden=!p.hidden;if(!p.hidden)p.scrollIntoView({block:'nearest'});};
 $('scanClose').onclick=()=>{$('scan').hidden=true;};
 const bad=checkConfig();
 $('scanCheck').textContent=bad.length?'Setup problems: '+bad.join('; '):'Setup check: all sheet settings match the player.';
 if(bad.length){console.warn('Scanner setup problems',bad);$('scanCheck').style.color='#c0392b';}
-window.__scan={findMarks,outlineScore,loadPhoto,V2R,extract2,solveH,proj,say,inkNow,tick,sel,v2apply,calibrate,colourShare,readStrip,S2,process,extract,CFG,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
+window.__scan={findMarks,outlineScore,loadPhoto,V2R,extract2,solveH,proj,say,inkNow,tick,sel,v2apply,calibrate,colourShare,readStrip,S2,process,CFG,openImage,parseHeic,heicToCanvas,hevcCodec};   // handy for testing
 })();
 // ===== 5b. DRAWINGS ON PLAIN PAPER (Oct 21, guided camera step 2): no printed sheet needed =====
 // Each piece is drawn on its own on any paper, with a little space around it. The scanner finds the separate drawings,
@@ -5812,7 +5539,7 @@ function names(mid){const arms=Object.keys(SHEETS2[mid].arms||{});   /* printed 
   return SHEETS2[mid].boxes.map(b=>{const i=arms.indexOf(b[0]);return [b[0],i>=0?TXT(i?'upload.armRight':'upload.armLeft'):OWN[b[0]]?TXT(OWN[b[0]]):String(b[5]||b[0]).split(' · ')[0]];});}
 /* Oct 23 (flow v3 tidy): the old plain-paper screen (thumbnails + menus, reached only from the old upload screen) is gone:
    Add drawings (add-drawings.js) uses find, guess and pieces below */
-return {find,guess,pieces,blobFromLine,splitLegs,names:mid=>names(mid),_find:find,_guess:guess,_state:()=>F};
+return {find,guess,pieces,blobFromLine,splitLegs,names:mid=>names(mid)};
 })();
 // ===== 5c. A PICTURE AS ONE PIECE (Oct 21): a painting or picture, cut out by drawing round it, made to look printed =====
 // For what the line readers can't do: a painted face, a coloured picture filling the photo. After "no corner squares",
@@ -5981,7 +5708,7 @@ function make(mid,key,line,img){img=img||P.img;const sh=SHEETS2[mid],pb=sh.boxes
 const OWN={legL:'upload.freeLegL',legR:'upload.freeLegR',inst:'upload.freeInst'};
 const nameOf=(mid,k)=>{const b=SHEETS2[mid].boxes.find(x=>x[0]===k);return OWN[k]?TXT(OWN[k]):String(b&&b[5]||k).split(' · ')[0];};
 function close(){P=null;}
-return {close,_state:()=>P,_make:make,_look:printLook,_snap:l=>snap(l),snap,make,outlineOf};
+return {close,_state:()=>P,snap,make,outlineOf};
 })();
 // ===== 5d. ADD DRAWINGS (Oct 21): one way in, whatever the photo is =====
 // Designer's sketch (canvas "oddbop Add drawings flow"): 1 Add drawings -> 2 Check the pieces -> 3 Put them together -> 4 on stage.
@@ -6002,7 +5729,7 @@ function layout(){const cv=$('addCv'),img=A.img,maxW=Math.min(420,cv.parentEleme
   cv.style.width=Math.round(img.W*sc)+'px';cv.style.height=Math.round(img.H*sc)+'px';cv.width=Math.round(img.W*sc*dpr);cv.height=Math.round(img.H*sc*dpr);A.view={sc,dpr,z:1,ox:0,oy:0};}   /* z, ox, oy: pinch zoom (Oct 23) */
 // Oct 26 (code review): turning the phone re-fits the photo, so taps and loops land where the finger is
 window.addEventListener('resize',()=>{clearTimeout(layout.t);layout.t=setTimeout(()=>{if(A&&A.step===2&&!$('addCheck').hidden){layout();draw();}},200);});
-const names=()=>FREEPAPER.names(A.mid),nameOf=k=>{const n=names().find(x=>x[0]===k);return n?n[1]:k;};
+const names=()=>FREEPAPER.names(A.mid),nameOf=k=>{if(k==='logo')return TXT('add.logoPart');const n=names().find(x=>x[0]===k);return n?n[1]:k;};
 function outline(g,bl,pad){if(bl.line){g.beginPath();bl.line.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();return;}
   const x=bl.x0-pad,y=bl.y0-pad,w=bl.x1-bl.x0+2*pad,h=bl.y1-bl.y0+2*pad,r=Math.min(w,h)*.12;g.beginPath();g.roundRect?g.roundRect(x,y,w,h,r):g.rect(x,y,w,h);}
 function draw(){if(!A||!A.view)return;const cv=$('addCv'),g=cv.getContext('2d'),{dpr}=A.view,V=A.view,sc=V.sc*(V.z||1),img=A.img,pad=6/sc;
@@ -6095,7 +5822,7 @@ function wire(){const cv=$('addCv');if(cv.dataset.wired)return;cv.dataset.wired=
   $('addPrev').onclick=()=>goPart(A.gi-1);
   $('addTurn').onclick=()=>{turn(1);};
   $('addInstHouse').onclick=()=>pickInst('house',1);$('addInstOwn').onclick=()=>pickInst('own');
-  ['name','plain'].forEach(f=>{const b=$('addFront_'+f);if(b)b.onclick=()=>{A.front=f;setParts();};});
+  ['name','plain','logo'].forEach(f=>{const b=$('addFront_'+f);if(b)b.onclick=()=>{const k=cur();A.front=f;setParts();const i=A.parts.indexOf(k);goPart(i>=0?i:Math.min(A.gi,A.parts.length));};});   /* Oct 26: + their logo (asked for last, as one more part) */
   $('addBack').onclick=()=>{A.again=true;step(2);};}   // Oct 26: coming back to Put them together keeps its edits
 
 // what it was drawn round is now one piece: found bits inside it go, and it takes the name of the biggest of them (guided:
@@ -6173,6 +5900,8 @@ const INST={guitar:['inst'],bass:['inst'],keys:['inst'],drums:['kick','snare','h
 function setParts(){const mid=A.mid,inst=INST[mid]||[],house=A.instChoice==='house'||A.instChoice==='keep';
   A.parts=names().map(x=>x[0]).filter(k=>!(['guitar','bass'].includes(mid)&&(k==='hand'||k==='grip'))&&!(k==='mouthO')&&   /* Oct 23 (designer): no open-mouth drawing on plain paper; the mouth is marked on the head (the chin drops) */!(house&&inst.includes(k))).sort((a,b)=>(ORDER.indexOf(a)+1||99)-(ORDER.indexOf(b)+1||99));
   if(house)A.assign=A.assign.map(v=>inst.includes(v)?'':v);
+  /* Oct 26 (designer: the logo drawn on the paper with the drummer, tapped like any part): asked for last */
+  const logo=mid==='drums'&&house&&A.front==='logo'&&!A.face;if(logo)A.parts.push('logo');else A.assign=A.assign.map(v=>v==='logo'?'':v);
   const box=$('addInst');if(!box)return;box.hidden=!inst.length;if(!inst.length)return;
   const H=window.HOUSE&&HOUSE[mid],main=inst[0]==='kick'?'kick':inst[0],pic=n=>{const u=H&&H.art(main,n);return u&&typeof artURL==='function'?artURL(u):null;};
   const src=pic(1);thumb($('addInstHouseImg'),src);
@@ -6185,7 +5914,7 @@ function setParts(){const mid=A.mid,inst=INST[mid]||[],house=A.instChoice==='hou
     b.setAttribute('aria-label',TXT('add.instDesign',{n}));thumb(b.querySelector('img'),pic(n));after.after(b);after=b;});
   const hn=A.house||1;one.setAttribute('aria-pressed',house&&hn===1);box.querySelectorAll('[data-house]').forEach(b=>b.setAttribute('aria-pressed',house&&hn===+b.dataset.house));
   $('addInstOwn').setAttribute('aria-pressed',!house);
-  $('addFront').hidden=!(house&&mid==='drums');['name','plain'].forEach(f=>{const b=$('addFront_'+f);if(b)b.setAttribute('aria-pressed',A.front===f);});}
+  $('addFront').hidden=!(house&&mid==='drums');['name','plain','logo'].forEach(f=>{const b=$('addFront_'+f);if(b)b.setAttribute('aria-pressed',A.front===f);});}
 /* Oct 22: a design's button shows just its drawing (cropped to the ink), so one drawn small in its picture is still clear */
 const THUMB=new Map();
 function thumb(img,src){img.hidden=!src;if(!src){img.src='';return;}img.dataset.want=src;if(THUMB.has(src)){img.src=THUMB.get(src);return;}
@@ -6213,7 +5942,9 @@ function afterApply(mid,list){if(!A||A.mid!==mid)return;const inst=INST[mid]||[]
     ADJSET['drums.'+k](Object.assign({},adjOf(ly),{stick:1,s:Math.min(ly.s,1.15)}));save();}
   if(!A.guided)return;
   const bodyR=list.find(r=>r.key===mid+'.body'&&!r.stage);
-  if(A.instChoice==='house'&&window.HOUSE&&HOUSE[mid]){const n=A.house||1;HOUSE[mid].apply(inst,n);if(mid==='drums'){S.drumFront=A.front;save();}
+  if(A.instChoice==='house'&&window.HOUSE&&HOUSE[mid]){const n=A.house||1;HOUSE[mid].apply(inst,n);if(mid==='drums'){   /* Oct 26: their logo, when one was tapped (or kept from before); else the name */
+      if(A.front==='logo'&&A.logoUrl&&window.LOGO)LOGO.use(typeof keep==='function'?keep(A.logoUrl):A.logoUrl);
+      else S.drumFront=A.front==='logo'&&!(window.LOGO&&LOGO.has())?'name':A.front;save();}
     /* design 2 or 3: a guitar or bass is lined up like a drawn one (same length body to neck, on the body); other pieces are
        fitted to ours (fitHouse) */
     if(['guitar','bass'].includes(mid)){if(HOUSE[mid].own('inst',n))alignOwn(mid,{},bodyR).catch(e=>console.warn('instrument',e));else if(bodyR)alignOwn(mid,null,bodyR).catch(e=>console.warn('instrument',e));}   /* ours, fitted to a drawn body */
@@ -6382,8 +6113,10 @@ async function arrange(mid){const {S2,say,sel}=X();$('scan').hidden=false;$('sca
 
 // ---------- 3. the pieces, then putting them together ----------
 async function build(){const {S2,say,tick,sel}=X();say(TXT('upload.cutting'));await tick();
-  const h0=S2.h,drawn=await FREEPAPER.pieces(A.mid,A.blobs,A.assign,n=>A.look[n]==='drawn'&&!A.blobs[n].res),results=[];S2.h=h0;   /* (it moves S2.h about; a sheet's stays) */
-  A.blobs.forEach((bl,n)=>{const k=A.assign[n];if(!k)return;
+  const h0=S2.h,drawn=await FREEPAPER.pieces(A.mid,A.blobs,A.assign,n=>A.look[n]==='drawn'&&!A.blobs[n].res&&A.assign[n]!=='logo'),results=[];S2.h=h0;   /* (it moves S2.h about; a sheet's stays) */
+  /* Oct 26: the logo is not a piece of the player: cut out on its own (drum-logo.js), put on the drum after Use these drawings */
+  {const li=A.assign.indexOf('logo');A.logoUrl=li>=0&&window.LOGO?LOGO.cut(A.img,A.blobs[li]):null;}
+  A.blobs.forEach((bl,n)=>{const k=A.assign[n];if(!k||k==='logo')return;
     if(bl.res)results.push(bl.res);   /* Oct 22: read from a printed sheet's box, exactly as before */
     else if(A.look[n]==='printed'){const line=bl.line||[[bl.x0,bl.y0],[bl.x1,bl.y0],[bl.x1,bl.y1],[bl.x0,bl.y1]];results.push(PICTURE.make(A.mid,k,line,A.img));}
     else if(drawn.by[n]&&!drawn.by[n].empty)results.push(drawn.by[n]);});
@@ -6464,8 +6197,8 @@ function pickHouse(mid,n){const inst=INST[mid];if(!inst||!window.HOUSE||!HOUSE[m
   return Promise.all(inst.filter(k=>HOUSE[mid].own(k,n)).map(k=>fitHouse(mid,k).catch(e=>console.warn('instrument',e))));}
 /* Oct 26 (code review): the pieces the instrument choice can change after the drawings go in (the instrument pieces and
    the head, which a guitar or bass lines up against), so Undo can put them back too */
-function undoKeys(mid){return [...(INST[mid]||[]),'head'].map(k=>mid+'.'+k).filter(k=>typeof ARTSET!=='undefined'&&ARTSET[k]);}
-return {ask,start,close,arrange,fromSheet,afterApply,pickHouse,undoKeys,_state:()=>A,_ends:ends,_align:(m,r)=>alignOwn(m,r)};
+function undoKeys(mid){return [...(INST[mid]||[]),'head',...(mid==='drums'?['logo']:[])].map(k=>mid+'.'+k).filter(k=>typeof ARTSET!=='undefined'&&ARTSET[k]);}
+return {ask,close,arrange,fromSheet,afterApply,pickHouse,undoKeys,_state:()=>A};
 })();
 // ===== 5e. MAKE THEM MINE (Oct 22, flow v3: "start from the player") =====
 // Designer's flow (sketch: Add drawings flow canvas, row "Draft v3"): Edit band shows the band as it is; each player has one
@@ -6525,25 +6258,34 @@ async function pick(mid,n){
 function open(mid,inst){T={mid,inst:inst||null,face:false,live:false};$('mineT').textContent=TXT('mine.title',{name:role(mid)});
   $('mineMain').hidden=false;$('mineTips').hidden=true;refreshPanel();showSize();$('mineBox').hidden=false;$('mineDraw').focus();
   if(inst==='own')tips(false);}
-function refreshPanel(){const mid=T.mid,box=$('mineInst');box.hidden=!MAIN[mid];if(!MAIN[mid])return;
+function refreshPanel(){const mid=T.mid,box=$('mineInst');front();box.hidden=!MAIN[mid];if(!MAIN[mid])return;
   $('mineInstQ').textContent=TXT('mine.instQ',{inst:TXT('inst.'+mid)});
   const sel=T.inst||current(mid);chips(box.querySelector('.mchips'),mid,sel,n=>{if(n==='own'){T.inst='own';refreshPanel();return;}T.inst=n;pick(mid,n);});}
 function closePanel(){$('mineBox').hidden=true;}
+/* Oct 26 (designer: "your logo on the bass drum"): the drummer's panel also picks what is on the front of the bass drum: the
+   band name, nothing, or their logo. Our logo with none yet asks for a photo of it straight away; with one, New logo photo
+   swaps it. The logo is read on this device like any drawing and stays here (drum-logo.js). */
+function front(msg){const f=$('mineFront');if(!f)return;const on=!!T&&T.mid==='drums'&&!!window.LOGO;f.hidden=!on;if(!on)return;
+  const cur=S.drumFront==='logo'&&!LOGO.has()?'name':(S.drumFront||'plain');   /* nothing picked yet: the drum is drawn plain */
+  f.querySelectorAll('[data-front]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.front===cur)));
+  $('mineLogoNew').hidden=!(cur==='logo'&&LOGO.has());const m=$('mineLogoMsg');m.hidden=!msg;m.textContent=msg||'';}
+function pickFront(v){if(v==='logo'&&!LOGO.has()){tips('logo');return;}S.drumFront=v;save();front();}
 // the example drawing: the designer's photo (src/art/ui/example-drawing) once it is in; until then a simple line drawing
 const EXAMPLE=`<svg viewBox="0 0 360 200" fill="#fff" stroke="#222" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="180" cy="40" r="28"/><circle cx="170" cy="36" r="2.5" fill="#222"/><circle cx="190" cy="36" r="2.5" fill="#222"/><path d="M170 52q10 7 20 0" fill="none"/><rect x="146" y="80" width="68" height="70" rx="8"/><rect x="104" y="82" width="20" height="74" rx="9"/><rect x="236" y="82" width="20" height="74" rx="9"/><rect x="150" y="160" width="22" height="34" rx="8"/><rect x="188" y="160" width="22" height="34" rx="8"/></svg>`;
-function tips(face){T.face=!!face;$('mineMain').hidden=true;$('mineTips').hidden=false;
-  $('mineTipsT').textContent=face?TXT('mine.faceTitle'):TXT('mine.tipsTitle',{name:role(T.mid)});
-  const ex=$('mineEx'),pic=!face&&window.UISZ&&UISZ['example-drawing'];ex.hidden=!!face;
+function tips(face){const logo=face==='logo';if(logo)face=false;T.face=!!face;T.logo=logo;$('mineMain').hidden=true;$('mineTips').hidden=false;   /* Oct 26: face='logo' = a photo of their logo */
+  $('mineTipsT').textContent=logo?TXT('mine.logoTitle'):face?TXT('mine.faceTitle'):TXT('mine.tipsTitle',{name:role(T.mid)});
+  const ex=$('mineEx'),pic=!face&&!logo&&window.UISZ&&UISZ['example-drawing'];ex.hidden=!!face||logo;
   if(pic){ex.innerHTML='';ex.style.backgroundImage='var(--ui-example-drawing)';}else{ex.style.backgroundImage='';ex.innerHTML=EXAMPLE;}
-  const li=$('mineTips').querySelectorAll('.mtips li');['1','2','3'].forEach((n,i)=>{if(li[i])li[i].textContent=TXT((face?'mine.faceTip':'mine.tip')+n);});
-  if(!face&&T.mid==='vocals'&&li[2]){const mi=T.inst||current('vocals');li[2].textContent=TXT(mi==='own'?'mine.micTip':'mine.micHeld');}   /* the singer's mic: drawn on the arm, or ours held in the hand */
+  const li=$('mineTips').querySelectorAll('.mtips li');['1','2','3'].forEach((n,i)=>{if(li[i])li[i].textContent=TXT((logo?'mine.logoTip':face?'mine.faceTip':'mine.tip')+n);});
+  if(!face&&!logo&&T.mid==='vocals'&&li[2]){const mi=T.inst||current('vocals');li[2].textContent=TXT(mi==='own'?'mine.micTip':'mine.micHeld');}   /* the singer's mic: drawn on the arm, or ours held in the hand */
   $('mineCamL').querySelector('span').focus&&0;}
 // a photo was taken or chosen: read it for this player
-function go(file){if(!file||!T||!window.SCANRUN)return;closePanel();
+function go(file){if(!file||!T)return;if(T.logo){logoPhoto(file);return;}if(!window.SCANRUN)return;closePanel();
   if(T.inst==null){const c=current(T.mid);T.inst=c==='own'?'keep':c;}   // instrument as it is on the card (a drawn one is kept)
   T.live=true;const sc=$('scan');sc.classList.add('mine');sc.hidden=false;sc.scrollIntoView({block:'start',behavior:'smooth'});SCANRUN(file);}
 function wire(){if(!$('mineBox'))return;
-  $('mineDraw').onclick=()=>tips(false);$('mineFace').onclick=()=>tips(true);$('mineBack').onclick=()=>{$('mineTips').hidden=true;$('mineMain').hidden=false;};
+  $('mineDraw').onclick=()=>tips(false);
+  {const f=$('mineFront');if(f){f.querySelectorAll('[data-front]').forEach(b=>b.onclick=()=>pickFront(b.dataset.front));$('mineLogoNew').onclick=()=>tips('logo');}}$('mineFace').onclick=()=>tips(true);$('mineBack').onclick=()=>{if(T)T.logo=false;$('mineTips').hidden=true;$('mineMain').hidden=false;};
   $('mineClose').onclick=()=>{closePanel();T=null;};
   $('mineBox').addEventListener('keydown',e=>{if(e.key==='Escape'){closePanel();T=null;}});
   $('mineBox').addEventListener('click',e=>{if(e.target===$('mineBox')){closePanel();T=null;}});   // a tap outside the card
@@ -6564,6 +6306,12 @@ function wire(){if(!$('mineBox'))return;
   $('mineFix').onclick=()=>{const mid=done.mid;hideDone();if(!mid||!window.ADD)return;const e=$('goEdit');if(e)e.click();
     setTimeout(()=>{T={mid,inst:null,face:false,live:true};$('scan').classList.add('mine');ADD.arrange(mid);},350);};
   members.forEach(card);}
+// the logo photo: cut out and put on the drum, then the stage shows it; nothing found: back to the panel with a note
+async function logoPhoto(file){const t=T;T.logo=false;$('mineTips').hidden=true;$('mineMain').hidden=false;let ok=false;
+  try{ok=await LOGO.fromPhoto(file);}catch(e){console.warn('logo',e);}
+  if(T!==t)return;if(!ok){front(TXT('mine.logoNone'));return;}
+  closePanel();T=null;const s=$('show');if(s)s.click();done.mid='drums';
+  $('mineDoneT').textContent=TXT('mine.logoOn');$('mineUndo').hidden=true;$('mineDone').hidden=false;clearTimeout(done.t);done.t=setTimeout(hideDone,8000);}
 // a player's own size on stage (S.stage[id].z, 60 % to 160 %)
 const zOf=mid=>{const p=(S.stage||{})[mid];return p&&+p.z>0?+p.z:1;};
 function resize(mid,d){S.stage=S.stage||{};const p=S.stage[mid]||(S.stage[mid]={});
@@ -6577,7 +6325,7 @@ function done(mid){members.forEach(m=>refreshCard(m.id));if(!T||!T.live)return;T
   $('mineDoneT').textContent=TXT('mine.on',{name:Cap(role(mid))});$('mineUndo').hidden=false;$('mineDone').hidden=false;
   clearTimeout(done.t);done.t=setTimeout(hideDone,15000);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
-return {target:()=>T&&T.live?T:null,open,done,refresh:refreshCard,_current:current};
+return {target:()=>T&&T.live?T:null,done};
 })();
 /* Oct 12 (remote test 3: "the steps were not obvious at first"; designer: a quick tutorial like the main screen's, with
    arrows pointing at the right spots). A short tour of Edit band: the page dims, a light frames the button for each step,
