@@ -2278,18 +2278,29 @@ function keyboardSpan(kl){const im=kl&&(kl.img||kl.ph),d=SLOTS.inst,D=d[3]*(kl?k
    small one on a phone needs 2-4, a strongly bent arm drawn big still gets up to 14. Always an even number, so the elbow
    point (half-way through the bend) is unchanged. len = the bend's length and wid = the arm picture's width, both in the
    arm's own units; the canvas transform turns them into screen pixels. */
-function bendStrips(x,len,wid,bend){const t=x.getTransform(),k=Math.hypot(t.a,t.b)||1,th=Math.abs(bend);if(!(th>1e-4)||!isFinite(th))return 2;
+function bendStrips(x,len,wid,bend,fine){const t=x.getTransform(),k=Math.hypot(t.a,t.b)||1,th=Math.abs(bend);if(!(th>1e-4)||!isFinite(th))return 2;
   const r=len*k/th+wid*k/2,err=.25,n=r>err?th/(2*Math.acos(Math.max(-1,1-err/r))):14;
-  return Math.max(2,Math.min(14,2*Math.ceil(n/2)));}
-function drawArm(x,im,X,Y,R1,R2,z,sx,sy,px,py,el,bendy,from,handAt,fs=1){   // returns the elbow point. Oct 22: handAt = a hand drawn on the arm starts at this share of the picture: it is never stretched (the arm is); from = draw only that hand
+  const sharp=fine&&th>1.2;   /* Oct 25 (designer: "fanned points" at sharp elbows): a sharp bend gets many fine strips, so the outside of the bend closes up. Oct 26 (code review): only for the squared-up guitar/bass arms (fine), or every sharply bent arm would cost up to 48 strips a frame */
+  return Math.max(2,Math.min(sharp?48:14,2*Math.ceil(n/(sharp?.4:1)/2)));}
+function drawArm(x,im,X,Y,R1,R2,z,sx,sy,px,py,el,bendy,from,handAt,fs=1,fold=null,fine=false){   // returns the elbow point. Oct 22: handAt = a hand drawn on the arm starts at this share of the picture: it is never stretched (the arm is); from = draw only that hand
  const w=im.width||150,h=im.height||150,ye=h*(el-py),ov=h*.03;
  if(bendy){   // Oct 5: new-sheet arms bend smoothly over a short stretch around the elbow (no hinge cut, nothing sticks out)
-   const sc=z*sy,zl=h*.16,y0=h*el-zl/2,n=bendStrips(x,zl*sc,w*z*sx,R2-R1),seg=zl/n;let cx=X-Math.sin(R1)*(y0-h*py)*sc,cy=Y+Math.cos(R1)*(y0-h*py)*sc,ex=cx,ey=cy;
+   const sc=z*sy,zl=h*.16,y0=h*el-zl/2,n=bendStrips(x,zl*sc,w*z*sx,R2-R1,fine),seg=zl/n;let cx=X-Math.sin(R1)*(y0-h*py)*sc,cy=Y+Math.cos(R1)*(y0-h*py)*sc,ex=cx,ey=cy;
    /* Oct 23: fs = the forearm drawn shorter, as if it comes toward us (the snare arm, reaching forward to a drum close to the body) */
    const strip=(px0,py0,a,r0,len,s2=sc)=>{if(from)return;x.save();x.translate(px0,py0);x.rotate(a);x.scale(z*sx,s2);x.beginPath();x.rect(-w,0,2*w,len);x.clip();x.drawImage(im,-w*px,-r0,w,h);x.restore();};
    if(!from){x.save();x.translate(X,Y);x.rotate(R1);x.scale(z*sx,sc);x.beginPath();x.rect(-w,-2*h,2*w,2*h+(y0-h*py)+1.5);x.clip();x.drawImage(im,-w*px,-h*py,w,h);x.restore();}
    for(let i=0;i<n;i++){const a=R1+(R2-R1)*(i+.5)/n,s2=sc*(1+(fs-1)*Math.max(0,(i+.5)/n*2-1));strip(cx,cy,a,y0+i*seg,seg+1.5,s2);cx-=Math.sin(a)*seg*s2;cy+=Math.cos(a)*seg*s2;if(i===n/2-1){ex=cx;ey=cy;}}
    const fin=handAt?Math.max(y0+zl,handAt*h):0;
+   /* Oct 25 (designer: the hand under the neck, fingers on it, the arm bending smoothly): fold = {at, ang}: the forearm and palm
+      stop at the knuckle crease (share 'at'); in the hand pass (from) the fingers past it are drawn turned by ang, in front */
+   if(!fin&&fold){const o=(fold.at*h-(y0+zl))*sc,kx=cx-Math.sin(R2)*o,ky=cy+Math.cos(R2)*o;
+     strip(cx,cy,R2,y0+zl,fold.at*h-(y0+zl)+h*.03,sc*fs);   /* the palm runs a little past the crease... */
+     if(from){/* Oct 26 (designer: a corner "cut out" on the outside of the fold): the knuckle band (a thin slice of the picture at the
+        crease) is fanned round the crease from the palm's angle to the fingers', so the outside of the fold is a rounded knuckle */
+       const t=h*.03,nf=Math.min(16,Math.max(2,Math.ceil(Math.abs(fold.ang)*(w/2)/(t*1.5))+1));
+       for(let i=0;i<=nf;i++){const a=R2+fold.ang*i/nf;x.save();x.translate(kx,ky);x.rotate(a);x.scale(z*sx,sc);x.beginPath();x.rect(-w,-t,2*w,2*t);x.clip();x.drawImage(im,-w*px,-fold.at*h,w,h);x.restore();}
+       x.save();x.translate(kx,ky);x.rotate(R2+fold.ang);x.scale(z*sx,sc);x.beginPath();x.rect(-w,-h*.045,2*w,2*h);   /* ...and the fingers start a little before it, so the fold has no gap */x.clip();x.drawImage(im,-w*px,-fold.at*h,w,h);x.restore();}
+     return {x:ex,y:ey};}
    if(!fin)strip(cx,cy,R2,y0+zl,2*h,sc*fs);
    else{strip(cx,cy,R2,y0+zl,fin-(y0+zl)+1.5);const o=(fin-(y0+zl))*sc;cx-=Math.sin(R2)*o;cy+=Math.cos(R2)*o;   /* the hand, at its drawn size */
      x.save();x.translate(cx,cy);x.rotate(R2);x.scale(z*sx,z);x.beginPath();x.rect(-w,0,2*w,2*h);x.clip();x.drawImage(im,-w*px,-fin,w,h);x.restore();
@@ -2311,13 +2322,29 @@ function instEnds(im){if(INSTE.has(im))return INSTE.get(im);let r=null;try{const
   let a=0;while(a<w-1&&col[a]<1)a++;let b=w-1;while(b>0&&col[b]<1)b--;
   if(b>a){const L=b-a,part=(x0,x1)=>{let n=0,s=0,sy=0;for(let x=Math.round(x0);x<=Math.round(x1);x++){n+=col[x];s+=col[x]*x;sy+=col[x]*cy[x];}return [n?s/n:(x0+x1)/2,n?sy/n:h/2,n];};
     const l=part(a,a+L*.3),rr=part(b-L*.3,b),bl=l[2]>=rr[2],bo=bl?l:rr,hd=bl?part(b-L*.1,b):part(a,a+L*.1);
-    r={bodyLeft:bl,body:[bo[0]/w,bo[1]/h],head:[hd[0]/w,hd[1]/h]};r.strum=[r.body[0]+(r.head[0]-r.body[0])*.2,r.body[1]+(r.head[1]-r.body[1])*.2];}}catch(e){}
+    r={bodyLeft:bl,body:[bo[0]/w,bo[1]/h],head:[hd[0]/w,hd[1]/h]};r.strum=[r.body[0]+(r.head[0]-r.body[0])*.2,r.body[1]+(r.head[1]-r.body[1])*.2];
+    /* Oct 25: the neck as drawn, two thirds of the way from the body's middle to the head: its middle line and its thickness */
+    const nx=Math.max(0,Math.min(w-1,Math.round(bo[0]+(hd[0]-bo[0])*.66)));r.neck=[nx/w,cy[nx]/h];r.neckT=col[nx]/h;}}catch(e){}
   INSTE.set(im,r);return r;}
 // a point of the instrument picture (shares of its size) on stage, with the instrument as drawn this frame
 function instPoint(L,fr,X,Y,R){const il=L.inst,im=il&&(il.img||il.ph);if(!im)return null;const d=SLOTS.inst,w=im.width||150,h=im.height||150,z=d[3]*il.s/Math.max(w,h),
   ox=(fr[0]-d[4])*w*z,oy=(fr[1]-d[5])*h*z,c=Math.cos(R),s=Math.sin(R);return {x:X+ox*c-oy*s,y:Y+ox*s+oy*c};}
 function inkBottom(im){if(INKB.has(im))return INKB.get(im);const w=im.width,h=im.height;if(!w||!h)return 1;const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(im,0,0);
   const a=g.getImageData(0,0,w,h).data;const need=Math.max(3,w*.02);let r=h-1;for(;r>0;r--){let n=0;for(let i=0;i<w;i++)if(a[(r*w+i)*4+3]>128)n++;if(n>=need)break;}   /* ignore stray specks */const v=(r+1)/h;INKB.set(im,v);return v;}   // lowest drawn line, as a share of the picture's height   // PATCH02: where a free stand's feet sit with its sliders at 0 (under the drum's slot, on the bass drum slot's bottom)
+/* Oct 25 (designer: "copy the method we already have from the sheet drawing, place the non-sheet arms in the same arrangement,
+   stretch them as needed: shoulder at the top, fingers at the bottom, elbow at the mid point"). A guitarist's or bassist's arm drawn with its hand on plain paper is squared up to the sheet layout: its
+   drawing is stretched along its length so it starts just above the shoulder pivot and its fingertips end where a sheet hand
+   ends. Then it reaches like the arms drawn on our sheets (the spot and elbow set in Adjust), bending smoothly at the elbow
+   (the designer tried a split pin and preferred the bend: fewer separate parts). The neck hand's fingers fold up over the neck,
+   in front of it. */
+const INKS=new WeakMap(),SHEETARM=new WeakMap(),SQUARE_TOP=.06,SQUARE_END=.95,KNUCKLE=.79;   // a squared-up arm's drawing runs from SQUARE_TOP to SQUARE_END of its picture; knuckles: the fingers are about the last sixth
+function inkSpan(im){if(INKS.has(im))return INKS.get(im);let r=[0,1];try{const S0=160,k=S0/Math.max(im.width,im.height),w=Math.max(4,Math.round(im.width*k)),h=Math.max(4,Math.round(im.height*k)),c=document.createElement('canvas');c.width=w;c.height=h;
+  const g=c.getContext('2d');g.drawImage(im,0,0,w,h);const d=g.getImageData(0,0,w,h).data,need=Math.max(1,w*.02),row=y=>{let n=0;for(let x=0;x<w;x++)if(d[(y*w+x)*4+3]>128)n++;return n>=need;};
+  let a=0;while(a<h-1&&!row(a))a++;let b=h-1;while(b>a&&!row(b))b--;r=[a/h,(b+1)/h];}catch(e){}INKS.set(im,r);return r;}
+function sheetArm(im){if(!im||!im.width)return im;if(SHEETARM.has(im))return SHEETARM.get(im);let out=im;
+  try{const w=im.width,h=im.height,sp=inkSpan(im);if(sp[1]-sp[0]>.1){const c=document.createElement('canvas');c.width=w;c.height=h;
+    c.getContext('2d').drawImage(im,0,sp[0]*h,w,(sp[1]-sp[0])*h,0,SQUARE_TOP*h,w,(SQUARE_END-SQUARE_TOP)*h);out=c;}}catch(e){}
+  SHEETARM.set(im,out);return out;}
 function standsFree(m){const L=m.layers;if(m.id!=='drums'||m.rec||typeof ADJSET==='undefined')return;
   for(const k of ['snareSt','hatSt']){const ly=L[k];if(!ly||!ly.v2||!ly.img||!(L.kick.img&&L.kick.img.width)||(+ly.v2||0)>=3||!ADJSET['drums.'+k])continue;
     const dk=k==='snareSt'?'snare':'hat',dl=L[dk],dd=SLOTS[dk],kl=L.kick,kd=SLOTS.kick,d=SLOTS[k],B=STAND_BASE[k],
@@ -2352,13 +2379,15 @@ function drawLayers(x,m,t){
       ox=md[1]+ml.x-hx+(ic.u-md[4])*mw*zm,oy=md[2]+ml.y-hy+((jw&&ic.t!=null?ic.t:ic.v)-md[5])*mh*zm+(jw?ml.jaw*.4:0),c=Math.cos(hr),sn=Math.sin(hr);mouthT={x:hx+ox*c-oy*sn,y:hy+dyB+ox*sn+oy*c};mouthR={x:hx+ox,y:hy+oy};}}
   if(il&&L.grip){const g=L.grip,ix=SLOTS.inst[1]+il.x,iy=SLOTS.inst[2]+il.y,c=Math.cos(ir),sn=Math.sin(ir),th=ir+ia,sl=Math.sin((m.ph||0)*.5+1)*e*5*il.s;
     nh={x:ix+g.x*c-g.y*sn+sl*Math.cos(th),y:iy+g.x*sn+g.y*c+sl*Math.sin(th)};}
-  m._wr=null;m._a2=null;m._strum=null;   // where the strum arm's wrist is this frame (the strum hand hangs there); the neck arm as drawn (Oct 22)
+  m._wr=null;m._a2=null;m._strum=null;m._fold2=null;   // where the strum arm's wrist is this frame (the strum hand hangs there); the neck arm as drawn (Oct 22)
   /* Oct 23 (designer: "the snare arm should be behind the hi-hat"): a drummer's snare arm holding our stick is drawn before the
      hi-hat cymbal */
   const ORDER9=m.id==='drums'&&L.armS&&L.armS.stick?SETS.drums.filter(k=>k!=='armS').flatMap(k=>k==='hat'?['armS','hat']:[k]):SETS[m.id];
   for(const k of ORDER9){const ly=L[k],d=SLOTS[k],ar=(ly.a||0)*Math.PI/180;let im=ly.img||ly.ph,D=d[3]*ly.s;if(!im)continue;
     if(k==='fore'&&m.id==='vocals'&&window.MICS){const mc=MICS.arm(m);if(mc){im=mc.cv;D=mc.D;}}   /* Oct 22: a picked mic held in the hand (puppeteer/mic-hold.js) */if(k==='hand'&&(!ly.img||(L.arm&&L.arm.hand&&L.arm.img)))continue;   /* Oct 22: a hand drawn on the strum arm replaces the separate one */if(ly.s===0)continue;   // size 0 = hidden (the drummer's legs on the new sheet)   // no drawn hand: the arm's own hand is used
     if(k==='head'&&!ly.img&&L.body.img)continue;            // a drawn body from an older sheet already has its own head
+    const squared=(k==='arm'||k==='arm2')&&(m.id==='guitar'||m.id==='bass')&&!!ly.hand&&!!ly.v2&&!!ly.img;   /* Oct 25: an uploaded arm with its hand, squared up to the sheet layout (sheetArm) */
+    if(squared)im=sheetArm(im);
     if(window.EDGE)im=EDGE.of(im,D,k);   /* Oct 25 (designer): every piece gets the face photos' white gap and dark line (paper-edge.js) */
     let rot=0,sx=1,sy=1,dy=0,tx,ty,hide=false,arm=null;
     const peek=ly.peek&&performance.now()<ly.peek,eb=(ly.eb||0)*Math.PI/180,v2arm=!!ly.v2&&!!ly.img&&typeof V2H!=='undefined'&&V2H[k]!=null,el=v2arm?(d[5]+V2H[k])/2:ELBOW,Hp=D*(im.height||150)/Math.max(im.width||150,im.height||150),   // arm picture's height on stage
@@ -2370,8 +2399,21 @@ function drawLayers(x,m,t){
     if(k==='mouth'||k==='mouthO'){const ox=d[1]+ly.x-hx,oy=d[2]+ly.y-hy+(k==='mouth'&&ly.jaw?ly.jaw*(open?Math.min(1,.35+e*2.5):0)*(m.dgS&&window.DISG?DISG.mouthAlpha(m):1):0),c=Math.cos(hr),sn=Math.sin(hr);   /* Oct 21: a picture face's jaw drops while singing (and stays shut behind the mic, like a drawn mouth fades) */
       tx=hx+ox*c-oy*sn;ty=hy+dyB+ox*sn+oy*c;rot=hr;}
     if(k==='inst')rot=ir;                                    // instrument rocks
-    if(k==='arm2'){if(!nh)continue;const r=ly.hand&&v2arm?bentReach(Sh,nh,l1,l2,eb,.6,2.2):bentReach(Sh,nh,l1,l2,eb);arm=[r.R1,r.R2];sy=r.st;}   // shoulder stays put, elbow bent as set, hand locked on the neck
-    if(k==='grip'){if(!nh)continue;if(L.arm2&&L.arm2.hand&&L.arm2.img){if(m._a2)drawArm(x,...m._a2,true,true,HAND-.1);continue;}tx=nh.x;ty=nh.y;rot=ir+ia;}   /* Oct 22 (designer): a hand drawn on the neck arm: the arm stays behind the neck, its hand is drawn again here, in front of it */
+    if(k==='arm2'){if(!nh)continue;const r=squared?bentReach(Sh,nh,l1,(KNUCKLE-el)*Hp,eb):ly.hand&&v2arm?bentReach(Sh,nh,l1,l2,eb,.6,2.2):bentReach(Sh,nh,l1,l2,eb);   /* a squared-up neck hand reaches with its knuckles */arm=[r.R1,r.R2];sy=r.st;
+      /* Oct 25: the fold for a squared-up neck hand: at the knuckles (the hand line HAND meets the fingers spot, just under the neck)
+         the fingers turn to point up across the neck (the instrument's own "up"), and are drawn in front of it in the grip pass */
+      if(squared){const th=ir+ia,im0=il.img||il.ph,ne=instEnds(window.EDGE?EDGE.of(im0,SLOTS.inst[3]*il.s,'inst'):im0);   /* Oct 26: measured on the instrument as drawn (with its paper edge), the same picture the strum point uses */
+        if(ne&&ne.neck){   // aim the knuckles at the neck's bottom edge (not the fingers spot, which is set for our bigger fingers piece)
+          const w0=im0.width||150,h0=im0.height||150,p0=instPoint(L,ne.neck,SLOTS.inst[1]+il.x,SLOTS.inst[2]+il.y,th),
+            hb=.5*ne.neckT*h0*SLOTS.inst[3]*il.s/Math.max(w0,h0),sl=Math.sin((m.ph||0)*.5+1)*e*5*il.s;
+          if(p0){const T={x:p0.x+sl*Math.cos(th)-hb*Math.sin(th)*.9,y:p0.y+sl*Math.sin(th)+hb*Math.cos(th)*.9},l2k=(KNUCKLE-el)*Hp,D0=Math.hypot(T.x-Sh.x,T.y-Sh.y),
+              c=(D0*D0-l1*l1-l2k*l2k)/(2*l1*l2k),bend=Math.min(1,Math.max(-.5,c)),
+              /* the elbow folds further (up to 120 degrees, the way it's set in Adjust) when the neck is too close for the set
+                 bend; the paper only stretches or shrinks for what's left */
+              eb2=Math.abs(eb)>=Math.acos(bend)?eb:(eb<=0?-1:1)*Math.acos(bend),
+              r2=bentReach(Sh,T,l1,l2k,eb2);r.R1=r2.R1;r.R2=r2.R2;r.st=r2.st;arm=[r.R1,r.R2];sy=r.st;}}
+        const want=Math.atan2(-Math.sin(th),-Math.cos(th));let ang=want-r.R2;ang=Math.atan2(Math.sin(ang),Math.cos(ang));m._fold2={fold:KNUCKLE,ang};}}   // shoulder stays put, elbow bent as set, hand locked on the neck
+    if(k==='grip'){if(!nh)continue;if(L.arm2&&L.arm2.hand&&L.arm2.img){if(m._fold2&&m._fold2.args)drawArm(x,...m._fold2.args,true,true,0,1,{at:m._fold2.fold,ang:m._fold2.ang},true);else if(m._a2)drawArm(x,...m._a2,true,true,HAND-.1);continue;}tx=nh.x;ty=nh.y;rot=ir+ia;}   /* Oct 22 (designer): a hand drawn on the neck arm: the arm stays behind the neck, its hand is drawn again here, in front of it */
     if(k==='hand'){if(!m._wr)continue;const cr=Math.cos(m._wr.r),sr=Math.sin(m._wr.r);tx=m._wr.x+ly.x*cr-ly.y*sr;ty=m._wr.y+ly.x*sr+ly.y*cr;rot=m._wr.r+Math.sin((m.ph||0)+.2)*e*.3+iS*.05;}   // Oct 5: x/y sliders move the hand across / along the forearm   // strum hand: on the wrist, flicks with the strum            // fingers wrapped over the front of the neck
     if(k==='armL'||k==='armR'){ // keys arms: shoulder fixed, hand bobs and drifts left/right with the register; the elbow does the bending
       const isL=k==='armL',flip=L.inst&&L.inst.v2,pp=flip?(isL?(m.pr==null?null:1-m.pr):(m.pl==null?null:1-m.pl)):(isL?m.pl:m.pr),   // new sheet: keyboard faces the player, so high notes are on the screen-left
@@ -2451,6 +2493,11 @@ function drawLayers(x,m,t){
     const w=im.width||150,h=im.height||150,z=D/Math.max(w,h);
     // Oct 20: the singer's mic arm is a folding paper strip (puppeteer/singer-disguise.js strip)
     if(k==='fore'&&m.id==='vocals'&&window.DISG&&DISG.on()&&mouthT&&DISG.strip(x,m,{im,X,Y,z,sx,sy,px:d[4],py:d[5],el,mouth:mouthT,sway:Math.sin((m.ph||0)*.9)*.07*(.3+e)+iS*.05,swing:Math.sin(ph*.9)*e*.45*(1-dn)+iS*.12+dn*.35*sw}))continue;   // swing = the free hand's upper-arm swing (armV below), so the hanging mic arm swings in time with it
+    if(R2!=null&&squared){const fo=k==='arm2'&&m._fold2?m._fold2:null,E=drawArm(x,im,X,Y,R,R2,z,sx,sy,d[4],d[5],el,true,false,k==='arm'?HAND-.1:0,1,fo?{at:fo.fold,ang:fo.ang}:null,true);   /* Oct 26 (code review): the strum hand keeps its drawn size (handAt), like a sheet arm's */
+      if(fo)fo.args=[im,X,Y,R,R2,z,sx,sy,d[4],d[5],el];
+      if(k==='arm'){const l2=(HAND-el)*h*z*sy;m._wr={x:E.x-Math.sin(R2)*l2,y:E.y+Math.cos(R2)*l2,r:R2};}
+      if(peek){x.save();x.strokeStyle='#e8553d';x.lineWidth=1;x.beginPath();x.arc(E.x,E.y,2.5,0,7);x.stroke();x.restore();}
+      continue;}
     if(R2!=null){const E=drawArm(x,im,X,Y,R,R2,z,sx,sy,d[4],d[5],el,v2arm,false,ly.hand&&v2arm&&(k==='arm'||k==='arm2')?HAND-.1:0,(k==='armS'&&m._stk&&m._stk.armS&&ly.stick&&m._stk.armS.fs)||1);
       /* Oct 23 (designer's drummer: "no sticks"): an arm drawn without a stick holds ours (the one that goes with the kit),
          from the hand onwards along the forearm, so it comes down on the drum with the hand */
@@ -5495,7 +5542,7 @@ function find(img){const {Y,W,H}=img,f=Math.max(1,Math.ceil(Math.max(W,H)/900)),
       if(x>0&&jn[p-1]&&lab[p-1]<0){lab[p-1]=id;st[sp++]=p-1;}if(x<w-1&&jn[p+1]&&lab[p+1]<0){lab[p+1]=id;st[sp++]=p+1;}
       if(y>0&&jn[p-w]&&lab[p-w]<0){lab[p-w]=id;st[sp++]=p-w;}if(y<h-1&&jn[p+w]&&lab[p+w]<0){lab[p+w]=id;st[sp++]=p+w;}}
     comps.push(c);}
-  splitStacked(comps,lab,ink,w,h);
+  splitStacked(comps,lab,ink,w,h);splitBridged(comps,lab,ink,w,h);
   // keep real drawings: not dust, not a row of grid dots joined up (a drawn line has ink all along its length), and not cut off by the photo's edge (the desk, the page's edge)
   const minN=Math.max(40,w*h*.0003),edge=3;
   /* Oct 26 (code review; the designer's bassist, whose arm ran off the photo): a drawing that only touches one side of the
@@ -5505,19 +5552,34 @@ function find(img){const {Y,W,H}=img,f=Math.max(1,Math.ceil(Math.max(W,H)/900)),
     return (L||Rt)?(c.y1-c.y0)>h*.5:(c.x1-c.x0)>w*.5;};
   if(window.__fpWhy)comps.forEach(c=>{if(c.n>=minN)window.__fpWhy.push({box:[c.x0*f,c.y0*f,(c.x1-c.x0)*f,(c.y1-c.y0)*f],n:c.n,long:Math.max(c.x1-c.x0,c.y1-c.y0),edge:!(c.x0>edge&&c.y0>edge&&c.x1<w-1-edge&&c.y1<h-1-edge)});});   // testing: what was found before the checks
   let keep=comps.map((c,id)=>Object.assign(c,{ids:[id]})).filter(c=>c.n>=minN&&Math.max(c.x1-c.x0,c.y1-c.y0)>=12&&c.n>=1.2*Math.max(c.x1-c.x0,c.y1-c.y0)&&!atEdge(c)&&!((c.x1-c.x0)>w*.8&&(c.y1-c.y0)>h*.8));   // nor a frame round the whole photo
+  if(window.__fpSubs)window.__fpSubs.push({keep1:keep.map(c=>[c.x0,c.y0,c.x1,c.y1,c.n])});
   // a drawing has paper all round it: shapes beside the dark table (the page's edge) are not drawings
   {const srt=Float32Array.from(g).sort(),paper=srt[Math.floor(srt.length*.9)],m=6;
     keep=keep.filter(c=>{let n=0,dk=0;const x0=Math.max(0,c.x0-m),y0=Math.max(0,c.y0-m),x1=Math.min(w-1,c.x1+m),y1=Math.min(h-1,c.y1+m);
       const t=(x,y)=>{if(jn[y*w+x])return;n++;if(g[y*w+x]<paper*.4)dk++;};   /* another drawing's line close by isn't the table (Oct 21: legs drawn just under the body) */for(let x=x0;x<=x1;x+=2){t(x,y0);t(x,y1);}for(let y=y0;y<=y1;y+=2){t(x0,y);t(x1,y);}
-      return dk<=n*.08;});}
+      /* Oct 26 (designer's IMG_1747 at message size: the arm drawn out to the paper's edge was thrown away as 'beside the
+         table'): only a long shape (a page edge runs most of the way across) is dropped for a little dark beside it; a
+         small drawing is dropped only when it's mostly dark round it */
+      const long=Math.max(c.x1-c.x0,c.y1-c.y0)>=.35*Math.max(w,h);return dk<=n*(long?.08:.3);});}
+  if(window.__fpSubs)window.__fpSubs.push({keep2:keep.map(c=>[c.x0,c.y0,c.x1,c.y1,c.n])});
   // a shape inside another one's frame (strings inside a guitar, eyes inside a head) belongs to it
   for(let again=true;again;){again=false;keep.sort((a,b)=>(b.x1-b.x0)*(b.y1-b.y0)-(a.x1-a.x0)*(a.y1-a.y0));
     outer:for(let i=0;i<keep.length;i++)for(let j=i+1;j<keep.length;j++){const A=keep[i],Bc=keep[j],ix=Math.max(0,Math.min(A.x1,Bc.x1)-Math.max(A.x0,Bc.x0)),iy=Math.max(0,Math.min(A.y1,Bc.y1)-Math.max(A.y0,Bc.y0));
       if(ix*iy>=.8*(Bc.x1-Bc.x0)*(Bc.y1-Bc.y0)){A.x0=Math.min(A.x0,Bc.x0);A.y0=Math.min(A.y0,Bc.y0);A.x1=Math.max(A.x1,Bc.x1);A.y1=Math.max(A.y1,Bc.y1);A.n+=Bc.n;A.ids.push(...Bc.ids);keep.splice(j,1);again=true;break outer;}}}
+  if(window.__fpSubs)window.__fpSubs.push({keep3:keep.map(c=>[c.x0,c.y0,c.x1,c.y1,c.n])});
   /* Oct 23 (designer's drummer: a zig-zag hairline with small breaks split the head into two halves): two drawings whose
      frames overlap by half of the smaller one or more are one drawing */
   for(let again=true;again;){again=false;outer2:for(let i=0;i<keep.length;i++)for(let j=0;j<keep.length;j++){if(i===j)continue;const A=keep[i],Bc=keep[j],ix=Math.max(0,Math.min(A.x1,Bc.x1)-Math.max(A.x0,Bc.x0)),iy=Math.max(0,Math.min(A.y1,Bc.y1)-Math.max(A.y0,Bc.y0)),
       sa=Math.min((A.x1-A.x0)*(A.y1-A.y0),(Bc.x1-Bc.x0)*(Bc.y1-Bc.y0));if(ix*iy>=.5*sa){A.x0=Math.min(A.x0,Bc.x0);A.y0=Math.min(A.y0,Bc.y0);A.x1=Math.max(A.x1,Bc.x1);A.y1=Math.max(A.y1,Bc.y1);A.n+=Bc.n;A.ids.push(...Bc.ids);keep.splice(j,1);again=true;break outer2;}}}
+  if(window.__fpSubs)window.__fpSubs.push({keep4:keep.map(c=>[c.x0,c.y0,c.x1,c.y1,c.n])});
+  /* Oct 26 (designer's IMG_1747 at message size: the hand came apart from its arm at the cuff line): a small shape whose
+     frame overlaps a bigger one's by a quarter or more, with its ink nearly touching the bigger one's, is part of it */
+  for(let again=true;again;){again=false;outer3:for(let i=0;i<keep.length;i++)for(let j=0;j<keep.length;j++){if(i===j)continue;const A=keep[i],Bc=keep[j];if(Bc.n>=A.n*.8)continue;
+      const ix=Math.max(0,Math.min(A.x1,Bc.x1)-Math.max(A.x0,Bc.x0)),iy=Math.max(0,Math.min(A.y1,Bc.y1)-Math.max(A.y0,Bc.y0));if(ix*iy<.25*(Bc.x1-Bc.x0)*(Bc.y1-Bc.y0))continue;
+      const aid=new Set(A.ids),bid=new Set(Bc.ids);let close=false;
+      for(let y=Bc.y0;y<=Bc.y1&&!close;y++)for(let x=Bc.x0;x<=Bc.x1&&!close;x++){if(!ink[y*w+x]||!bid.has(lab[y*w+x]))continue;
+        for(let dy=-8;dy<=8&&!close;dy++)for(let dx=-8;dx<=8;dx++){const X2=x+dx,Y2=y+dy;if(X2<0||Y2<0||X2>=w||Y2>=h)continue;const q=Y2*w+X2;if(ink[q]&&aid.has(lab[q])){close=true;break;}}}
+      if(!close)continue;A.x0=Math.min(A.x0,Bc.x0);A.y0=Math.min(A.y0,Bc.y0);A.x1=Math.max(A.x1,Bc.x1);A.y1=Math.max(A.y1,Bc.y1);A.n+=Bc.n;A.ids.push(...Bc.ids);keep.splice(j,1);again=true;break outer3;}}
   /* Oct 22 (designer's drawn bass: a gap in the pen line left the bottom of its body as a separate scrap, which was dropped,
      so the bass came in with half its body missing): scraps of line too small to be drawings on their own, lying mostly
      inside a drawing's frame (a little wider), are part of it */
@@ -5527,6 +5589,7 @@ function find(img){const {Y,W,H}=img,f=Math.max(1,Math.ceil(Math.max(W,H)/900)),
     /* Oct 23 (designer's drummer: tips of zig-zag hair broken off): a small bit of line just beside a drawing belongs to it */
     if(!(best&&bo>=.6)){for(const A of keep){const gx=Math.max(A.x0-c.x1,c.x0-A.x1,0),gy=Math.max(A.y0-c.y1,c.y0-A.y1,0);if(gx<=6&&gy<=6&&c.n<A.n*.15){best=A;bo=1;break;}}}
     if(best&&bo>=.6){best.x0=Math.min(best.x0,c.x0);best.y0=Math.min(best.y0,c.y0);best.x1=Math.max(best.x1,c.x1);best.y1=Math.max(best.y1,c.y1);best.n+=c.n;best.ids.push(id);kept.add(id);}});}
+  if(window.__fpSubs)window.__fpSubs.push({keep5:keep.map(c=>[c.x0,c.y0,c.x1,c.y1,c.n])});
   const blobs=keep.map(c=>clipFor(c,{w,h,f,lab,ink,bg,img}));
   return {w,h,f,blobs};}
 /* Oct 23 (designer's bass player: the neck drawn ~2 mm above the vest, the shorts touching it): pieces drawn close above one
@@ -5543,6 +5606,7 @@ function splitStacked(comps,lab,ink,w,h){const sub=new Int32Array(w*h).fill(-1),
   for(const [cid,list] of by){const c=comps[cid];if(!c||c.n<200)continue;
     // the big shapes, grown by what lies inside their frames (eyes in a head)
     let big=list.filter(i=>subs[i].n>=c.n*.12).map(i=>({x0:subs[i].x0,y0:subs[i].y0,x1:subs[i].x1,y1:subs[i].y1,ids:[i]}));if(big.length<2)continue;
+    if(window.__fpSubs)window.__fpSubs.push({c:[c.x0,c.y0,c.x1,c.y1,c.n],big:big.map(g=>[g.x0,g.y0,g.x1,g.y1,subs[g.ids[0]].n])});   // testing: the big shapes inside one joined drawing
     for(const i of list){const s=subs[i];if(big.some(g=>g.ids.includes(i)))continue;const g=big.find(g=>s.x0>=g.x0-2&&s.x1<=g.x1+2&&s.y0>=g.y0-2&&s.y1<=g.y1+2);if(g)g.ids.push(i);}
     // group the big shapes that sit side by side (they belong together); then groups stacked one above the other are split
     big.sort((a,b)=>a.y0-b.y0);const groups=[];
@@ -5557,6 +5621,43 @@ function splitStacked(comps,lab,ink,w,h){const sub=new Int32Array(w*h).fill(-1),
     for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++){const p=y*w+x;if(lab[p]!==cid)continue;const si=sub[p],gi=si>=0&&gOf.has(si)?gOf.get(si):near(x,y);
       lab[p]=ids[gi];const B=boxes[gi];if(ink[p])B.n++;if(x<B.x0)B.x0=x;if(x>B.x1)B.x1=x;if(y<B.y0)B.y0=y;if(y>B.y1)B.y1=y;}
     groups.forEach((G,gi)=>{const B=boxes[gi];if(gi===0)Object.assign(c,B);else comps.push(B);});}}
+/* Oct 26 (designer's IMG_1747 sent at message size, 1800 px: the right arm, drawn with its top touching the body's shoulder
+   corner, came out as part of the body and the bassist got our arm): two drawings whose ink meets at a single point are
+   two drawings. The drawing's ink is walked once to find its cut points (a cell whose removal splits it); a cut counts
+   when both sides are drawings in their own right (enough ink, a box with real width and height) and their boxes barely
+   overlap. The two halves of one outline broken by a pen gap overlap a lot, so they stay one drawing; a detail inside a
+   drawing (an eye in a head) sits inside its box, so it stays too. */
+function splitBridged(comps,lab,ink,w,h){const minN=Math.max(40,w*h*.0003);
+  for(let cid=0;cid<comps.length;cid++){const c=comps[cid];if(!c||c.n<300)continue;
+    for(let round=0;round<2;round++){   // an arm each side can be cut off in turn
+      const cells=[],idx=new Int32Array(w*h).fill(-1);
+      for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++){const p=y*w+x;if(lab[p]===cid&&ink[p]){idx[p]=cells.length;cells.push(p);}}
+      const N=cells.length;if(N<300)break;
+      const nb=p=>{const x=p%w,y=(p/w)|0,o=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){if(!dx&&!dy)continue;const X2=x+dx,Y2=y+dy;if(X2<0||Y2<0||X2>=w||Y2>=h)continue;const q=Y2*w+X2;if(idx[q]>=0)o.push(idx[q]);}return o;};
+      const disc=new Int32Array(N).fill(-1),low=new Int32Array(N),par=new Int32Array(N).fill(-1),size=new Int32Array(N).fill(1),cand=[];let t=0;
+      const need=Math.max(minN,N*.15);
+      for(let r=0;r<N;r++){if(disc[r]>=0)continue;const st=[[r,nb(r),0]];disc[r]=low[r]=t++;let rootKids=0;
+        while(st.length){const f=st[st.length-1],v=f[0],ns=f[1];
+          if(f[2]<ns.length){const u=ns[f[2]++];if(disc[u]<0){par[u]=v;disc[u]=low[u]=t++;st.push([u,nb(u),0]);}else if(u!==par[v]&&disc[u]<low[v])low[v]=disc[u];}
+          else{st.pop();const pv=par[v];if(pv>=0){if(low[v]<low[pv])low[pv]=low[v];size[pv]+=size[v];
+              const cut=size[v];if(low[v]>=disc[pv]&&cut>=need&&N-cut>=need)cand.push([Math.min(cut,N-cut),pv,v]);if(pv===r)rootKids++;}}}}
+      if(!cand.length)break;cand.sort((a,b)=>b[0]-a[0]);let done=false;
+      for(const [,pv,v] of cand.slice(0,6)){   // the most even cuts first
+        const side=new Uint8Array(N),st=[v];side[v]=1;side[pv]=2;let n1=0;const B1={x0:1e9,y0:1e9,x1:-1,y1:-1},B2={x0:1e9,y0:1e9,x1:-1,y1:-1};
+        while(st.length){const u=st.pop();n1++;for(const q of nb(u))if(!side[q]){side[q]=1;st.push(q);}}
+        if(n1<need||N-n1<need)continue;
+        for(let i=0;i<N;i++){const p=cells[i],x=p%w,y=(p/w)|0,B=side[i]===1?B1:B2;if(x<B.x0)B.x0=x;if(x>B.x1)B.x1=x;if(y<B.y0)B.y0=y;if(y>B.y1)B.y1=y;}
+        const long=Math.max(c.x1-c.x0,c.y1-c.y0),thin=B=>Math.min(B.x1-B.x0,B.y1-B.y0)<Math.max(6,long*.12);if(thin(B1)||thin(B2))continue;
+        const ix=Math.max(0,Math.min(B1.x1,B2.x1)-Math.max(B1.x0,B2.x0)),iy=Math.max(0,Math.min(B1.y1,B2.y1)-Math.max(B1.y0,B2.y0)),
+          sa=Math.min((B1.x1-B1.x0)*(B1.y1-B1.y0),(B2.x1-B2.x0)*(B2.y1-B2.y0));if(ix*iy>=.3*sa)continue;
+        // cut: the cut-off side becomes a new drawing; the joined drawing's filler cells go with the nearer side
+        const nid=comps.length,nb1={x0:1e9,y0:1e9,x1:-1,y1:-1,n:0},nb2={x0:1e9,y0:1e9,x1:-1,y1:-1,n:0};
+        const dist=(B,x,y)=>{const dx=Math.max(B.x0-x,0,x-B.x1),dy=Math.max(B.y0-y,0,y-B.y1);return dx*dx+dy*dy;};
+        for(let y=c.y0;y<=c.y1;y++)for(let x=c.x0;x<=c.x1;x++){const p=y*w+x;if(lab[p]!==cid)continue;const i=idx[p];
+          const one=i>=0?side[i]===1:dist(B1,x,y)<dist(B2,x,y);const B=one?nb1:nb2;if(one)lab[p]=nid;
+          if(ink[p])B.n++;if(x<B.x0)B.x0=x;if(x>B.x1)B.x1=x;if(y<B.y0)B.y0=y;if(y>B.y1)B.y1=y;}
+        Object.assign(c,nb2);comps.push(nb1);if(window.__fpSubs)window.__fpSubs.push({cut:[cid,nid,n1,N-n1]});done=true;break;}
+      if(!done)break;}}}
 // what belongs to one drawing (its lines and everything they enclose, a little wider), plus the paper's grey and colour beside it
 function clipFor(c,{w,h,f,lab,ink,bg,img}){const pad=4,x0=Math.max(0,c.x0-pad),y0=Math.max(0,c.y0-pad),x1=Math.min(w-1,c.x1+pad),y1=Math.min(h-1,c.y1+pad),cw=x1-x0+1,ch=y1-y0+1;
   const ids=new Set(c.ids),mem=new Uint8Array(cw*ch);
@@ -5585,6 +5686,12 @@ function pcaOf(keep,cw,ch,x0,y0,f){let n=0,mx=0,my=0;for(let y=0;y<ch;y++)for(le
 function endsOf(keep,cw,ch){let top=0,bot=0;const q=Math.max(1,Math.round(ch*.3));for(let y=0;y<ch;y++){let a=-1,z=-1;for(let x=0;x<cw;x++)if(keep[y*cw+x]){if(a<0)a=x;z=x;}
   if(a<0)continue;if(y<q)top=Math.max(top,z-a);if(y>=ch-q)bot=Math.max(bot,z-a);}return {top,bot};}
 // a piece drawn round by hand (Add drawings, Oct 21): the same description as a drawing the finder found
+/* Oct 26: trousers drawn as one shape become two legs, cut where the legs part (the emptiest column in their lower
+   half); each leg is a drawn-round piece, so turning the photo keeps it */
+function splitLegs(img,bl){const Y=img.Y,W=img.W,x0=Math.max(0,Math.round(bl.x0)),x1=Math.min(W,Math.round(bl.x1)),y0=Math.round(bl.y0),y1=Math.round(bl.y1),ya=Math.round(y0+(y1-y0)*.45);
+  let best=Math.round((x0+x1)/2),bn=1e9;for(let x=Math.round(x0+(x1-x0)*.3);x<=x0+(x1-x0)*.7;x++){let n=0;for(let y=ya;y<y1;y+=2)if(Y[y*W+x]<110)n++;if(n<bn){bn=n;best=x;}}
+  const L=[[x0,y0],[best,y0],[best,y1],[x0,y1]],R=[[best,y0],[x1,y0],[x1,y1],[best,y1]];
+  return [L,R].map(line=>{const b=blobFromLine(img,line);b.drawn=line;return b;});}
 function blobFromLine(img,line){const f=4,xs=line.map(p=>p[0]),ys=line.map(p=>p[1]),X0=Math.max(0,Math.min(...xs)),Y0=Math.max(0,Math.min(...ys)),
     X1=Math.min(img.W,Math.max(...xs)),Y1=Math.min(img.H,Math.max(...ys)),x0=Math.floor(X0/f),y0=Math.floor(Y0/f),cw=Math.max(1,Math.ceil(X1/f)-x0),ch=Math.max(1,Math.ceil(Y1/f)-y0);
   const c=document.createElement('canvas');c.width=cw;c.height=ch;const g=c.getContext('2d',{willReadFrequently:true});g.fillStyle='#fff';g.beginPath();
@@ -5621,7 +5728,15 @@ function guess(mid,blobs,skip){const sh=SHEETS2[mid],keys=sh.boxes.map(b=>b[0]).
     const all=left();if(c.length>1&&c[0]===all[0]&&c[0].el<2.05&&all[1]&&c[0].area>=2*all[1].area)c=c.slice(1);
     take(c[0],'inst');}
   if(has('kick')){const r=left().filter(p=>p.el<1.4)[0];take(r,'kick');}
-  let body=has('body')?left().filter(p=>p.el<2.6)[0]:null;take(body,'body');
+  /* Oct 26 (designer's IMG_1748: head, shirt and trousers drawn as three shapes one above the other; the trousers were
+     taken for the body, the shirt for the head and the head for a leg): three roundish drawings stacked up, each over the
+     next, are the head, the body and the trousers; the trousers are cut into two legs afterwards (add-drawings.js) */
+  let body=null;{const big=left().filter(p=>p.el<2.6),top=big[0]?big[0].area:0,cs=big.filter(p=>p.area>=top*.2).sort((a,b)=>a.cy-b.cy),st=[];
+    for(const p of cs){const q=st[st.length-1];if(!q){st.push(p);continue;}const ov=Math.min(p.cx+p.bw/2,q.cx+q.bw/2)-Math.max(p.cx-p.bw/2,q.cx-q.bw/2);
+      if(ov>=.3*Math.min(p.bw,q.bw)&&p.cy>q.cy)st.push(p);}
+    if(st.length>=3&&has('head')&&has('body')){take(st[0],'head');take(st[1],'body');body=st[1];
+      if(has('legL')&&has('legR')&&!left().some(p=>p.el>=1.8&&p.cy>st[2].cy)){assign[st[2].i]='legs';used.add('legL');used.add('legR');}}}
+  if(!body){body=has('body')?left().filter(p=>p.el<2.6)[0]:null;take(body,'body');}
   if(has('head')){let r=left().filter(p=>p.el<1.6&&(!body||p.area<body.area))[0];
     /* Oct 23 (designer's bass player: solid black hair and moustache made the head the "biggest" drawing, so it was taken
        for the body): the head is the one on top. A roundish drawing above the body with the body's own width or less... if
@@ -5697,7 +5812,7 @@ function names(mid){const arms=Object.keys(SHEETS2[mid].arms||{});   /* printed 
   return SHEETS2[mid].boxes.map(b=>{const i=arms.indexOf(b[0]);return [b[0],i>=0?TXT(i?'upload.armRight':'upload.armLeft'):OWN[b[0]]?TXT(OWN[b[0]]):String(b[5]||b[0]).split(' · ')[0]];});}
 /* Oct 23 (flow v3 tidy): the old plain-paper screen (thumbnails + menus, reached only from the old upload screen) is gone:
    Add drawings (add-drawings.js) uses find, guess and pieces below */
-return {find,guess,pieces,blobFromLine,names:mid=>names(mid),_find:find,_guess:guess,_state:()=>F};
+return {find,guess,pieces,blobFromLine,splitLegs,names:mid=>names(mid),_find:find,_guess:guess,_state:()=>F};
 })();
 // ===== 5c. A PICTURE AS ONE PIECE (Oct 21): a painting or picture, cut out by drawing round it, made to look printed =====
 // For what the line readers can't do: a painted face, a coloured picture filling the photo. After "no corner squares",
@@ -6321,6 +6436,8 @@ async function start(mid,opt){opt=opt||{};const {S2,say,tick}=X();say(TXT('uploa
   if(!A.face&&!A.picture&&blobs.length){const skip=[];if(A.instChoice==='house'||A.instChoice==='keep')skip.push(...(INST[mid]||[]));if(['guitar','bass'].includes(mid))skip.push('hand','grip');if(mid==='vocals')skip.push('mouthO');
     if(skip.length)A.assign=FREEPAPER.guess(mid,blobs,skip);}
   if(mid==='vocals'&&!A.face&&!A.picture&&blobs.length&&!(A.instChoice==='house'||A.instChoice==='keep'))A.assign=FREEPAPER.guess(mid,blobs,['mouthO']);
+  /* Oct 26: trousers found as one drawing ('legs' from the guess) are cut into two legs here */
+  for(let i=A.blobs.length-1;i>=0;i--)if(A.assign[i]==='legs'){const [l,r]=FREEPAPER.splitLegs(A.img,A.blobs[i]);A.blobs.splice(i,1,l,r);A.assign.splice(i,1,'legL','legR');A.look.splice(i,1,lookOf(l),lookOf(r));}
   setParts();if(A.face){A.parts=['head'];const ib=$('addInst');if(ib)ib.hidden=true;}
   wire();step(2);
   $('addSnap').checked=!!A.picture;   /* Oct 22: snapping is for pictures; on line drawings it pulled loops in and lost bits of arms */
