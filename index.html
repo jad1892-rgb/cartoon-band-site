@@ -1377,7 +1377,7 @@ const L={ctx:null,an:null,data:new Uint8Array(1024),mode:null,tb:new Float32Arra
          being handed over as "the next beat" only: the clock ticks a beat only within 0.01 s before it, frames are 0.017 s
          apart, so about 2 beats in 5 never ticked at 60 frames a second, more on a busy phone (the designer: fast songs
          "hit and miss"; the bench with fixed frame times ticked 1 beat of 135). */
-      if(c&&B&&B.P){B.P=c.P;B.next=(B.last==null||c.last>B.last+.5*c.P)?c.last:c.next;B.err=0;B.far=0;B.chal=0;B.chalS=0;B.conf=Math.max(B.conf||0,c.conf);this.scanOn=true;}else this.scanOn=false;}
+      if(c&&B&&B.P){B.P=c.P;B.next=(B.last==null||c.last>B.last+.5*c.P)?c.last:c.next;B.err=0;B.far=0;B.chal=0;B.chalS=0;B.conf=Math.max(B.conf||0,c.conf);B.groove=c.groove;this.scanOn=true;}else{this.scanOn=false;if(B)B.groove=null;}}   /* Nov 4: groove = does the scanned song really have a beat (0..1; null = not known, live sound) */
     if(this.mode){this.beatStep(t/1000,this.data);for(const h of this.beatHooks)h.call(this,t/1000,this.data);}   // step 2.7 beat clock
     if(this.mode==='demo')this.clar=(Math.floor(t/4000)%2)?.9:.2; // demo: 4s singing, 4s not
     else if(this.an&&(this.fr++&1)===0)this.clar=this.clar*.6+this.pitchClarity()*.4;
@@ -1537,7 +1537,7 @@ const L={ctx:null,an:null,data:new Uint8Array(1024),mode:null,tb:new Float32Arra
       if(tt-B.next>2*B.P)B.next=tt+((B.next-tt)%B.P+B.P)%B.P;   // Oct 26: back from a hidden page, skip the missed beats in one go (keeping the phase) instead of ticking through hours of them
       while(B.next<=tt+.01){if((B.conf>.1||this.scanOn)&&(this.gate==null||this.gate>.3)){B.last=B.next-.01;B.n++;}   // Oct 27: on the scanned beats a tick is never dropped for a low live sureness (it was: ticks skipped on Ted's Teeth)   // flash a hair early: the ears hear a hit ~10 ms late
         B.next+=B.P+Math.max(-.02,Math.min(.02,.5*B.err));B.err=0;}}
-    this.beat={bpm:B.P?60/B.P:0,conf:B.conf,last:B.last,n:B.n,phase:B.P?Math.min(1,Math.max(0,(tt-B.last)/B.P)):0};},
+    this.beat={bpm:B.P?60/B.P:0,conf:B.conf,last:B.last,n:B.n,phase:B.P?Math.min(1,Math.max(0,(tt-B.last)/B.P)):0,groove:B.groove==null?1:B.groove};},   // Nov 4: groove (see above); 1 when not known
   /* Oct 27 evening: the sound delay. The ears analyse sound before the speaker plays it; on the designer's iPhone the beat ticks came
      ~0.14 s before he heard the beat. outDelay() gives the browser's own figure in seconds (outputLatency + baseLatency where the
      browser has it, else from getOutputTimestamp, else baseLatency), eased and re-read at most twice a second. outDelayHow says which.
@@ -1802,6 +1802,12 @@ window.BEATSCAN=(()=>{const FPS=60,BANDS=[[30,150],[150,1500],[1500,4000],[4000,
     const A=L=>{if(L>maxL)return 0;const i=Math.floor(L),f=L-i;return ac[i]*(1-f)+ac[i+1]*f;};
     let best=0,bP=0;for(let P=.25*FPS;P<=1.5*FPS;P+=.25){const bpm=60*FPS/P,w=Math.log2(bpm/120),s=(A(P)+A(2*P)+A(4*P)+.5*A(P/2))*Math.exp(-.5*w*w);if(s>best){best=s;bP=P;}}
     if(!bP)return;
+    /* Nov 4 (classical ear test, classical-nov3.md): GROOVE = does this song really have a beat? The repeat strength at the chosen
+       tempo (how much the "new sound" curve repeats at 1, 2 and 4 beats; up to 3.5) is ~1.5-3 for a pop song and only .1-.3 for
+       rubato piano, yet the line-up (live.conf) reports full sureness on both, because it measures WHERE in the song we are, not
+       whether the beat chain is real. Groove is that strength scaled to 0..1 (.3 -> 0, 1.0 -> 1; Party in Yorkshire 1.1, Donut 2.0); the Director and the beat 1 lean
+       use it to keep the band stiller on music with no real beat (fewer leaps and steps, more swaying). */
+    S.strength=A(bP)+A(2*bP)+A(4*bP)+.5*A(bP/2);S.groove=Math.max(0,Math.min(1,(S.strength-.3)/.7));
     // beats: dynamic programming over the curve, each beat about one beat length after the last
     const sdv=Math.sqrt(e0/n)||1,score=new Float32Array(n),back=new Int32Array(n).fill(-1),lo=Math.round(bP/2),hi=Math.round(2*bP),T=100;
     for(let t=0;t<n;t++){const ot=o[t]/sdv;let bv=0,bj=-1;if(t>=lo){for(let tau=Math.max(0,t-hi);tau<=t-lo;tau++){const r=Math.log((t-tau)/bP),v=score[tau]-T*r*r;if(bj<0||v>bv){bv=v;bj=tau;}}}
@@ -1857,7 +1863,7 @@ window.BEATSCAN=(()=>{const FPS=60,BANDS=[[30,150],[150,1500],[1500,4000],[4000,
   function clock(tt){if(!S||!S.beats||live.off==null||live.trust<2)return null;const st=tt-live.off,B=S.beats;
     if(st>S.done/FPS-1)return null;let lo=0,hi=B.length-1;if(st<B[0]||st>=B[hi])return null;
     while(hi-lo>1){const m=(lo+hi)>>1;if(B[m]<=st)lo=m;else hi=m;}
-    return {P:B[hi]-B[lo],next:B[hi]+live.off,last:B[lo]+live.off,bpm:60/S.P,conf:Math.min(1,live.conf*1.5)};}
+    return {P:B[hi]-B[lo],next:B[hi]+live.off,last:B[lo]+live.off,bpm:60/S.P,conf:Math.min(1,live.conf*1.5),groove:S.groove==null?1:S.groove};}
   return {frame,live:onLive,clock,bar,state:()=>({S,live})};})();
 /* ===== SECTION SCAN (Nov 2): where a song file's verses, choruses and bridges are =====
    A fact about the music for any puppet set (layer 1 of the animation kit). Works on a song read ahead by the song scan
@@ -2832,6 +2838,11 @@ window.DIRECTOR=(function(){
      hops; on a fast busy one everything, bigger. Moments that own their players (the routine) and the song's end skip the dice. */
   const COST={sway:.3,nod:.3,turn:.4,twist:.4,point:.5,wave:.5,step:.5,mill:.6,jump:.6,hop:.6};   // (designer: twirls look good on slow songs — twist and turn are cheap; it is the leaping about that jars)
   const CALM=.45;   // below this energy a jump or a side hop becomes a slow sway, left to right over two beats
+  /* Nov 4 (classical ear test): GROOVE = does the song really have a beat (ears/beat-scan.js; 1 for pop, ~0 for rubato piano,
+     1 when not known). On beatless music the band stays stiller: the energy is scaled down (so leaps become sways), every
+     moment and move has a lower chance of going ahead, the front-line routine no longer comes with the 16-bar grid, and the
+     beat 1 lean is gentler (frame-loop.js). Eased over a few bars so a quiet passage in a pop song doesn't flip the band about. */
+  const grooveK=g=>.4+.6*g;   // chance scale: 1 on a pop song, .4 on beatless music
   const RULES={   // hold = the moment lasts this many bars (then its "end" line runs), gap = at least this many bars between two of the same
     lead:{hold:4,gap:8},singerOut:{hold:0,gap:2},drop:{hold:1,gap:DROP_GAP},quiet:{hold:2,gap:4},bar4:{hold:0,gap:0},bar8:{hold:0,gap:0},bar16:{hold:0,gap:0},pulse8:{hold:0,gap:0},pulse16:{hold:0,gap:0},build:{hold:0,gap:8},fill:{hold:1,gap:4},fullTilt:{hold:4,gap:16,owns:true},section:{hold:0,gap:0},chorus:{hold:0,gap:0},verse:{hold:0,gap:0},bridge:{hold:0,gap:0},   /* owns: while held, no other hop or step for its players (the routine must stay in sync) */end:{hold:0,gap:0},
     busy:{hold:2,gap:4},sparse:{hold:1,gap:4},   // busy / sparse: a player's notes per bar well above / below his own average for the song
@@ -2889,7 +2900,7 @@ window.DIRECTOR=(function(){
     {when:'end',who:'all',what:[['jump',{beat:0}]]},
     {when:'fill',who:'all',what:[['sway',{beat:0}]]},   // sheet v3: everyone sways after a drum fill
   ];
-  const D={bar:0,beat:0,inBar:0,sure:false,lead:null,held:{},since:{},quiet:false,singerOut:false,log:[],energy:.5,on:()=>!!(window.MOVES&&MOVES.on())   /* Nov 3: normal behaviour (was try-out director); off with the Still band try-out, via MOVES.on */};
+  const D={bar:0,beat:0,inBar:0,sure:false,lead:null,held:{},since:{},quiet:false,singerOut:false,log:[],energy:.5,groove:1,on:()=>!!(window.MOVES&&MOVES.on())   /* Nov 3: normal behaviour (was try-out director); off with the Still band try-out, via MOVES.on */};
   const AV={};   // each player's running song average (his level), and this bar's sum
   let lastN=-1,barSum={},barN=0,songT=0,queue=[],leadRun={},quietRun=0,outRun=0,backRun=0,notes={},prevE={},rising={},NAV={},busyRun={},sparseRun={},swing={},SWAV={},onRun={},offRun={},wasOff={},hadOn={},bandHist=[],DAV=null,tiltRun=0,awayBars={};
   function say(s){D.log.unshift(s);if(D.log.length>6)D.log.pop();}
@@ -2899,7 +2910,7 @@ window.DIRECTOR=(function(){
     const what=l.vary?l.vary[Math.min(l.vary.length-1,Math.floor(rnd()*l.vary.length))]:(odd&&l.alt?l.alt:l.what);   // vary: one of several, picked at random (Nov 2 evening: was by bar count — "samey")
     for(const [mv,o0] of what){let o=Object.assign({},o0);
       if((mv==='hop'||mv==='step')&&!(RULES[when]||{}).owns&&owned(l.who)){continue;}   // owned by the routine: this slide is dropped
-      const must=(RULES[when]||{}).owns||when==='end';let name=mv;if(!must&&rnd()>=Math.min(1,(1.6-(COST[mv]||.5))*(.5+D.energy)))continue;   // the move's own dice (cost × energy)
+      const must=(RULES[when]||{}).owns||when==='end';let name=mv;if(!must&&rnd()>=Math.min(1,(1.6-(COST[mv]||.5))*(.5+D.energy)*grooveK(D.groove)))continue;   // the move's own dice (cost × energy × groove)
       /* the leap gradient (designer, Nov 2 late): on a calm song a jump or a side hop is a slow sway instead (left to right over
          two beats); as the energy rises the hops grow from a shuffle to a real leap */
       if(!must&&(name==='jump'||(name==='hop'&&o.dx))&&D.energy<CALM){name='sway';o={beat:o.beat||0,rate:1/(4*P),amount:.1,dur:4*P};}
@@ -2907,7 +2918,7 @@ window.DIRECTOR=(function(){
     if(name==='hop'||name==='step')o.per=P;else if(name==='jump')o.dur=Math.min(.6,P*.9);else if(name==='mill')o.dur=Math.min(.8,P);
     queue.push({at:D.beat+(o.beat||0),who:l.who,mv:name,o});}}if(!again&&when!=='bar')say((extra||'')+when+' @ bar '+D.bar);}
   const REGULAR=new Set(['bar','bar4','bar8','bar16','pulse8','pulse16']),ALWAYS=new Set(['drop','section','chorus','verse','bridge','end','fullTilt','singerOut','singerBack']);
-  const chance=kind=>{const r=RULES[kind]||{};if(r.chance!=null)return r.chance;return REGULAR.has(kind)?CH.regular:ALWAYS.has(kind)?1:CH.react;};
+  const chance=kind=>{const r=RULES[kind]||{};const c=r.chance!=null?r.chance:REGULAR.has(kind)?CH.regular:ALWAYS.has(kind)?1:CH.react;return kind==='end'?c:c*grooveK(D.groove);};   // Nov 4: × groove (the song's end always)
   function start(kind,extra,who){const r=RULES[kind]||{},key=who?kind+':'+who:kind;if(D.bar-(D.since[key]||-1e9)<r.gap)return false;
     if(rnd()>=chance(kind)){if(!REGULAR.has(kind))D.since[key]=D.bar;return false;}   // the dice said no this time (a reactive moment still waits its gap; a regular one just tries again next time)
     D.since[key]=D.bar;
@@ -2924,7 +2935,7 @@ window.DIRECTOR=(function(){
     // sections (song files read ahead, ears/section-scan.js): a new section starting on this beat 1 = 'section', and its kind
     {const sec=window.SECTIONS?SECTIONS.now(t/1000):null;const key=sec?sec.bar+':'+sec.letter:null;
       if(key!==D.secKey){D.secKey=key;D.sec=sec;if(sec&&D.bar>1){start('section',sec.letter+' ');if(sec.kind==='chorus'||sec.kind==='verse'||sec.kind==='bridge')start(sec.kind);
-        if(sec.kind==='chorus'&&!D.held.fullTilt)start('fullTilt','(chorus) ');}}}   // the front-line routine opens every chorus
+        if(sec.kind==='chorus'&&!D.held.fullTilt&&D.groove>.5)start('fullTilt','(chorus) ');}}}   // the front-line routine opens every chorus (Nov 4: only on music with a real beat)
     // home base (designer, Nov 2: "two steps back should be followed by two forward eventually"): a player away from his spot
     // for two bars with no slide running hops home on this beat 1 (queued after this bar's moves, so a planned hop back wins)
     for(const m of members){const aw=MOVES.away(m.id);awayBars[m.id]=aw>.02&&!MOVES.sliding(m.id)?(awayBars[m.id]||0)+1:0;
@@ -2960,10 +2971,10 @@ window.DIRECTOR=(function(){
     {const sg=lv.vocals||0,dr=nt.drums||0,on=band>BA*1.1&&band>.4&&sg>.25&&dr>=(DAV||0)*.9;tiltRun=on?tiltRun+1:0;
       /* on songs whose levels stay flat (both built-in songs: their tracks are auto-levelled, so the band never gets "louder"),
          full tilt would never come; so it also comes with every drop (the 16-bar grid) — the designer can split the two later */
-      if((tiltRun>=2||D.bar%DROP_BARS===0)&&D.bar>4&&!D.held.fullTilt)start('fullTilt',tiltRun>=2?'':'(with the drop) ');}
+      if((tiltRun>=2||(D.bar%DROP_BARS===0&&D.groove>.5))&&D.bar>4&&!D.held.fullTilt)start('fullTilt',tiltRun>=2?'':'(with the drop) ');}   // Nov 4: the grid fallback only on music with a real beat
     // the song's energy: tempo (70 BPM = low, 150 = high), the drums' hits per bar against a busy 16, the ears' busyness; eased over ~4 bars
     {const tempo=Math.max(0,Math.min(1,(60/P-70)/80)),drums=Math.max(0,Math.min(1,(nt.drums||0)/16)),busy=window.FACTS&&FACTS.busy!=null?Math.max(0,Math.min(1,FACTS.busy)):.5,
-      want=.4*tempo+.35*drums+.25*busy;D.energy+=(want-D.energy)*.25;}
+      want=(.4*tempo+.35*drums+.25*busy)*(.5+.5*D.groove);D.energy+=(want-D.energy)*.25;}   // Nov 4: × groove (half the energy on beatless music)
     // a drum fill: far more hits than usual in the bar just gone (the move lands on the beat 1 after it)
     {const n=nt.drums||0,a=DAV;DAV=a==null?n:a+(n-a)*.1;if(D.bar>4&&n>=12&&n>DAV*1.8)start('fill');}
     // quiet: everyone soft for two bars
@@ -2988,7 +2999,7 @@ window.DIRECTOR=(function(){
   function step(t){if(!D.on())return;const B=L.beat,play=BV.a>.3&&B&&B.bpm>0;
     const sk=(L.songKey||'')+'|'+(L.songName||'');if(sk!==D.song){D.song=sk;reset();}   // a new song: count from the start again
     if(!play){lastN=-1;if(D.bar&&!L.mode){reset();}return;}
-    D.P=60/B.bpm;
+    D.P=60/B.bpm;{const g=B.groove==null?1:B.groove;D.groove+=(g-D.groove)*Math.min(1,.4*Math.min(.1,Math.max(0,(t-(D.t||t))/1000)));}   // groove eases in over ~3 s
     /* notes: a player's unsmoothed level (m.raw, puppeteer/update.js) jumping well above a floor that trails it; after a note
        the floor sits at that level, so the sound must dip before the next one counts (a strum per note, a hit per drum) */
     const dt=Math.min(.1,Math.max(0,(t-(D.t||t))/1000));D.t=t;
@@ -3002,10 +3013,10 @@ window.DIRECTOR=(function(){
   // a small, seedable random: the designer can ask for the same run again (window.__dirSeed) when chasing something he saw
   function seed(){let x=(window.__dirSeed!=null?+window.__dirSeed:Math.floor(Math.random()*1e9))>>>0||1;D.seed=x;rnd=()=>{x^=x<<13;x>>>=0;x^=x>>>17;x^=x<<5;x>>>=0;return x/4294967296;};}
   seed();
-  function reset(){Object.assign(D,{bar:0,beat:0,inBar:0,lead:null,held:{},since:{},quiet:false,singerOut:false});queue.length=0;barSum={};barN=0;leadRun={};quietRun=outRun=backRun=0;notes={};prevE={};rising={};busyRun={};sparseRun={};swing={};onRun={};offRun={};wasOff={};hadOn={};D.openT=0;bandHist=[];DAV=null;for(const k in SWAV)delete SWAV[k];for(const k in AV)delete AV[k];for(const k in NAV)delete NAV[k];}
+  function reset(){Object.assign(D,{bar:0,beat:0,inBar:0,lead:null,held:{},since:{},quiet:false,singerOut:false,groove:1});queue.length=0;barSum={};barN=0;leadRun={};quietRun=outRun=backRun=0;notes={};prevE={};rising={};busyRun={};sparseRun={};swing={};onRun={};offRun={};wasOff={};hadOn={};D.openT=0;bandHist=[];DAV=null;for(const k in SWAV)delete SWAV[k];for(const k in AV)delete AV[k];for(const k in NAV)delete NAV[k];}
   window.addEventListener('band:ended',()=>{if(D.on()&&D.bar>2){D.beat++;fire('end');for(const q of queue.splice(0))MOVES.go(q.who,q.mv,q.o);}});
   window.addEventListener('band:songfile',reset);
-  const readout=()=>!D.on()?'':`${D.last?'band '+(AV.__band||0).toFixed(2)+' · guitar: level '+(D.last.lv.guitar||0).toFixed(2)+' · '+(D.last.nt.guitar||0)+' notes · swing '+(D.last.sg.guitar||0).toFixed(2)+' (usual '+(NAV.guitar||0).toFixed(1)+' notes, '+(SWAV.guitar||0).toFixed(2)+')\n':''}${D.sec?D.sec.kind+' '+D.sec.letter+' · ':''}bar ${D.bar} · energy ${D.energy.toFixed(2)} · seed ${D.seed} · beat ${D.inBar+1}${D.sure?'':' (guessed)'}${D.lead?' · '+D.lead+' leads':''}${D.singerOut?' · singer out':''}${D.held.quiet?' · quiet':''}${Object.keys(D.held).filter(k=>!/^(drop|bar|quiet)$/.test(k)&&k!=='lead').map(k=>' · '+k.replace(':',' ')).join('')} · drop in ${DROP_BARS-(D.bar%DROP_BARS)}`;
+  const readout=()=>!D.on()?'':`${D.last?'band '+(AV.__band||0).toFixed(2)+' · guitar: level '+(D.last.lv.guitar||0).toFixed(2)+' · '+(D.last.nt.guitar||0)+' notes · swing '+(D.last.sg.guitar||0).toFixed(2)+' (usual '+(NAV.guitar||0).toFixed(1)+' notes, '+(SWAV.guitar||0).toFixed(2)+')\n':''}${D.sec?D.sec.kind+' '+D.sec.letter+' · ':''}bar ${D.bar} · energy ${D.energy.toFixed(2)} · groove ${D.groove.toFixed(2)} · seed ${D.seed} · beat ${D.inBar+1}${D.sure?'':' (guessed)'}${D.lead?' · '+D.lead+' leads':''}${D.singerOut?' · singer out':''}${D.held.quiet?' · quiet':''}${Object.keys(D.held).filter(k=>!/^(drop|bar|quiet)$/.test(k)&&k!=='lead').map(k=>' · '+k.replace(':',' ')).join('')} · drop in ${DROP_BARS-(D.bar%DROP_BARS)}`;
   return {LIST,RULES,state:D,step,reset,readout,fire};
 })();
 // ===== 3b. PAPER CUTOUT PUPPETS: each piece has one job and one pivot =====
@@ -3332,7 +3343,7 @@ function beatPose(t){const B=L.beat,dt=Math.min(.25,Math.max(0,(t-(BV.t||t))/100
   BV.a+=(want-BV.a)*(1-Math.exp(-dt/.4));
   /* Oct 27 (try-out "bars"): BV.b1 = 1 on beat 1 of each bar (ears/bar-finder.js), fading over about half a beat. The players use it to
      lean a little deeper into beat 1: a lean, not a hit, so a beat 1 found one beat off still just looks like an ordinary bob. */
-  {const R=L.bar,B=L.beat;let b1=0;if(R&&R.last>0   /* Nov 3: beat 1 lean is normal behaviour (was try-out bars) */&&B&&B.bpm>0){const P=60/B.bpm,since=t/1000-R.last;if(since>=0&&since<P)b1=Math.exp(-since/(.35*P));}BV.b1=b1;}
+  {const R=L.bar,B=L.beat;let b1=0;if(R&&R.last>0   /* Nov 3: beat 1 lean is normal behaviour (was try-out bars) */&&B&&B.bpm>0){const P=60/B.bpm,since=t/1000-R.last;if(since>=0&&since<P)b1=Math.exp(-since/(.35*P))*(.4+.6*(B.groove==null?1:B.groove));}BV.b1=b1;}   /* Nov 4: gentler on music with no real beat (groove, ears/beat-scan.js) */
   const v=members.find(m=>m.id==='vocals');if(v)v.sgS=(v.sgS||0)+(((v.open?1:0))-(v.sgS||0))*(1-Math.exp(-dt/.3));}   // is the singer in a sung line (smoothed)
 /* Oct 7 (the designer's idea, signed off Oct 7 as normal behaviour): the stage lights keep their own, slower beat clock (LV). It follows the
    band's beat (BV) but eases into a new tempo over ~3 s and back onto the beat over ~2 s, so when the band re-finds the rhythm
