@@ -494,7 +494,7 @@ body.in-app #ws{padding-top:112px}
 .mine{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px}
 .mine>button{width:100%;min-height:48px}
 .mgo{display:flex;flex-direction:column;gap:6px}.mgo .mineGo{min-height:48px}.mgo .mineAdj{min-height:44px}   /* Oct 23: Adjust beside Make them mine */
-.minst{display:flex;flex-direction:column;gap:6px}
+.minst{display:flex;flex-direction:column;gap:6px}.minst[hidden]{display:none}   /* Nov 8: the bass-drum row is for the drummer only; display:flex used to beat hidden, so every player saw it */
 .mchips{display:flex;gap:8px;flex-wrap:wrap}
 .mchips button{flex:1 1 0;min-width:56px;min-height:52px;padding:4px 6px;display:flex;align-items:center;justify-content:center}
 .mchips img{max-width:72px;max-height:40px;object-fit:contain;display:block}
@@ -514,7 +514,7 @@ body.in-app #ws{padding-top:112px}
 .mclose{align-self:center;min-width:120px}
 #mineEx{height:240px;border-radius:12px;background:#fbfbf9 center/contain no-repeat;border:1px solid #d6d6d2}
 #mineEx svg{width:100%;height:100%}
-.mtips{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}
+.mtips{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:6px}.mtips.plain{list-style:none;padding-left:0}.mtips li[hidden]{display:none}
 .mrow{display:flex;gap:10px;flex-wrap:wrap}.mrow .btn{flex:1 1 140px;text-align:center;min-height:48px;display:flex;align-items:center;justify-content:center}
 /* the upload panel, entered from Make them mine: the photo is already chosen, so its old heading, help and photo buttons go */
 #scan.mine>h2,#scan.mine>.hint,#scan.mine .scanpick{display:none}
@@ -532,6 +532,53 @@ body.in-app #mineDone{top:150px}
 /* Oct 26: the drawn words (the designer's Words (Oct 26) sheet): the big buttons' titles take the button's width, and the
    Size on stage label room for its word */
 .mbig .mbt.ui-w{display:block;height:26px}.msizer>.ui-w{display:inline-block;min-width:96px;height:20px}
+</style><style id="player-screen-css">/* Nov 8 (designer: "one simplified screen that lets you adjust more intuitively"): the player screen, player-screen.js.
+   Typed words in the hand font for now (drawn words come with the next design sheet). */
+#plBox{position:fixed;inset:0;z-index:28;background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+#plBox[hidden]{display:none}
+/* the screen fits the window (designer, desktop: "I have to scroll up and down"): the stage takes the spare height, the hint,
+   chips / Done row and tray stay in view below it; only a tall tray scrolls inside itself */
+.plcard{width:min(100%,560px);margin:0 auto;padding:8px 10px 10px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px;height:100%;min-height:0}
+.plhead{display:flex;align-items:center;gap:8px}
+.plhead h2{flex:1;margin:0;text-align:center;font:800 22px 'oddbop hand',system-ui,sans-serif;color:var(--ink);overflow-wrap:anywhere}
+.plhead button{min-height:44px;min-width:72px}
+@media (max-height:600px){.plhead h2{font-size:18px}.plhead button{min-height:38px}.plchips button{min-height:40px}.pltools button{min-height:40px}}
+#plUndo:disabled{opacity:.4}
+.plstage{position:relative;background:#fff;border:1px solid var(--line);border-radius:18px;flex:1 1 auto;min-height:180px;overflow:hidden;color:#1c1c20}
+#plCv{display:block;width:100%;height:100%;touch-action:manipulation;cursor:pointer}
+#plCv[hidden]{display:none}
+#plAdj{height:100%;overflow:auto;padding:6px 8px;box-sizing:border-box}
+#plAdj[hidden]{display:none}
+/* the adjusting panel hosted here: the upload panel's own heading, help, photo buttons, bottom row and frame go */
+#scan.pl{background:none!important;border:0!important;border-image:none!important;padding:0!important;margin:0;color:#1c1c20}
+#scan.pl>h2,#scan.pl>.hint,#scan.pl .scanpick,#scan.pl #scanMsg,#scan.pl>.row:not(.scanpick),#scan.pl #scanJoints>h3,#scan.pl #scanJoints>.hint{display:none}
+#scan.pl #scanJoints,#scan.pl #addCheck{margin:0}
+#scan.pl #addInst,#scan.pl [data-t="add.gHelp"],#scan.pl #addCheck>.hint{display:none}   /* the instrument is picked on the screen's own chip; the long help is the screen's one-line hint */
+#scan.pl #jointsCv,#scan.pl #addCv{display:block;margin:0 auto;max-width:none;width:auto}   /* the sheet caps these at 420 / 480 px; here they are sized by code (layout / frame) — a cap shrinks the picture under the pointer and every tap lands up-left of the arrow (designer's recording, Nov 8) */
+.plhint{min-height:20px;text-align:center;font:15px/1.3 'oddbop hand',system-ui,sans-serif;color:var(--mut);padding:0 6px}
+.plhint[hidden]{display:none}
+.plchips{display:flex;gap:8px}
+.plchips[hidden]{display:none}
+.plchips button{flex:1 1 0;min-width:0;min-height:48px;padding:6px 4px;font-size:15px}
+.plchips button[hidden]{display:none}
+.plchips button[aria-pressed="true"]{outline:3px solid #e8553d;outline-offset:1px}
+.pltray{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px;flex:0 1 auto;max-height:45%;overflow:auto}
+.pltray[hidden]{display:none}
+.pltray .plp{margin:0;font:15px/1.35 'oddbop hand',system-ui,sans-serif;color:var(--ink)}
+.plrow{display:flex;gap:10px;flex-wrap:wrap}.plrow .btn{flex:1 1 140px;text-align:center;min-height:48px;display:flex;align-items:center;justify-content:center;margin:0}
+.pllinks{display:flex;flex-wrap:wrap;justify-content:center;gap:0 14px}
+.pltray .mlink{color:var(--ink)}
+.pltray .msizer b{color:var(--ink)}
+.pltray #mineFront{margin-top:4px}
+.pltools{display:flex;gap:10px;justify-content:center}
+.pltools[hidden]{display:none}
+.pltools button{min-height:48px;flex:1 1 0;max-width:220px}
+#plDone[hidden]{display:none}
+/* the band page: a card is a tap target now; its old buttons are the designer's */
+body:not(.dev) #ws .card.pltap{cursor:pointer}
+body:not(.dev) #ws .card.pltap .mine{display:none}
+body:not(.dev) #ws .card.pltap>canvas{grid-row:1/span 2}
+body.pl-open{overflow:hidden}
 </style><style id="ui-art">
 /* PATCH06: the designer's hand-drawn interface, lossless WebP at 2x (made with tools/ui-sheets). Oct 8: the pictures are now files in src/art/ui/; this file keeps only how they are laid out */
 .ui-big-a{--f:var(--ui-big-button-a);--es:84;--ew:42.0px}
@@ -548,10 +595,19 @@ body.in-app #mineDone{top:150px}
 .ui-f:focus-visible{outline:none;filter:drop-shadow(0 0 3px #ffd36b) drop-shadow(0 0 7px rgba(255,211,107,.8))}
 .ui-f:disabled{filter:grayscale(1) opacity(.55)}
 .ui-w{position:relative}
-/* Nov 3 (designer, phone in dark mode: "can't read the text on these boxes"): the drawn words are black ink; on the dark
-   grey buttons and chips of dark mode (.alt, labels, anything but the orange buttons) the ink turns white, orange stays orange */
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .ui-w:not(button:not(.alt)):not(.btn:not(.alt))::after,:root:not([data-theme="light"]) .ui-i.ui-w:not(button:not(.alt))::before{filter:invert(1) hue-rotate(180deg)}}
-:root[data-theme="dark"] .ui-w:not(button:not(.alt)):not(.btn:not(.alt))::after,:root[data-theme="dark"] .ui-i.ui-w:not(button:not(.alt))::before{filter:invert(1) hue-rotate(180deg)}
+/* Nov 3 (designer, phone in dark mode: "can't read the text on these boxes"): the drawn words are black ink. In dark mode the
+   page and the plain buttons (Adjust, Draw, labels...) go dark, so the ink turns white there. Nov 8 (designer: the start menu came
+   out half light, half dark): the rule is now "white ink only on a dark surface", in three steps —
+   1. dark mode: every drawn word and icon turns white (the page itself is dark);
+   2. on white paper it stays black: drawn panels and cards (.ui-p), dialogs (.hbcard, .howcard, the Edit band tour card), the print
+      and upload panels, the clip-ready bar, any button with a drawn paper frame (.ui-f) and the orange buttons;
+   3. a dark plain button (button.alt / .btn.alt without a drawn frame) turns the ink white again wherever it sits, paper included
+      (the id'd panels in step 2 are wrapped in :where() so step 3 still outranks them — Nov 8 evening, Start again was black on dark). */
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ui-ink-flip:invert(1) hue-rotate(180deg)}}
+:root[data-theme="dark"]{--ui-ink-flip:invert(1) hue-rotate(180deg)}
+.ui-w::after,.ui-i.ui-w::before{filter:var(--ui-ink-flip,none)}
+.ui-p.ui-w::after,.ui-p .ui-w::after,.ui-p.ui-i.ui-w::before,.ui-p .ui-i.ui-w::before,.hbcard.ui-w::after,.hbcard .ui-w::after,.hbcard.ui-i.ui-w::before,.hbcard .ui-i.ui-w::before,.howcard.ui-w::after,.howcard .ui-w::after,.howcard.ui-i.ui-w::before,.howcard .ui-i.ui-w::before,:where(#tourCard).ui-w::after,:where(#tourCard) .ui-w::after,:where(#tourCard).ui-i.ui-w::before,:where(#tourCard) .ui-i.ui-w::before,:where(#sheetsP).ui-w::after,:where(#sheetsP) .ui-w::after,:where(#sheetsP).ui-i.ui-w::before,:where(#sheetsP) .ui-i.ui-w::before,:where(#scan).ui-w::after,:where(#scan) .ui-w::after,:where(#scan).ui-i.ui-w::before,:where(#scan) .ui-i.ui-w::before,:where(#recReady).ui-w::after,:where(#recReady) .ui-w::after,:where(#recReady).ui-i.ui-w::before,:where(#recReady) .ui-i.ui-w::before,.ui-f.ui-w::after,.ui-f .ui-w::after,.ui-f.ui-i.ui-w::before,.ui-f .ui-i.ui-w::before,button:not(.alt).ui-w::after,button:not(.alt) .ui-w::after,button:not(.alt).ui-i.ui-w::before,button:not(.alt) .ui-i.ui-w::before,.btn:not(.alt).ui-w::after,.btn:not(.alt) .ui-w::after,.btn:not(.alt).ui-i.ui-w::before,.btn:not(.alt) .ui-i.ui-w::before{filter:none}
+button.alt:not(.ui-f).ui-w::after,button.alt:not(.ui-f) .ui-w::after,button.alt:not(.ui-f).ui-i.ui-w::before,button.alt:not(.ui-f) .ui-i.ui-w::before,.btn.alt:not(.ui-f).ui-w::after,.btn.alt:not(.ui-f) .ui-w::after,.btn.alt:not(.ui-f).ui-i.ui-w::before,.btn.alt:not(.ui-f) .ui-i.ui-w::before{filter:var(--ui-ink-flip,none)}
 .ui-w>.ui-t{visibility:hidden}
 .ui-w::after{content:"";position:absolute;inset:0;background:var(--w) var(--wp,center)/auto var(--wh,16px) no-repeat;pointer-events:none}
 /* Oct 26: words on the newer screens' plain buttons: the drawn word is as tall as --wh, or smaller when the button is too narrow for it (never cut off) */
@@ -639,8 +695,16 @@ body.in-app #mineDone{top:150px}
   <button class="alt" id="scanBtn" data-t="edit.upload">📷 Upload a drawn sheet</button>
 </div>
 <div id="wsNote" hidden=""><span></span><button class="alt" id="wsUndo" data-t="edit.undo">↶ Undo</button></div>
+<div id="plBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="plName"><div class="plcard">
+  <div class="plhead"><button class="alt" id="plBack" data-t="pl.band">Band</button><h2 id="plName"></h2><button class="alt" id="plUndo" data-t="edit.undo">↶ Undo</button></div>
+  <div class="plstage" id="plStage"><canvas id="plCv" width="10" height="10"></canvas><div id="plAdj" hidden=""></div></div>
+  <div class="plhint" id="plHint" hidden=""></div>
+  <div class="plchips" id="plChips"><button class="alt" data-tray="draw" data-t="pl.drawing">Drawing</button><button class="alt" data-tray="inst" id="plChipInst"></button><button class="alt" data-tray="style" id="plChipStyle" data-t="pl.style">Style</button><button class="alt" data-tray="size" data-t="pl.size">Size</button></div>
+  <div class="pltray" id="plTray" hidden=""></div>
+  <div class="pltools" id="plTools" hidden=""><button class="alt" id="plCancel" data-t="pl.cancel">Cancel</button><button id="plDone" data-t="pl.done">Done</button></div>
+</div></div>
 <div id="mineBox" hidden="" role="dialog" aria-modal="true" aria-labelledby="mineT"><div class="hbcard mcard">
-  <div id="mineMain"><h3 id="mineT"></h3><p class="msub" data-t="mine.sub">Anything you don't draw stays ours.</p>
+  <div id="mineMain"><h3 id="mineT"></h3>
     <button id="mineDraw" class="mbig"><span class="mbt" data-t="mine.draw">Draw on paper</span><span class="mbs" data-t="mine.drawSub">Any paper, any pen. Then take a photo.</span></button>
     <button id="mineFace" class="mbig alt"><span class="mbt" data-t="mine.face">Photo of a face</span><span class="mbs" data-t="mine.faceSub">Put a real face on them. It stays on this phone.</span></button>
     <div id="mineInst" class="minst"><span class="msmall" id="mineInstQ"></span><div class="mchips"></div></div>
@@ -649,7 +713,7 @@ body.in-app #mineDone{top:150px}
     <div class="mlinks"><button class="mlink" id="minePrint" data-t="mine.print">Need a guide? Print a sheet</button><button class="mlink" id="mineAdjust" data-t="mine.adjust">Adjust their pose</button><button class="mlink" id="mineReset" data-t="mine.reset">Back to default</button></div>
     <button class="alt mclose" id="mineClose" data-t="mine.close">Close</button></div>
   <div id="mineTips" hidden=""><h3 id="mineTipsT"></h3><div id="mineEx" aria-hidden="true"></div>
-    <ol class="mtips"><li data-t="mine.tip1">Each part on its own, a finger's width apart.</li><li data-t="mine.tip2">A dark, thick pen. Colour in if you like.</li><li data-t="mine.tip3">Start small: just a head is enough.</li></ol>
+    <ol class="mtips"><li data-t="mine.tip1">Draw your band mate whole or just the parts you want to change (head, body, arms and legs). Take a photo of the drawing or choose one on your phone.</li><li></li><li></li></ol>
     <div class="mrow"><label class="btn" id="mineCamL"><span data-t="mine.takePhoto">Take photo</span><input id="mineCam" type="file" accept="image/*" capture="environment" hidden=""></label><label class="btn alt" id="mineFileL"><span data-t="mine.choosePhoto">Choose a photo</span><input id="mineFile" type="file" accept="image/*" hidden=""></label></div>
     <button class="mlink" id="mineBack" data-t="mine.back">Back</button></div>
 </div></div>
@@ -942,12 +1006,12 @@ window.WTXT={
 
   // ---- Edit band tour (Oct 12: opens the first time Edit band is opened; the "?" next to Back to the show opens it again)
   'tour.step': 'Step {n} of {of}',
-  'tour.title1': 'Make them mine',
-  'tour.text1': 'Every player has this button. Draw them on paper, or use a photo of a face.',
+  'tour.title1': 'Tap a player',
+  'tour.text1': 'Each player has a screen of their own: draw them or use a photo of a face, pick their instrument and style, and tap them to fix their pose.',
   'tour.title2': 'Pick their instrument',
   'tour.text2': 'Tap one of ours, or Draw to draw your own.',
   'tour.title3': 'Draw, then take a photo',
-  'tour.text3': 'Any paper, any pen: each part on its own. Then take a photo and tap each part.',
+  'tour.text3': 'Draw them whole or just the parts you want to change, any paper, any pen. Then take a photo.',
   'tour.title4': 'Watch them play',
   'tour.text4': 'Your new player goes straight on stage. Back to the show takes you there any time.',
   'tour.done': 'Got it',
@@ -1110,9 +1174,23 @@ window.WTXT={
   'add.instQ': 'Their instrument:',
   'add.instHouse': 'Ours',
   // Oct 22 (flow v3, "start from the player"): Make them mine
+  'pl.title': 'The {name}',
+  'pl.openCard': 'The {name}: tap to open their screen',
+  'pl.tapHint': 'Tap them to adjust a piece.',
+  'pl.adjHint': 'Drag the head, an arm or a leg to move it, or its dot to move the pin. Tap one to turn or size it. The body stays put.',
+  'pl.done': 'Done',
+  'pl.cancel': 'Cancel',
+  'pl.band': 'Band',
+  'pl.drawing': 'Drawing',
+  'pl.style': 'Style',
+  'pl.size': 'Size',
+  'pl.print': 'Print a guide',
+  'pl.drawInst': 'Draw your own {inst} on the same page.',
+  'pl.resetDone': 'Back to the default player.',
+  'pl.found': 'Found {n} piece{s}. Tap them if anything is wrong.',
+  'pl.missing': 'We couldn\'t find everything. Tap each part we ask for, or draw round it.',
   'mine.button': 'Make them mine',
   'mine.title': 'Make the {name} yours',
-  'mine.sub': 'Anything you don\'t draw stays ours.',
   'mine.draw': 'Draw on paper',
   'mine.drawSub': 'Any paper, any pen. Then take a photo.',
   'mine.face': 'Photo of a face',
@@ -1125,9 +1203,7 @@ window.WTXT={
   'mine.close': 'Close',
   'mine.tipsTitle': 'Draw the {name}',
   'mine.faceTitle': 'Photo of a face',
-  'mine.tip1': 'Each part on its own, a finger\'s width apart.',
-  'mine.tip2': 'A dark, thick pen. Colour in if you like.',
-  'mine.tip3': 'Start small: just a head is enough.',
+  'mine.tip1': 'Draw your band mate whole or just the parts you want to change (head, body, arms and legs). Take a photo of the drawing or choose one on your phone.',
   'mine.faceTip1': 'Close up and straight on, in good light.',
   'mine.faceTip2': 'Next you draw round the face with your finger.',
   'mine.faceTip3': 'It stays on this phone and shows in our printed look.',
@@ -1218,6 +1294,11 @@ window.OPT=(function(){
                   // afterRec (C), scanBeats + soundSync=auto, and moves + director + bars (Beat 1 moves) + moodLights (Nov 3, the designer tried jazz and classical too) were signed off and are now normal behaviour. Add new ones here as ['key','Label','tip'] (a tick box) or
                   // ['key','Label','tip',[['value','Choice label'],...]] (a choice; the first is the normal behaviour); dropped ones are deleted.
     ['stillBand','Still band (no stage moves)','Nov 3: switches OFF the stage moves and the Director (normal behaviour since Nov 3) to compare with the band that only bobs in place. Beat 1 lean and mood lights stay on'],
+    ['singerStyle','Singer style','Nov 7: how the singer carries themself. Pop singer = the choreography as it is. Hip hop = no jumps or twists (a sway instead), a nod on beat 1, and while they are clearly singing the free hand comes up and swings side to side with the beat. Hip hop + syllables = the same, plus the hand flicks on each vocal pulse (syllable) while they are clearly singing. Later a choice next to each player on Edit band',[['pop','Pop singer (normal)'],['hiphop','Hip hop'],['hiphop2','Hip hop + syllables']]],
+    ['guitarStyle','Guitar style','Nov 7: Rock = the choreography as it is. Indie = no Director moves at all; a shuffle instead — beats 1 and 2 the whole body bobs to the left, 3 and 4 to the right; the head shakes side to side between the bobs; the guitar is lifted head-up on beat 4 every second bar while playing; a double turn (a full 360) on the drop; staccato strumming. Later a choice next to each player on Edit band',[['rock','Rock (normal)'],['indie','Indie']]],
+    ['bassStyle','Bass style','Nov 8: Rock = the choreography as it is. Dub = very still: no hops, jumps, twists or windmill; a deep slow sway, a head nod on 2 and 4 (against the drummer), and the ripple as the signature on the drop and the 16-bar pulse',[['rock','Rock (normal)'],['dub','Dub']]],
+    ['keysStyle','Keys style','Nov 8: Showman = the choreography as it is. Synth-pop robot = moves in steps with hard stops: the head turns in clicks on the beat, and in busy keys spells (1 bar in 16 otherwise) steps barely off the neck — up, left, right, down on beats 1 to 4; on the drop, the 16-bar pulse and when the keys come in, the ROBOT arms — forearms turning in depth about a flat elbow, half a turn a beat, two bars',[['showman','Showman (normal)'],['robot','Synth-pop robot']]],
+    ['drumsStyle','Drums style','Nov 8: Rock = the choreography as it is (a hard nod on beat 3). Metal = a headbang on every beat at full force, and the sticks thrown up overhead for a beat on the drop and after a fill',[['rock','Rock (normal)'],['metal','Metal']]],
     ['soundSync','Sound sync','Oct 27: phones play a song ~0.1-0.2 s after the band hears it, so the band moves slightly early. This holds the band back so it moves to what you hear: the phone\'s own figure, or a fixed amount (more for Bluetooth headphones). Song files only',[['auto','Phone\'s own figure (normal since Nov 3)'],['off','Off'],['150','0.15 s'],['250','0.25 s (Bluetooth)']]],
   ];
   let v={};try{v=JSON.parse(localStorage.getItem('bandOpt')||'{}')||{};}catch(e){}
@@ -2043,7 +2124,7 @@ const TURNS=/^(arm|inst|fore|grip|head|leg|hand)/;   // pieces that get an angle
 const ARMS=new Set(['arm','arm2','armV','armL','armR','armS','armH','fore']),ELBOW=.42,HAND=.85;
 // arms drawn on a new sheet: where the hand sits along the picture (shoulder at .1); they bend halfway between the two
 const V2H={arm:.85,arm2:.85,armL:.85,armR:.85,armS:.6,armH:.6,armV:.85,fore:.65};
-const adjOf=l=>{const o={x:l.x,y:l.y,s:l.s,a:l.a};if(l.eb!=null)o.eb=l.eb;if(l.v2)o.v2=+l.v2||1;if(l.jaw)o.jaw=l.jaw;if(l.hand)o.hand=1;if(l.stick)o.stick=1;return o;};   /* Oct 23: stick = a drummer's arm drawn without a stick: ours goes in the hand */   // PATCH01: v2 = version of the new sheet the piece was placed from   // v2: piece drawn on a new sheet   // arms also keep their elbow bend (even 0)   // a piece's nudges, as saved
+const adjOf=l=>{const o={x:l.x,y:l.y,s:l.s,a:l.a};if(l.eb!=null)o.eb=l.eb;if(l.v2)o.v2=+l.v2||1;if(l.sz)o.sz=l.sz;if(l.jaw)o.jaw=l.jaw;if(l.hand)o.hand=1;if(l.stick)o.stick=1;return o;};   /* Oct 23: stick = a drummer's arm drawn without a stick: ours goes in the hand */   // PATCH01: v2 = version of the new sheet the piece was placed from   // v2: piece drawn on a new sheet   // arms also keep their elbow bend (even 0)   // a piece's nudges, as saved
 // Saved settings (slider positions, artwork, nudges) live in this browser
 let S={v:{},art:{},adj:{}};try{S=Object.assign(S,JSON.parse(localStorage.getItem('bandSave')||'{}'));}catch(e){}
 // This browser's memory belongs to one band file (its fingerprint, FILE_SIG = its BAND SETTINGS block). When the file changes
@@ -2201,7 +2282,7 @@ members.forEach(m=>{
     const set=u=>{u=artURL(u);if(!u)return;ly.want=u;const im=new Image();im.onload=()=>{if(ly.want===u)ly.img=im;};im.src=u;};   // Oct 7: the last picture asked for wins, even if an earlier, bigger one finishes loading later
     ARTSET[key]=u=>{set(u);S.art[key]=u;save();};
     ARTCLEAR[key]=()=>{ly.img=null;delete S.art[key];};     // back to the placeholder (used by presets)
-    ADJSET[key]=o=>{const d=Object.assign({x:0,y:0,s:1,a:0},DEF[key],o||{});['x','y','s','a'].forEach(q=>ly[q]=+d[q]);ly.v2=d.v2?(+d.v2||1):0;ly.jaw=+(d.jaw||0);if(ARMS.has(k)){ly.eb=+(d.eb||0);ly.hand=+(d.hand||0);ly.stick=+(d.stick||0);}   // Oct 22: hand = the hand is drawn on this arm   // o missing = original layout
+    ADJSET[key]=o=>{const d=Object.assign({x:0,y:0,s:1,a:0},DEF[key],o||{});['x','y','s','a'].forEach(q=>ly[q]=+d[q]);ly.v2=d.v2?(+d.v2||1):0;ly.sz=+(d.sz||0);ly.jaw=+(d.jaw||0);   /* Nov 8: sz = the body's size on its sheet when it was placed; the player's scale is read from it (scanner.js PLAYERK) */if(ARMS.has(k)){ly.eb=+(d.eb||0);ly.hand=+(d.hand||0);ly.stick=+(d.stick||0);}   // Oct 22: hand = the hand is drawn on this arm   // o missing = original layout
       row.querySelectorAll('[data-a]').forEach(sv);if(o)S.adj[key]=adjOf(ly);else delete S.adj[key];};
     if(S.art[key])set(S.art[key]);
     ARTDB.refresh.push(()=>{if(S.art[key])set(S.art[key]);});   // Oct 7: the user's own drawings arrive from the browser's database a moment after start
@@ -2770,21 +2851,129 @@ window.MOVES=(function(){
     // keys: one hand points up in the air while the other keeps playing (designer, Nov 2)
     point:[1.6,null,(mv,u,o)=>{mv.point=Math.max(mv.point,u<.2?ease(u/.2):u<.75?1:1-ease((u-.75)/.25));}],
     // drums: a hard head nod, down fast and back up (designer, Nov 2)
-    nod:[.5,null,(mv,u,o)=>{mv.nod=Math.max(mv.nod,u<.25?ease(u/.25):1-ease((u-.25)/.75));}],
+    nod:[.5,null,(mv,u,o)=>{mv.nod=Math.max(mv.nod,(o.amt||1)*(u<.25?ease(u/.25):1-ease((u-.25)/.75)));}],   // Nov 7: o.amt = how hard (the hip hop singer's nod is gentler than the drummer's)
     // vocals: the free arm goes up and waves side to side (designer, Nov 2)
     wave:[2.6,null,(mv,u,o,e)=>{const a=u<.2?ease(u/.2):u<.8?1:1-ease((u-.8)/.2);mv.wave=Math.max(mv.wave,a);mv.waveA=Math.sin(e*Math.PI*2*(o.rate||1.1))*.42*a;}],
+    // Nov 7 (designer: "the arm moving as a wave like in body popping"): the hip hop singer's arm wave. The free arm comes out
+    // level to the side, a hump runs along it from the fingertips to the shoulder, and the arm settles back. mv.armWave = how far
+    // the arm is in the level pose (eased in and out), mv.armC = where the hump is (1 = fingertips, 0 = shoulder; runs past both ends)
+    // Nov 7 (second look, designer: "going across to the mic arm and back"): both arms level, the hump runs from the free hand
+    // along that arm, across the body, down the mic arm to the mic, and back — one bar (the Director sets dur = 4 beats).
+    // mv.armG = where the hump is on that whole span: 0 free fingertips, 1 free shoulder, 2 mic shoulder, 3 mic fingertips.
+    armwave:[2.4,null,(mv,u,o)=>{const w=u<.12?ease(u/.12):u>.85?1-ease((u-.85)/.15):1;mv.armWave=Math.max(mv.armWave,w);
+        const v=Math.min(1,Math.max(0,(u-.06)/.88)),g=v<.5?-.3+3.6*(v*2):3.3-3.6*((v-.5)*2);mv.armG=g;
+        if(g>.9&&g<2.1)mv.tilt+=Math.sin(Math.PI*(g-.9)/1.2)*.05*w;}],   // the body rocks a little as the wave crosses the chest
+    // Nov 7 (designer): NECK UP — the guitar's head lifted for a beat (the whole instrument turned about the player's hands; the
+    // direction that lifts the drawn head is worked out in cutouts.js instLift). Only while the guitar is actually playing
+    // (the designer's "positive guitar": read as level above a floor). mv.neckUp 0..1, eased up over the first third, down over the last.
+    neckup:[.6,(mv,o,m)=>{o.off=!(m&&m.env>.12);},(mv,u,o)=>{if(o.off)return;mv.neckUp=Math.max(mv.neckUp,u<.35?ease(u/.35):u>.65?1-ease((u-.65)/.35):1);}],
+    // Nov 8 (designer): the ROBOT (keys, synth-pop) — body-popping 80s robot that shows off the 2D pieces. Two bars (the Director sets
+    // dur = 8 beats), one step per beat, each step a SNAP (the first quarter of the beat) then a hard stop. The head lifts off the body
+    // and travels round at right angles: up, left, up, across to the right, down, back to the middle, down home (mv.rhx / mv.rhy =
+    // the head's offset from its place, puppet units). The arms do the classic robot: upper arms out level, forearms up / down,
+    // swapping each step (mv.robot = the arms' weight, mv.rbA = which pose). Snap = quick ease then hold.
+    robot:[4,null,(mv,u,o)=>{const n=8,f=Math.min(n-1e-6,u*n),i=Math.floor(f),p=f-i,w=p<.25?ease(p/.25):1;
+        /* (designer, third look): the arms only — the forearms keep a flat 90-degree bend and turn in DEPTH about the elbow HALF a
+           turn per beat: up to down (passing "toward the viewer" mid-snap), then down to up; one arm up while the other is down.
+           mv.rbT = that turn. The head is not part of this move any more: it has its own pattern (headbox) while the keys are busy. */
+        mv.robot=Math.max(mv.robot,u<.1?ease(u/.1):u>.9?1-ease((u-.9)/.1):1);mv.rbT=(i+w)*Math.PI;}],
+
+    // Nov 8 (designer, fourth look): HEADBOX (keys, synth-pop robot) — independent of the arms, the head steps barely off the neck:
+    // beat 1 up, beat 2 left, beat 3 right, beat 4 down, each a snap then a stop. One bar (the Director sets dur = 4 beats); the
+    // Director fires it every bar of a busy keys spell and, otherwise, with a 1-in-16 chance per bar ("right now it's too much").
+    headbox:[2,null,(mv,u,o)=>{const PTS=[[0,-6],[-6,-3],[6,-3],[0,1]],f=Math.min(4-1e-6,u*4),i=Math.floor(f),p=f-i,w=p<.25?ease(p/.25):1,a=i===0?[0,0]:PTS[i-1],b=PTS[i];
+        mv.rhx=a[0]+(b[0]-a[0])*w;mv.rhy=a[1]+(b[1]-a[1])*w;}],
+    // Nov 8 (designer): STICKS UP (drums, metal) — both arms thrown up overhead, sticks and all, for a beat, then back to the kit.
+    // mv.sticksUp 0..1: fast up (first 30%), held, down over the last 30%. The Director fires it on the drop and after a fill.
+    sticksup:[.7,null,(mv,u,o)=>{mv.sticksUp=Math.max(mv.sticksUp,u<.3?ease(u/.3):u>.7?1-ease((u-.7)/.3):1);}],
+    // Nov 7 (designer): RIPPLE — both arms go up in the air and a ripple runs up the whole puppet from the feet to the fingertips
+    // and back down again, over one bar (the Director sets dur = 4 beats). mv.armsUp = the arms' raise (eased in/out);
+    // mv.strips = {mode:'ripple', c, amp, W}: the stage draws him in strips foreshortened by a hump (in depth) centred at
+    // height c (puppet units: feet ~150, raised fingertips ~0). Works on any drawing: no new pieces.
+    ripple:[2,null,(mv,u,o)=>{const w=u<.12?ease(u/.12):u>.8?1-ease((u-.8)/.2):1;mv.armsUp=Math.max(mv.armsUp,w);
+        const v=Math.min(1,Math.max(0,(u-.08)/.84)),up=v<.5?v*2:2-v*2,c=150-160*ease(up);mv.strips={mode:'ripple',c,amp:(o.amp||34)*w,W:o.W||28};}],   /* amp = depth of the hump (puppet units): a slope of ~50 degrees at its steepest */
     // sways side to side on the spot (a paper puppet rocked on its feet)
     sway:[2.4,null,(mv,u,o,e)=>{const a=Math.min(1,u/.2,(1-u)/.2);mv.tilt+=Math.sin(e*Math.PI*2*(o.rate||.8))*(o.amount||.1)*a;}],
   };
-  function go(id,name,o){const sp=SPEC[name];if(!sp)return;o=Object.assign({},o||{});
+  function go(id,name0,o0){if(!SPEC[name0])return;
     const who=id==='all'?members:members.filter(m=>m.id===id);
-    for(const m of who){const mv=mvOf(m);if(o.delay)o._wait=o.delay;   // seconds to wait before it starts
+    for(const m of who){if(trait(m.id,'none')&&!(trait(m.id,'only')||{})[name0])continue;   // Nov 7: a style with no moves at all but its own few (indie guitar: the shuffle is the act, plus neckup)
+      const mv=mvOf(m),name=swap(m.id,name0),sp=SPEC[name],o=Object.assign({},o0||{});   // Nov 7: the player's style may do another move instead (a swapped-in nod is a gentle one)
+      if(name!==name0){if(name==='nod')o.amt=.6;if(name==='sway'){o.rate=o.rate||.8;o.amount=o.amount||.1;delete o.height;delete o.dur;}}if(name==='wave')delete o.dur;   /* a plain wave keeps its own length (the Director passes a bar for the arm wave it may become) */
+      if(o.delay)o._wait=o.delay;   // seconds to wait before it starts
       for(let i=list.length-1;i>=0;i--)if(list[i].m===m&&list[i].name===name){const a=list[i];list.splice(i,1);   // the same move again restarts it
         if(a.t0!=null&&(name==='hop'||name==='step')){mv.dx=a.x0+(a.dx||0);mv.dy=a.y0+(a.dy||0);}}   // a hop cut short still lands where it was going (no drift)
       list.push(Object.assign({m,name,t0:null,dur:sp[0]},o));}}
-  function step(t){for(const m of members){const mv=mvOf(m);mv.lift=0;mv.sq=1;mv.leg=0;mv.lean=0;mv.look=0;mv.mill=0;mv.point=0;mv.nod=0;mv.wave=0;mv.waveA=0;mv.tilt=0;mv.strips=null;}
+  /* ===== STYLES (Nov 7, try-out "Singer style"): the same player, carrying themself differently =====
+     A style is a small page of its own: which moves it will not do (and what it does instead), plus a MANNERISM — something
+     that runs for as long as a condition holds, rather than a one-shot move. Only the singer has styles so far (the try-out
+     option singerStyle; later a choice next to each player on Edit band). The Director's choreography stays as it is: the
+     swap below is applied to whatever it asks for, so one list serves every style.
+     Hip hop (the designer, Nov 7): no jumping and twisting, a nod on beat 1, and when they are clearly singing the free hand
+     comes up and swings side to side with the beat. */
+  const STYLES={pop:{swap:{}},hiphop:{swap:{jump:'sway',twist:'sway',wave:'armwave'}},   // Nov 7 (second look): the singer's wave becomes the arm wave
+    hiphop2:{base:'hiphop',syl:true},   // Nov 7 (second look): hip hop plus a flick of the hand on each vocal pulse (syllable)
+    rock:{swap:{}},indie:{swap:{},none:true,only:{neckup:1,turn:1},shuffle:1,headShake:.13,staccato:1},
+    dub:{swap:{},none:true,only:{ripple:1},dubGroove:1},
+    showman:{swap:{}},robot:{swap:{},none:true,only:{robot:1,headbox:1},robotHead:1},
+    metal:{swap:{},headbang:1}};   // Nov 8 (designer): drums option 2, Metal — headbang every beat, sticks up overhead on the drop / after a fill; keeps the rest of the drummer's choreography   // Nov 8 (designer): keys option 2, the synth-pop ROBOT — stepped moves with hard stops; the head lifts off the body and travels at right angles, classic robot arms   // Nov 8 (designer): bass option 2, Dub — very still; a deep slow sway and a nod on 2 and 4 (mannerism), the ripple as the signature   // Nov 7 (designer, second go): guitar option 2, Indie — no Director moves except its own (neckup: the guitar's head lifted, beat 4 every 2 bars while playing); a shuffle (beats 1-2 the whole body bobs left, 3-4 right, the leg on that side stepping out first), the head shakes between bobs, staccato strumming
+  const STYLE_OPT={vocals:['singerStyle','pop'],guitar:['guitarStyle','rock'],bass:['bassStyle','rock'],keys:['keysStyle','showman'],drums:['drumsStyle','rock']};   // which try-out option holds each player's style, and the normal one
+  const style=id=>{const so=STYLE_OPT[id];if(!so)return 'pop';const v=window.OPT&&OPT.val(so[0]);return v&&STYLES[v]?v:so[1];};
+  const is=(id,st)=>{let k=style(id);while(k){if(k===st)return true;k=STYLES[k].base;}return false;};   // this style, or one built on it
+  const trait=(id,f)=>{let k=style(id);while(k){if(STYLES[k][f]!=null)return STYLES[k][f];k=STYLES[k].base;}return null;};
+  const swap=(id,name)=>((trait(id,'swap')||{})[name])||name;   // the move this player's style does instead (or the same move)
+  /* the hip hop hand: SURE = a sung line is open and the singer disguise is not covering the mouth (the detector is confident).
+     mv.hh eases up over ~.4 s and down over ~.6 s; mv.hhA swings -1..1 and back once per beat (the designer asked for faster and smaller after the first look), scaled
+     by how much the band is moving to the beat at all (BV.a), so the hand settles when the music stops. */
+  /* where we are in the bar, 0..4 (beat 1 = 0), from the bar finder's last beat 1 and the beat clock; the plain beat count if no bars yet */
+  function barPos(t){const R=L.bar,B=L.beat;if(R&&R.last>0&&B&&B.bpm>0){const p=((t/1000-R.last)/(60/B.bpm))%4;if(isFinite(p)&&p>=0)return p;}
+    return typeof BV!=='undefined'?(((BV.n%4)+4)%4)+BV.ph:0;}
+  /* the indie shuffle (designer, Nov 7): beats 1 and 2 the whole body is over to the left and bobs on each beat, beats 3 and 4 over to the
+     right. mv.shx = the body's sideways slide (puppet units), eased so the change of side is a step, not a snap; the bob itself is the
+     ordinary on-the-beat dip plus a squash here. Scaled by how much the band moves to the beat at all (BV.a), so it rests when the music does. */
+  function shuffle(m,t){const mv=mvOf(m),ba=typeof BV!=='undefined'?BV.a:0,dt=Math.min(.1,Math.max(0,(t-(m.shT||t))/1000));m.shT=t;
+    const bp=barPos(t),side=bp<2?-1:1;m.shS=(m.shS||0)+(side-(m.shS||0))*(1-Math.exp(-dt/.09));
+    const dip=typeof BV!=='undefined'?.5+.5*Math.cos(2*Math.PI*BV.ph):0;
+    mv.shx=m.shS*7*ba;mv.lean+=m.shS*.05*ba;mv.sq=Math.min(mv.sq,1-.05*dip*ba);   /* (shx, not dx: dx is where the hops have slid him) */
+    /* the feet (designer): before the body moves to a side, the leg on that side leads, stepping out. The step runs over the .6 beat
+       around the change of side (from .3 beat before to .3 after): the leg swings out, the body follows, the leg comes back under him.
+       The left leg leads into beat 1 (going left), the right leg into beat 3 (going right). mv.legL / mv.legR = outward swing (rad). */
+    const stepAt=(centre,leg)=>{let d=bp-centre;if(d>2)d-=4;if(d<-2)d+=4;if(d>-.3&&d<.3){const u=(d+.3)/.6;mv[leg]=Math.max(mv[leg]||0,Math.sin(Math.PI*u)*.42*ba);}};
+    stepAt(0,'legL');stepAt(2,'legR');}
+  /* the dub groove (designer, Nov 8): the whole puppet sways deep and slow — one full sway every two bars — with a little weight
+     shift sideways, and the head nods on beats 2 and 4 (the off-beats, against the drummer who nods on 1 and 3). Everything
+     scaled by how much the band moves to the beat (BV.a), so he rests when the music does. */
+  function dubGroove(m,t){const mv=mvOf(m),ba=typeof BV!=='undefined'?BV.a:0,bp=barPos(t),bt=typeof BV!=='undefined'?BV.n+BV.ph:0;
+    const sw=Math.sin(Math.PI*bt/4);mv.tilt+=sw*.07*ba;mv.shx=sw*4*ba;mv.lean+=sw*.04*ba;
+    const d=Math.min(Math.abs(bp-1),Math.abs(bp-3));if(d<.4)mv.nod=Math.max(mv.nod,.55*Math.cos(Math.PI*d/.8)*ba);}
+  /* the robot's manner between moves (designer, Nov 8): the head turns in clicks — a new angle each beat, snapped in the first
+     fifth of the beat and held — cycling left, middle, right, middle; the body leans a touch the same way. mv.look is the head's turn. */
+  function robotHead(m,t){const mv=mvOf(m),ba=typeof BV!=='undefined'?BV.a:0;if(typeof BV==='undefined'||!(ba>.05))return;
+    const n=((BV.n%4)+4)%4,p=BV.ph,SEQ=[-.16,0,.16,0],a=SEQ[(n+3)%4],b=SEQ[n],w=p<.2?ease(p/.2):1,v=(a+(b-a)*w)*ba;
+    mv.look+=v;mv.lean+=v*.3;}
+  /* the metal headbang (designer, Nov 8): a full-force nod on EVERY beat — snaps down on the beat, comes up over the rest of it —
+     scaled by how much the band moves to the beat. (The rock drummer's hard nod on beat 3 is a Director line, rock-only.) */
+  function headbang(m,t){const mv=mvOf(m),ba=typeof BV!=='undefined'?BV.a:0;if(typeof BV==='undefined'||!(ba>.05))return;
+    const p=BV.ph,a=p<.18?ease(p/.18):1-ease((p-.18)/.82);mv.nod=Math.max(mv.nod,a*ba);}
+  function mannerism(m,t){const mv=mvOf(m);mv.hh=0;mv.hhA=0;mv.hhP=0;mv.shx=0;mv.legL=0;mv.legR=0;mv.rhx=0;mv.rhy=0;mv.robot=0;mv.rbT=0;mv.sticksUp=0;if(on()&&trait(m.id,'shuffle'))shuffle(m,t);else m.shS=0;
+    if(on()&&trait(m.id,'headbang'))headbang(m,t);
+    if(on()&&trait(m.id,'dubGroove'))dubGroove(m,t);if(on()&&trait(m.id,'robotHead'))robotHead(m,t);
+    if(m.id!=='vocals'||!is(m.id,'hiphop')||!on()){m.hhS=0;m.hhF=null;return;}
+    const dt=Math.min(.1,Math.max(0,(t-(m.hhT||t))/1000));m.hhT=t;
+    const sure=!!m.open&&!(m.dgS&&m.dgS.cover>.5),want=sure?1:0;
+    m.hhS=(m.hhS||0)+(want-(m.hhS||0))*(1-Math.exp(-dt/(sure?.4:.6)));if(!isFinite(m.hhS))m.hhS=0;
+    const bt=typeof BV!=='undefined'&&isFinite(BV.n+BV.ph)?BV.n+BV.ph:t/500,ba=typeof BV!=='undefined'?Math.min(1,BV.a*1.5):1;
+    mv.hh=m.hhS*ba;mv.hhA=Math.sin(Math.PI*2*bt);
+    /* syllables (hiphop2): a vocal pulse = the singer's raw level (m.raw, update.js) jumping well above a floor that trails it,
+       the same trick the Director uses to count notes. At least 150 ms apart (faster than a hand can read), and only while
+       sure. mv.hhP = 1 on the pulse, gone ~.2 s later: the hand flicks on it. On a mixed song some pulses will be a strum or
+       a chord in the singer's band, not a syllable: good enough to try, not a real syllable detector. */
+    if(trait(m.id,'syl')&&m.hhS>.5){const r=Math.min(1,m.raw||0),f=m.hhF==null?r:Math.min(r,m.hhF+dt*1.2);
+      if(r-f>.08&&t-(m.hhLast||0)>150){m.hhLast=t;m.hhF=r;}else m.hhF=f;
+      const since=(t-(m.hhLast||-1e9))/1000;mv.hhP=since<.2?1-since/.2:0;}else m.hhF=null;}   // Nov 7 (designer: faster and smaller): a full there-and-back every beat
+  function step(t){for(const m of members){const mv=mvOf(m);mv.lift=0;mv.sq=1;mv.leg=0;mv.lean=0;mv.look=0;mv.mill=0;mv.point=0;mv.nod=0;mv.wave=0;mv.waveA=0;mv.tilt=0;mv.strips=null;mv.armWave=0;mv.armG=0;mv.armsUp=0;mv.neckUp=0;mannerism(m,t);}
     for(let i=0;i<list.length;i++){const a=list[i],mv=mvOf(a.m);
-      if(a.t0==null){if(a._wait>0){a._wait-=1/60;continue;}a.t0=t;const sp=SPEC[a.name];if(sp[1])sp[1](mv,a);if(a.dur==null||!(a.dur>0))a.dur=a.dur||1;}
+      if(a.t0==null){if(a._wait>0){a._wait-=1/60;continue;}a.t0=t;const sp=SPEC[a.name];if(sp[1])sp[1](mv,a,a.m);if(a.dur==null||!(a.dur>0))a.dur=a.dur||1;}
       const e=(t-a.t0)/1000,u=Math.min(1,e/a.dur);SPEC[a.name][2](mv,u,a,e);
       if(u>=1){list.splice(i,1);i--;}}}
   // each player's own move at once: windmills, the keys point, the drummer's nod, the singer's wave
@@ -2803,7 +2992,7 @@ window.MOVES=(function(){
   function release(id){for(let i=list.length-1;i>=0;i--)if(list[i].m.id===id)list.splice(i,1);const m=members.find(q=>q.id===id);if(m&&m.mv){m.mv.dx=0;m.mv.dy=0;}}
   function reset(){list.length=0;for(const m of members)m.mv={dx:0,dy:0,face:1};}
   const on=()=>!(window.OPT&&OPT.on('stillBand'));   /* Nov 3: stage moves are normal behaviour (was try-out moves); the Still band try-out turns them off to compare */
-  return {go,showOff,step,spot,pose,busy,reset,release,away,home,sliding,on,names:Object.keys(SPEC),own:OWN};
+  return {go,showOff,step,spot,pose,busy,reset,release,away,home,sliding,on,style,is,trait,swap,names:Object.keys(SPEC),own:OWN};
 })();
 /* ===== THE DIRECTOR (Nov 2, try-out "moves"): musical moments → the band's choreography =====
    Layer 2 of the animation kit (design doc, Nov 2). The ears say what the music is doing; the Director turns that into a few
@@ -2836,7 +3025,7 @@ window.DIRECTOR=(function(){
      and the song has an ENERGY 0..1 (tempo, how busy the drums are, how busy the sound is; settles over a few bars). A move
      in a line goes ahead with chance (1.6 - cost) × (0.5 + energy), capped at 1: on a slow song mostly sways and nods, small
      hops; on a fast busy one everything, bigger. Moments that own their players (the routine) and the song's end skip the dice. */
-  const COST={sway:.3,nod:.3,turn:.4,twist:.4,point:.5,wave:.5,step:.5,mill:.6,jump:.6,hop:.6};   // (designer: twirls look good on slow songs — twist and turn are cheap; it is the leaping about that jars)
+  const COST={sway:.3,nod:.3,turn:.4,twist:.4,point:.5,wave:.5,armwave:.5,ripple:.5,neckup:.3,robot:.5,headbox:.2,sticksup:.4,step:.5,mill:.6,jump:.6,hop:.6};   // (designer: twirls look good on slow songs — twist and turn are cheap; it is the leaping about that jars)
   const CALM=.45;   // below this energy a jump or a side hop becomes a slow sway, left to right over two beats
   /* Nov 4 (classical ear test): GROOVE = does the song really have a beat (ears/beat-scan.js; 1 for pop, ~0 for rubato piano,
      1 when not known). On beatless music the band stays stiller: the energy is scaled down (so leaps become sways), every
@@ -2844,7 +3033,7 @@ window.DIRECTOR=(function(){
      beat 1 lean is gentler (frame-loop.js). Eased over a few bars so a quiet passage in a pop song doesn't flip the band about. */
   const grooveK=g=>.4+.6*g;   // chance scale: 1 on a pop song, .4 on beatless music
   const RULES={   // hold = the moment lasts this many bars (then its "end" line runs), gap = at least this many bars between two of the same
-    lead:{hold:4,gap:8},singerOut:{hold:0,gap:2},drop:{hold:1,gap:DROP_GAP},quiet:{hold:2,gap:4},bar4:{hold:0,gap:0},bar8:{hold:0,gap:0},bar16:{hold:0,gap:0},pulse8:{hold:0,gap:0},pulse16:{hold:0,gap:0},build:{hold:0,gap:8},fill:{hold:1,gap:4},fullTilt:{hold:4,gap:16,owns:true},section:{hold:0,gap:0},chorus:{hold:0,gap:0},verse:{hold:0,gap:0},bridge:{hold:0,gap:0},   /* owns: while held, no other hop or step for its players (the routine must stay in sync) */end:{hold:0,gap:0},
+    lead:{hold:4,gap:8},singerOut:{hold:0,gap:2},drop:{hold:1,gap:DROP_GAP},quiet:{hold:2,gap:4},bar4:{hold:0,gap:0},bar8:{hold:0,gap:0},bar16:{hold:0,gap:0},pulse8:{hold:0,gap:0},pulse16:{hold:0,gap:0},build:{hold:0,gap:8},fill:{hold:1,gap:4},fullTilt:{hold:4,gap:16,owns:true},section:{hold:0,gap:0},chorus:{hold:0,gap:0},verse:{hold:0,gap:0},bridge:{hold:0,gap:0},   /* owns: while held, no other hop or step for its players (the routine must stay in sync) */end:{hold:0,gap:0},beat1:{hold:0,gap:0},bar2:{hold:0,gap:0},
     busy:{hold:2,gap:4},sparse:{hold:1,gap:4},   // busy / sparse: a player's notes per bar well above / below his own average for the song
     loud:{hold:1,gap:4},comesIn:{hold:0,gap:4},dropsOut:{hold:0,gap:4},longNote:{hold:0,gap:4},bar:{hold:0,gap:0}};   // loud: above his usual this bar; comes in / drops out: from silent to playing and back; long note: one sung line held 1.5 s
   const LIST=[   // when, who, what. "X:end" lines run when a held moment is over; each:'bar' = run again on every beat 1 while the
@@ -2858,6 +3047,7 @@ window.DIRECTOR=(function(){
     {when:'pulse16',who:'guitar',every:16,vary:[[['mill',{beat:0}]],[['twist',{beat:0}]]]},
     {when:'pulse8',who:'bass',every:8,vary:[[['hop',{dx:.08,beat:0}],['hop',{dx:-.08,beat:2}],['hop',{dx:.08,beat:4}],['hop',{dx:-.08,beat:6}]],[['sway',{beat:0}]],[['jump',{beat:0}],['jump',{beat:4}]]]},
     {when:'pulse16',who:'bass',every:16,vary:[[['mill',{beat:0}]],[['turn',{beat:0}],['turn',{beat:4}]]]},   // a turn round and back
+    {when:'pulse16',who:'bass',every:16,style:'dub',what:[['ripple',{beat:0}]]},   // Nov 8: the dub bassist's 16-bar pulse is the ripple (his other lines are refused: style dub allows only the ripple)
     {when:'pulse8',who:'keys',every:8,vary:[[['sway',{beat:0}]],[['jump',{beat:0}]]]},
     {when:'pulse16',who:'keys',every:16,vary:[[['point',{beat:0}]],[['twist',{beat:0}]]]},
     {when:'pulse8',who:'vocals',every:8,vary:[[['hop',{dx:-.08,beat:0}],['hop',{dx:.08,beat:2}],['hop',{dx:-.08,beat:4}],['hop',{dx:.08,beat:6}]],[['jump',{beat:0}],['jump',{beat:4}]],[['sway',{beat:0}]]]},
@@ -2874,7 +3064,8 @@ window.DIRECTOR=(function(){
     {when:'sparse',who:'guitar',what:[['turn',{beat:0}]]},
     {when:'sparse:end',who:'guitar',what:[['turn',{beat:0}]]},   // "but also returns to default after 1 bar"
     {when:'quiet',who:'guitar',what:[['sway',{beat:0}]]},
-    {when:'drop',who:'guitar',what:[['twist',{beat:3}]]},   // sheet v3: twist on the drop's beat 4 (was: when the quiet ends)
+    {when:'drop',who:'guitar',style:'rock',what:[['twist',{beat:3}]]},   // sheet v3: twist on the drop's beat 4 (was: when the quiet ends)
+    {when:'drop',who:'guitar',style:'indie',what:[['turn',{beat:0}],['turn',{beat:2}]]},   // Nov 8 (designer): the indie guitarist's special — a double turn on the drop, one on the 1 and one on the 3: a full 360
     {when:'busy',who:'guitar',what:[['mill',{beat:0}]]},
     // BASS
     {when:'lead',who:'bass',what:[['step',{dy:.14,beat:0}]]},
@@ -2882,20 +3073,31 @@ window.DIRECTOR=(function(){
     {when:'loud',who:'bass',what:[['jump',{beat:0}]]},
     {when:'quiet',who:'bass',what:[['sway',{beat:0}]]},
     {when:'drop',who:'bass',what:[['twist',{beat:1}],['mill',{beat:2}]]},
+    {when:'drop',who:'bass',style:'dub',what:[['ripple',{beat:0}]]},   // Nov 8: the dub bassist ripples on the drop
     // KEYS
     {when:'comesIn',who:'keys',what:[['point',{beat:2}]]},   // 2 beats after
     {when:'build',who:'keys',what:[['sway',{beat:0}]]},   // sheet v3: sway on a build (was: keys leads)
     {when:'drop',who:'keys',what:[['twist',{beat:1}]]},
+    {when:'drop',who:'keys',style:'robot',what:[['robot',{beat:0}]]},   // Nov 8: the synth-pop robot's drop, 16-bar pulse and entrance are all the ROBOT (his other lines are refused)
+    {when:'pulse16',who:'keys',every:16,style:'robot',what:[['robot',{beat:0}]]},
+    {when:'comesIn',who:'keys',style:'robot',what:[['robot',{beat:0}]]},
+    {when:'busy',who:'keys',style:'robot',each:'bar',what:[['headbox',{beat:0}]]},   // Nov 8: the robot's head box every bar of a busy keys spell...
+    {when:'beat1',who:'keys',style:'robot',chance:1/16,what:[['headbox',{beat:0}]]},   // ...and 1 bar in 16 otherwise (designer: "right now it's too much")
     {when:'busy',who:'keys',what:[['turn',{beat:0}]]},
     {when:'busy:end',who:'keys',what:[['turn',{beat:0}]]},   // faces the front again when the busy spell is over (a turned-away keys player would be odd for long)
     // DRUMS
-    {when:'bar',who:'drums',what:[['nod',{beat:2}]]},   // a hard nod on beat 3 of every bar
+    {when:'bar',who:'drums',style:'rock',what:[['nod',{beat:2}]]},   // a hard nod on beat 3 of every bar (rock; the metal drummer headbangs every beat instead — moves.js)
+    {when:'drop',who:'drums',style:'metal',what:[['sticksup',{beat:0}]]},   // Nov 8: metal — sticks thrown up on the drop...
+    {when:'fill',who:'drums',style:'metal',what:[['sticksup',{beat:0}]]},   // ...and on the beat 1 after a fill
     // SINGER
     {when:'longNote',who:'vocals',what:[['wave',{beat:0}]]},
+    {when:'beat1',who:'vocals',style:'hiphop',what:[['nod',{beat:0,amt:.6}]]},   // Nov 7: the hip hop singer nods on the one (every bar; the Director's dice don't apply to beat1)
+    {when:'bar2',who:'guitar',style:'indie',what:[['neckup',{beat:3}]]},   // Nov 7: the indie guitarist lifts the guitar's head on beat 4 every second bar (while playing — the move checks)
     {when:'singerBack',who:'vocals',what:[['step',{dy:.14,beat:0}]]},
     {when:'singerOut',who:'vocals',what:[['step',{dy:-.14,beat:0}]]},
     {when:'build',who:'vocals',what:[['jump',{beat:0}]]},   // sheet v3: jump on a build
-    {when:'drop',who:'vocals',what:[['twist',{beat:0}]]},
+    {when:'drop',who:'vocals',style:'pop',what:[['twist',{beat:0}]]},
+    {when:'drop',who:'vocals',style:'hiphop',what:[['ripple',{beat:0}]]},   // Nov 7: the hip hop singer's drop = arms up, the ripple up and down over the bar
     // EVERYONE
     {when:'end',who:'all',what:[['jump',{beat:0}]]},
     {when:'fill',who:'all',what:[['sway',{beat:0}]]},   // sheet v3: everyone sways after a drum fill
@@ -2907,16 +3109,18 @@ window.DIRECTOR=(function(){
   // who is owned by an exclusive moment right now (RULES.owns): their other hops and steps are dropped while it is held
   const owned=id=>{for(const key in D.held){const h=D.held[key];if(!(RULES[h.kind]||{}).owns)continue;if(LIST.some(l=>l.when===h.kind&&(l.who===id||l.who==='all')))return h.kind;}return null;};
   function fire(when,extra,who,again,odd){const P=D.P;for(const l of LIST)if(l.when===when&&(!who||l.who===who)&&(!again||l.each==='bar')){
+    if(l.style&&!MOVES.is(l.who,l.style))continue;   // Nov 7: a line for one style only (moves.js STYLES)
+    if(l.chance!=null&&rnd()>=l.chance)continue;   // Nov 8: a line's own odds (the robot's head box: 1 in 16 on an ordinary bar)
     const what=l.vary?l.vary[Math.min(l.vary.length-1,Math.floor(rnd()*l.vary.length))]:(odd&&l.alt?l.alt:l.what);   // vary: one of several, picked at random (Nov 2 evening: was by bar count — "samey")
-    for(const [mv,o0] of what){let o=Object.assign({},o0);
+    for(const [mv,o0] of what){let o=Object.assign({},o0);   // (Nov 7: a move the player's style won't do is swapped for its stand-in in MOVES.go, per player, so 'all' lines work too)
       if((mv==='hop'||mv==='step')&&!(RULES[when]||{}).owns&&owned(l.who)){continue;}   // owned by the routine: this slide is dropped
       const must=(RULES[when]||{}).owns||when==='end';let name=mv;if(!must&&rnd()>=Math.min(1,(1.6-(COST[mv]||.5))*(.5+D.energy)*grooveK(D.groove)))continue;   // the move's own dice (cost × energy × groove)
       /* the leap gradient (designer, Nov 2 late): on a calm song a jump or a side hop is a slow sway instead (left to right over
          two beats); as the energy rises the hops grow from a shuffle to a real leap */
       if(!must&&(name==='jump'||(name==='hop'&&o.dx))&&D.energy<CALM){name='sway';o={beat:o.beat||0,rate:1/(4*P),amount:.1,dur:4*P};}
       else{const g=Math.max(0,Math.min(1,(D.energy-CALM)/(1-CALM))),E=.4+.9*g;if(name==='hop'||name==='step'){o.height=(o.height||16)*E;if(o.dx)o.dx*=.7+.5*g;}if(name==='jump')o.height=30*E;}
-    if(name==='hop'||name==='step')o.per=P;else if(name==='jump')o.dur=Math.min(.6,P*.9);else if(name==='mill')o.dur=Math.min(.8,P);
-    queue.push({at:D.beat+(o.beat||0),who:l.who,mv:name,o});}}if(!again&&when!=='bar')say((extra||'')+when+' @ bar '+D.bar);}
+    if(name==='hop'||name==='step')o.per=P;else if(name==='jump')o.dur=Math.min(.6,P*.9);else if(name==='mill')o.dur=Math.min(.8,P);else if(name==='ripple'||name==='wave')o.dur=4*P;else if(name==='robot')o.dur=8*P;else if(name==='headbox')o.dur=4*P;   /* Nov 7: the ripple, and the arm wave it may become, take a bar (a plain wave ignores dur); Nov 8: the robot takes two */
+    queue.push({at:D.beat+(o.beat||0),who:l.who,mv:name,o});}}if(!again&&when!=='bar'&&when!=='beat1'&&when!=='bar2')say((extra||'')+when+' @ bar '+D.bar);}
   const REGULAR=new Set(['bar','bar4','bar8','bar16','pulse8','pulse16']),ALWAYS=new Set(['drop','section','chorus','verse','bridge','end','fullTilt','singerOut','singerBack']);
   const chance=kind=>{const r=RULES[kind]||{};const c=r.chance!=null?r.chance:REGULAR.has(kind)?CH.regular:ALWAYS.has(kind)?1:CH.react;return kind==='end'?c:c*grooveK(D.groove);};   // Nov 4: × groove (the song's end always)
   function start(kind,extra,who){const r=RULES[kind]||{},key=who?kind+':'+who:kind;if(D.bar-(D.since[key]||-1e9)<r.gap)return false;
@@ -2931,7 +3135,7 @@ window.DIRECTOR=(function(){
     // every beat: a long sung note (the singer's line open for 1.5 s without a break)
     {const v=members.find(m=>m.id==='vocals');if(v){if(v.open){if(!D.openT)D.openT=t;else if(t-D.openT>2500&&D.bar>1){start('longNote');D.openT=1e18;}}else D.openT=0;}}
     if(k!==0)return;
-    D.bar++;start('bar');
+    D.bar++;start('bar');fire('beat1');if(D.bar%2===0)fire('bar2');   // Nov 7: beat1 = every bar, bar2 = every second bar; no gap and no dice (for style lines; the moves' own dice still apply)
     // sections (song files read ahead, ears/section-scan.js): a new section starting on this beat 1 = 'section', and its kind
     {const sec=window.SECTIONS?SECTIONS.now(t/1000):null;const key=sec?sec.bar+':'+sec.letter:null;
       if(key!==D.secKey){D.secKey=key;D.sec=sec;if(sec&&D.bar>1){start('section',sec.letter+' ');if(sec.kind==='chorus'||sec.kind==='verse'||sec.kind==='bridge')start(sec.kind);
@@ -3095,6 +3299,18 @@ function drawArm(x,im,X,Y,R1,R2,z,sx,sy,px,py,el,bendy,from,handAt,fs=1,fold=nul
   const T1=x.getTransform();armRows(x,T1,im,w,h,X,Y,R1,z*sx,z*sy,-w*px,-h*py,0,h*py+ye+ov);
   const ex=X-Math.sin(R1)*ye*z*sy,ey=Y+Math.cos(R1)*ye*z*sy;
   armRows(x,T1,im,w,h,ex,ey,R2,z*sx,z*sy,-w*px,-h*el,h*el-ov,h);x.setTransform(T1);return {x:ex,y:ey};}
+/* Nov 7 (designer: "the arm moving as a wave like in body popping"): the whole arm drawn in strips along a curve with a hump
+   travelling along it. s = share of the picture from the shoulder (0) to the end (1); the hump's centre is at c; each strip is
+   turned by the slope of the hump there (a bump's slope is an S: up before the crest, down after), so the arm picture ripples
+   without stretching. The strips are cut from the picture the same way as a bending arm's (armRows). */
+function drawArmWave(x,im,X,Y,R,z,sx,sy,px,py,c,amp){const w=im.width||150,h=im.height||150,sc=z*sy,y0=h*py,len=h-y0,n=18,seg=len/n,W=.22;
+  const T0=x.getTransform();let cx=X,cy=Y;
+  for(let i=0;i<n;i++){const s=(i+.5)/n,d=(s-c)/W,a=R-amp*2.3*d*Math.exp(-d*d);
+    armRows(x,T0,im,w,h,cx,cy,a,z*sx,sc,-w*px,-(y0+i*seg),y0+i*seg,y0+(i+1)*seg+1.5);cx-=Math.sin(a)*seg*sc;cy+=Math.cos(a)*seg*sc;}
+  x.setTransform(T0);}
+/* Nov 7 (indie): the turn that lifts the instrument's head by `amt` radians: a neck drawn pointing to the player's right needs the
+   opposite turn from one pointing left. Measured once per instrument picture (instEnds caches). No ends found: no tilt. */
+function instLift(L,amt){const il=L.inst,im=il&&(il.img||il.ph);if(!im)return 0;const ie=instEnds(im);if(!ie)return 0;return (ie.head[0]>ie.body[0]?-1:1)*amt;}
 const STAND_BASE={snareSt:[80,140],hatSt:[122,140]},INKB=new WeakMap();
 /* Oct 22 (designer: "the hands should reach the correct point on the instrument: the neck and the strings"): where a
    lying-down guitar or bass picture has its body (the wide end) and its head (the narrow end), as shares of its size.
@@ -3143,6 +3359,10 @@ function drawLayers(x,m,t){
   if(m.id==='vocals'&&window.DISG&&!m.rec)m.dgS=DISG.step(m,t);   // (Oct 26: not while measuring feet/sheets, which pass t=0 and upset his timing) Oct 18 singer disguises: how much to cover the mouth / step back
   const dgR=m.id==='vocals'&&m.dgS?m.dgS.rest:0;
   const e=m.env,p=m.p,s=Math.sin(m.ph||0),open=m.mouth!=null?m.mouth:e>.06,L=m.layers,mo=L.mouthO&&(L.mouthO.img||L.mouthO.ph);
+  /* Nov 7 (styles, moves.js): a style's traits. staccato = the strum stroke is snapped (a quick stroke, then a hold) instead of a
+     smooth swing; headSway = the head tips side to side with the beat (one side per beat). Both 0 for the normal styles. */
+  const stOn=!m.rec&&window.MOVES&&MOVES.on(),stc=stOn?(MOVES.trait(m.id,'staccato')||0):0,hsk=stOn?(MOVES.trait(m.id,'headShake')||0):0,itl=stOn&&m.mv?(m.mv.neckUp||0)*.5:0,
+    strumW=a=>{const v=Math.sin(a);return stc?v*(1-stc)+Math.tanh(4*v)*stc*.85:v;};
   // Step 3.1 rest pose: a player with nothing to play sways slowly and 'breathes', each at his own pace, so the band never looks frozen.
   // It fades out as his instrument comes in (gone by a quarter of his range), and is off while drawing sheets are made (m.rec).
   const IP={bass:0,drums:1.7,vocals:3.1,guitar:4.4,keys:5.6}[m.id]||0,idl=m.rec?0:Math.max(0,1-e*4),
@@ -3152,18 +3372,22 @@ function drawLayers(x,m,t){
     dn=m.id==='vocals'?Math.min(1,ba*(1-.6*(m.sgS||0))*(1+.8*dgR)+.4*dgR):0;   // Oct 18: dances more while stepped back from the mic   // the singer dances to the beat, less while he's singing
   const b1=(typeof BV!=='undefined'&&BV.b1)||0;   // Oct 27 (try-out "bars"): 1 on beat 1, fading over half a beat
   const dyB=-e*5*((1-ba)*Math.abs(Math.sin(t/200))+ba*(1-dip))-iB*1.2+dn*2.5*dip+ba*b1*2.2*(.4+.6*e);   // ... + a deeper dip into beat 1   // body bobs (now on the beat when there is one) + resting breath + singer's dip
-  const il=L.inst,ia=il?(il.a||0)*Math.PI/180:0,ir=s*e*.12+iS*.03;  // instrument's set angle + its rocking
+  const il=L.inst,ia=il?(il.a||0)*Math.PI/180:0,ir=s*e*.12+iS*.03+(itl?instLift(L,itl):0);  // instrument's set angle + its rocking (+ Nov 7 indie neckup move: the whole guitar turned so its head points up — whichever way the drawn neck points)
   // Head: where the neck is and how far the head tips. Mouth pieces ride along with it.
-  const hl=L.head,hx=SLOTS.head[1]+(hl?hl.x:0),hy=SLOTS.head[2]+(hl?hl.y:0),
-        hr=(m.id==='drums'?p.k*.15-p.s*.05:m.id==='vocals'?-e*.12:Math.sin((m.ph||0)*.5)*e*.15*(1-.5*ba))+Math.sin(it*.8+.9)*idl*.06
-          +(m.id==='vocals'?dn*(.08*dip+.04*sw)-.14*dgR:m.id==='drums'?ba*.04*dip:ba*(.04+.08*e)*dip)+ba*.05*b1;   // nod on the beat (a little more on beat 1)
+  /* Nov 7 (designer: "the mouth doesn't follow the nod; from a photo the chin stays still"): the nod (moves.js) is part of the
+     head's own tip and drop here, so the mouth, a photo face's jaw and the mic's target all ride with it, not just the head picture */
+  const nodA=window.MOVES&&MOVES.on()&&!m.rec&&m.mv?(m.mv.nod||0):0;
+  const hl=L.head,hx=SLOTS.head[1]+(hl?hl.x:0),hy0=SLOTS.head[2]+(hl?hl.y:0),hy=hy0+nodA*5,
+        hr=nodA*.5+(m.id==='drums'?p.k*.15-p.s*.05:m.id==='vocals'?-e*.12:Math.sin((m.ph||0)*.5)*e*.15*(1-.5*ba))+Math.sin(it*.8+.9)*idl*.06
+          +(m.id==='vocals'?dn*(.08*dip+.04*sw)-.14*dgR:m.id==='drums'?ba*.04*dip:ba*(.04+.08*e)*dip)+ba*.05*b1
+          +(hsk?hsk*Math.sin(4*Math.PI*(BV.n+BV.ph))*(1-dip)*Math.max(ba,.3)*Math.min(1,.4+e):0);   /* (Nov 9: nothing at all for the other styles) */   // Nov 7 (indie): the head shakes side to side between the bobs (twice a beat, quiet at the bob itself)   // nod on the beat (a little more on beat 1)
   // Neck fingers: a spot on the rocking instrument (near its head) that slides a little along the neck. The neck arm reaches for it.
   let nh=null;
   let mouthT=null,mouthR=null;   // Oct 18: where the singer's mouth is this frame, and (Oct 19) where it is at rest (no nod, no bob)
   if(m.id==='vocals'&&L.fore&&window.DISG&&(DISG.on()||(m.dgS&&m.dgS.cover>.01)||(L.fore.peekUp&&performance.now()<L.fore.peekUp))){const jw=L.mouth&&L.mouth.jaw&&L.mouth.img,ml=jw?L.mouth:(L.mouthO&&(L.mouthO.img||L.mouthO.ph))?L.mouthO:L.mouth,md=SLOTS.mouth;if(ml){   /* Oct 21 (designer): a photo face's mouth is where the jaw meets the face, not where the drawn open mouth sat */
     // Oct 18 (designer: the mic sat a little left of the mouth): aim at the drawn mouth's ink, not the middle of its box
     const mi=ml.img||ml.ph,ic=mi&&window.DISG?DISG.inkCentre(mi):{u:.5,v:.5},mw=mi&&mi.width||150,mh=mi&&mi.height||150,zm=md[3]*ml.s/Math.max(mw,mh),
-      ox=md[1]+ml.x-hx+(ic.u-md[4])*mw*zm,oy=md[2]+ml.y-hy+((jw&&ic.t!=null?ic.t:ic.v)-md[5])*mh*zm+(jw?ml.jaw*.4:0),c=Math.cos(hr),sn=Math.sin(hr);mouthT={x:hx+ox*c-oy*sn,y:hy+dyB+ox*sn+oy*c};mouthR={x:hx+ox,y:hy+oy};}}
+      ox=md[1]+ml.x-hx+(ic.u-md[4])*mw*zm,oy=md[2]+ml.y-hy+((jw&&ic.t!=null?ic.t:ic.v)-md[5])*mh*zm+(jw?ml.jaw*.4:0),c=Math.cos(hr),sn=Math.sin(hr);mouthT={x:hx+ox*c-oy*sn,y:hy+dyB+ox*sn+oy*c};mouthR={x:hx+ox,y:hy0+oy};}}
   if(il&&L.grip){const g=L.grip,ix=SLOTS.inst[1]+il.x,iy=SLOTS.inst[2]+il.y,c=Math.cos(ir),sn=Math.sin(ir),th=ir+ia,sl=Math.sin((m.ph||0)*.5+1)*e*5*il.s;
     nh={x:ix+g.x*c-g.y*sn+sl*Math.cos(th),y:iy+g.x*sn+g.y*c+sl*Math.sin(th)};}
   m._wr=null;m._a2=null;m._strum=null;m._fold2=null;   // where the strum arm's wrist is this frame (the strum hand hangs there); the neck arm as drawn (Oct 22)
@@ -3183,13 +3407,13 @@ function drawLayers(x,m,t){
     const squared=(k==='arm'||k==='arm2')&&(m.id==='guitar'||m.id==='bass')&&!!ly.hand&&!!ly.v2&&!!ly.img;   /* Oct 25: an uploaded arm with its hand, squared up to the sheet layout (sheetArm) */
     if(squared)im=sheetArm(im);
     if(window.EDGE)im=EDGE.of(im,D,k);   /* Oct 25 (designer): every piece gets the face photos' white gap and dark line (paper-edge.js) */
-    let rot=0,sx=1,sy=1,dy=0,tx,ty,hide=false,arm=null;
+    let rot=0,sx=1,sy=1,dy=0,tx,ty,hide=false,arm=null,fsR=1;   /* fsR: the forearm drawn shorter, coming toward us (the robot, Nov 8) */
     const peek=ly.peek&&performance.now()<ly.peek,eb=(ly.eb||0)*Math.PI/180,v2arm=!!ly.v2&&!!ly.img&&typeof V2H!=='undefined'&&V2H[k]!=null,el=v2arm?(d[5]+V2H[k])/2:ELBOW,Hp=D*(im.height||150)/Math.max(im.width||150,im.height||150),   // arm picture's height on stage
       l1=(el-d[5])*Hp,l2=(HAND-el)*Hp,Sh={x:d[1]+ly.x,y:d[2]+ly.y},cx=SLOTS.body[1]+(L.body?L.body.x:0),ph=m.ph||0;
     if(k==='body'){dy=dyB;rot=s*e*.04+iS*.03+dn*.05*sw-(m.id==='vocals'?.1*dgR:0);}   // Oct 18: leans away from the mic toward the band                      // bobs and sways
-    if(k==='head'){ty=hy+dyB;rot=hr;if(MV&&MV.nod>0){rot+=MV.nod*.5;ty+=MV.nod*5;}if(MV&&MV.look)rot-=MV.look;}   /* Nov 2: a hard nod; the head looks where a hop is going (moves.js) */                        // rides the body, nods to the music
+    if(k==='head'){ty=hy+dyB;rot=hr;if(MV&&MV.look)rot-=MV.look;if(MV&&(MV.rhx||MV.rhy)){tx=d[1]+ly.x+MV.rhx;ty+=MV.rhy;}}   /* Nov 8: the robot's head lifts off the body (moves.js robot) */   /* Nov 2: the head looks where a hop is going (moves.js); the nod is in hr/hy above (Nov 7) */                        // rides the body, nods to the music
     if(k==='legL'||k==='legR'){const len=D*.8;ty=d[2]+ly.y+dyB;sy=(len-dyB)/len;   // hips bob, feet stay on the floor
-      rot=m.id==='drums'?(k==='legR'?-p.k*.2:p.h*.12):(k==='legL'?1:-1)*(s*e*.08+iS*.015)+dn*.04*sw;if(MV)rot+=MV.leg*(k==='legL'?1:-1);}   /* Nov 2: legs swing on a hop (moves.js) */  // drummer's feet work the pedals, others groove
+      rot=m.id==='drums'?(k==='legR'?-p.k*.2:p.h*.12):(k==='legL'?1:-1)*(s*e*.08+iS*.015)+dn*.04*sw;if(MV)rot+=MV.leg*(k==='legL'?1:-1)+(k==='legL'?(MV.legL||0):-(MV.legR||0));}   /* Nov 2: legs swing on a hop (moves.js); Nov 7: a leg stepping out to its own side (the indie shuffle) */  // drummer's feet work the pedals, others groove
     if(k==='mouth'||k==='mouthO'){const ox=d[1]+ly.x-hx,oy=d[2]+ly.y-hy+(k==='mouth'&&ly.jaw?ly.jaw*(open?Math.min(1,.35+e*2.5):0)*(m.dgS&&window.DISG?DISG.mouthAlpha(m):1):0),c=Math.cos(hr),sn=Math.sin(hr);   /* Oct 21: a picture face's jaw drops while singing (and stays shut behind the mic, like a drawn mouth fades) */
       tx=hx+ox*c-oy*sn;ty=hy+dyB+ox*sn+oy*c;rot=hr;}
     if(k==='inst')rot=ir;                                    // instrument rocks
@@ -3208,7 +3432,7 @@ function drawLayers(x,m,t){
               r2=bentReach(Sh,T,l1,l2k,eb2);r.R1=r2.R1;r.R2=r2.R2;r.st=r2.st;arm=[r.R1,r.R2];sy=r.st;}}
         const want=Math.atan2(-Math.sin(th),-Math.cos(th));let ang=want-r.R2;ang=Math.atan2(Math.sin(ang),Math.cos(ang));m._fold2={fold:KNUCKLE,ang};}}   // shoulder stays put, elbow bent as set, hand locked on the neck
     if(k==='grip'){if(!nh)continue;if(L.arm2&&L.arm2.hand&&L.arm2.img){if(m._fold2&&m._fold2.args)drawArm(x,...m._fold2.args,true,true,0,1,{at:m._fold2.fold,ang:m._fold2.ang},true);else if(m._a2)drawArm(x,...m._a2,true,true,HAND-.1);continue;}tx=nh.x;ty=nh.y;rot=ir+ia;}   /* Oct 22 (designer): a hand drawn on the neck arm: the arm stays behind the neck, its hand is drawn again here, in front of it */
-    if(k==='hand'){if(!m._wr)continue;const cr=Math.cos(m._wr.r),sr=Math.sin(m._wr.r);tx=m._wr.x+ly.x*cr-ly.y*sr;ty=m._wr.y+ly.x*sr+ly.y*cr;rot=m._wr.r+Math.sin((m.ph||0)+.2)*e*.3+iS*.05;}   // Oct 5: x/y sliders move the hand across / along the forearm   // strum hand: on the wrist, flicks with the strum            // fingers wrapped over the front of the neck
+    if(k==='hand'){if(!m._wr)continue;const cr=Math.cos(m._wr.r),sr=Math.sin(m._wr.r);tx=m._wr.x+ly.x*cr-ly.y*sr;ty=m._wr.y+ly.x*sr+ly.y*cr;rot=m._wr.r+strumW((m.ph||0)+.2)*e*.3+iS*.05;}   // Oct 5: x/y sliders move the hand across / along the forearm   // strum hand: on the wrist, flicks with the strum            // fingers wrapped over the front of the neck
     if(k==='armL'||k==='armR'){ // keys arms: shoulder fixed, hand bobs and drifts left/right with the register; the elbow does the bending
       const isL=k==='armL',flip=L.inst&&L.inst.v2,pp=flip?(isL?(m.pr==null?null:1-m.pr):(m.pl==null?null:1-m.pl)):(isL?m.pl:m.pr),   // new sheet: keyboard faces the player, so high notes are on the screen-left
         hy2=-Math.abs(Math.sin(isL?ph:ph*1.37+1))*e*10-iB*1.5,r0=Math.hypot(l2*Math.sin(eb),l1+l2*Math.cos(eb)),   // reach of the arm as bent
@@ -3230,8 +3454,8 @@ function drawLayers(x,m,t){
     if(k==='fore'){arm=[-e*.12+iS*.03+dn*.03*dip,-e*.22+Math.sin(ph*1.3)*e*.1+iS*.04+dn*.05*dip];
       if(window.DISG&&m.dgS)arm=DISG.fore(m,arm,{ar,eb});}   // Oct 18: mic in front of the mouth when unsure, lowered while resting                          // mic comes up to the mouth when singing
     let reach=false;
-    if(k==='arm'&&ly.hand&&v2arm&&m._strum){const T=m._strum,st2=Math.sin(ph+.6)*e*7+iS*1.2,T2={x:T.x+T.nx*st2,y:T.y+T.ny*st2},r=bentReach(Sh,T2,l1,l2,eb,.6,2.2);arm=[r.R1,r.R2];sy=r.st;reach=true;}   /* Oct 22: a hand drawn on the strum arm reaches the strings and strums across them */
-    else if(k==='arm')arm=[s*e*.25+iS*.05,Math.sin(ph+.6)*e*.7+iS*.08];                                  // strumming: mostly forearm
+    if(k==='arm'&&ly.hand&&v2arm&&m._strum){const T=m._strum,st2=strumW(ph+.6)*e*7+iS*1.2,T2={x:T.x+T.nx*st2,y:T.y+T.ny*st2},r=bentReach(Sh,T2,l1,l2,eb,.6,2.2);arm=[r.R1,r.R2];sy=r.st;reach=true;}   /* Oct 22: a hand drawn on the strum arm reaches the strings and strums across them */
+    else if(k==='arm')arm=[s*e*.25+iS*.05,strumW(ph+.6)*e*.7+iS*.08];                                  // strumming: mostly forearm
     if(k==='kick')sx=sy=1+p.k*.1;                            // bass drum thumps
     if(k==='snare'){dy=p.s*3;sx=sy=1+p.s*.05;}               // snare jolts
     if(k==='armS')arm=v2arm?(u=>[u*.15+iS*.02,u+iS*.03])((.1+.5*Math.min(1,e*3))*(1-p.s)):[-p.s*.22+s*e*.03+iS*.04,-p.s*.6+s*e*.04+iS*.05];   // PATCH01   // snare stick comes down on the hit, mostly from the forearm
@@ -3290,8 +3514,20 @@ function drawLayers(x,m,t){
        in the air, waving side to side. Each arm is turned from the shoulder to point up, straightened, at its drawn length. */
     if(MV&&R2!=null){const wr=a=>Math.atan2(Math.sin(a),Math.cos(a));let T=null,h=0;
       if(MV.point>0&&k==='armR'&&m.id==='keys'){T=-2.75;h=MV.point;}
+      if(MV.sticksUp>0&&m.id==='drums'&&(k==='armS'||k==='armH')){T=k==='armS'?Math.PI-.35:Math.PI+.35;h=MV.sticksUp;}   /* Nov 8 (metal): both arms up overhead, sticks and all */
+      /* Nov 8 (robot, moves.js): classic robot arms — upper arms out level, a flat 90-degree bend at the elbow, and the forearm turning
+         in DEPTH about the elbow: up (full length), toward the viewer (foreshortened to little more than the hand), down, toward.
+         Half a turn per beat; the two arms half a turn apart (one up, one down). On a flat drawing that is a vertical forearm whose length is |cos| of the turn. */
+      if(MV.robot>0&&m.id==='keys'&&(k==='armL'||k==='armR')){const left=k==='armL',out=left?Math.PI*.5:-Math.PI*.5,th=MV.rbT+(left?0:Math.PI),c=Math.cos(th),
+        T2=c>=0?(left?Math.PI:-Math.PI):0,h3=MV.robot;fsR=1+(Math.max(.18,Math.abs(c))-1)*h3;
+        R+=wr(out-R)*h3;R2+=wr(T2-R2)*h3;sy+=(1-sy)*h3;R2=R+wr(R2-R);}
       if(MV.wave>0&&k==='armV'&&m.id==='vocals'){T=Math.PI+MV.waveA;h=MV.wave;}
-      if(T!=null){R+=wr(T-R)*h;R2+=wr(T-R2)*h;sy+=(1-sy)*h;}}
+      if(MV.armsUp>0&&m.id==='vocals'&&(k==='armV'||k==='fore')){T=k==='armV'?Math.PI-.25:Math.PI+.25;h=Math.max(h,MV.armsUp);}   /* Nov 7 (ripple): both arms up in the air, a little apart */
+      if(T!=null){R+=wr(T-R)*h;R2+=wr(T-R2)*h;sy+=(1-sy)*h;R2=R+wr(R2-R);}   /* Nov 7: keep the forearm within half a turn of the upper arm — the two could land a full circle apart (2.89 vs -3.39), and the bend was then drawn as a spiral of strips */
+      /* Nov 7 (styles, moves.js): the hip hop hand. While they are clearly singing the free arm comes out to the side
+         (upper arm about level with the shoulder) and the forearm points up, swinging side to side with the beat, so the
+         hand moves left and right at head height. Weighted in and out by MV.hh so it blends with the ordinary swing. */
+      if(MV.hh>0&&k==='armV'&&m.id==='vocals'&&!(MV.armsUp>0)){const h2=MV.hh*(1-Math.max(MV.wave||0,MV.armWave||0)),fl=(MV.hhP||0)*h2,T1=Math.PI*.3+fl*.12,T2=Math.PI*1.02+MV.hhA*.35-fl*.5;R+=wr(T1-R)*h2;R2+=wr(T2-R2)*h2;R2=R+wr(R2-R);}   /* Nov 7: + a flick of the forearm on a vocal pulse (hiphop2); forearm kept within half a turn of the upper arm */}
     // Oct 18 (after the giant-mic bug): a piece whose numbers have gone bad (not a number, or absurdly stretched) is skipped for this
     // frame instead of being drawn across the stage; DRAWBAD counts them so the pre-publish check can fail on it
     if(!isFinite(X)||!isFinite(Y)||!isFinite(R)||(R2!=null&&!isFinite(R2))||!(D>0)||!isFinite(D)||!isFinite(sx)||!isFinite(sy)||Math.abs(sx)>8||Math.abs(sy)>8){window.DRAWBAD=(window.DRAWBAD||0)+1;continue;}
@@ -3301,13 +3537,16 @@ function drawLayers(x,m,t){
     if(hide)continue;
     const w=im.width||150,h=im.height||150,z=D/Math.max(w,h);
     // Oct 20: the singer's mic arm is a folding paper strip (puppeteer/singer-disguise.js strip)
-    if(k==='fore'&&m.id==='vocals'&&window.DISG&&DISG.on()&&mouthT&&DISG.strip(x,m,{im,X,Y,z,sx,sy,px:d[4],py:d[5],el,mouth:mouthT,sway:Math.sin((m.ph||0)*.9)*.07*(.3+e)+iS*.05,swing:Math.sin(ph*.9)*e*.45*(1-dn)+iS*.12+dn*.35*sw}))continue;   // swing = the free hand's upper-arm swing (armV below), so the hanging mic arm swings in time with it
-    if(R2!=null&&squared){const fo=k==='arm2'&&m._fold2?m._fold2:null,E=drawArm(x,im,X,Y,R,R2,z,sx,sy,d[4],d[5],el,true,false,k==='arm'?HAND-.1:0,1,fo?{at:fo.fold,ang:fo.ang}:null,true);   /* Oct 26 (code review): the strum hand keeps its drawn size (handAt), like a sheet arm's */
+    if(k==='fore'&&m.id==='vocals'&&window.DISG&&DISG.on()&&mouthT&&!(MV&&(MV.armsUp>.5||MV.armWave>.5))&&DISG.strip(x,m,{im,X,Y,z,sx,sy,px:d[4],py:d[5],el,mouth:mouthT,sway:Math.sin((m.ph||0)*.9)*.07*(.3+e)+iS*.05,swing:Math.sin(ph*.9)*e*.45*(1-dn)+iS*.12+dn*.35*sw}))continue;   // swing = the free hand's upper-arm swing (armV below), so the hanging mic arm swings in time with it
+    if(R2!=null&&squared){const fo=k==='arm2'&&m._fold2?m._fold2:null,E=drawArm(x,im,X,Y,R,R2,z,sx,sy,d[4],d[5],el,true,false,k==='arm'?HAND-.1:0,fsR,fo?{at:fo.fold,ang:fo.ang}:null,true);   /* Oct 26 (code review): the strum hand keeps its drawn size (handAt), like a sheet arm's */
       if(fo)fo.args=[im,X,Y,R,R2,z,sx,sy,d[4],d[5],el];
       if(k==='arm'){const l2=(HAND-el)*h*z*sy;m._wr={x:E.x-Math.sin(R2)*l2,y:E.y+Math.cos(R2)*l2,r:R2};}
       if(peek){x.save();x.strokeStyle='#e8553d';x.lineWidth=1;x.beginPath();x.arc(E.x,E.y,2.5,0,7);x.stroke();x.restore();}
       continue;}
-    if(R2!=null){const E=drawArm(x,im,X,Y,R,R2,z,sx,sy,d[4],d[5],el,v2arm,false,ly.hand&&v2arm&&(k==='arm'||k==='arm2')?HAND-.1:0,(k==='armS'&&m._stk&&m._stk.armS&&ly.stick&&m._stk.armS.fs)||1);
+    if(MV&&MV.armWave>0&&!(MV.armsUp>0)&&(k==='armV'||k==='fore')&&m.id==='vocals'&&R2!=null){   /* (the ripple's arms-up wins if both run) */const wv=MV.armWave,wr=a=>Math.atan2(Math.sin(a),Math.cos(a)),left=k==='armV',lvl=left?Math.PI*.5:-Math.PI*.5;   /* Nov 7: the arm wave (moves.js armwave): both arms level out to the sides, the hump running from the free hand across to the mic and back */
+      const Ra=R+wr(lvl-R)*wv,c=left?1-MV.armG:MV.armG-2;if(wv>.98){drawArmWave(x,im,X,Y,Ra,z,sx,sy,d[4],d[5],c,left?.55:-.55);continue;}
+      R=Ra;R2=R2+wr(lvl-R2)*wv;R2=R+wr(R2-R);}   /* easing in and out: an ordinary straightening arm, so the hand-over is smooth */
+    if(R2!=null){const E=drawArm(x,im,X,Y,R,R2,z,sx,sy,d[4],d[5],el,v2arm,false,ly.hand&&v2arm&&(k==='arm'||k==='arm2')?HAND-.1:0,((k==='armS'&&m._stk&&m._stk.armS&&ly.stick&&m._stk.armS.fs)||1)*fsR);
       /* Oct 23 (designer's drummer: "no sticks"): an arm drawn without a stick holds ours (the one that goes with the kit),
          from the hand onwards along the forearm, so it comes down on the drum with the hand */
       if((k==='armS'||k==='armH')&&ly.stick&&window.STICKS){const st=STICKS.img();if(st){const hh=(im.height||150),Lf=(((m._stk&&m._stk[k]&&m._stk[k].hv)||V2H[k])-el)*hh*z*sy*((m._stk&&m._stk[k]&&m._stk[k].fs)||1),wx=E.x-Math.sin(R2)*Lf,wy=E.y+Math.cos(R2)*Lf,
@@ -3968,8 +4207,21 @@ function drawStrips(m,t,k,st){const s=k*dpr,MX=70,MY=80,Wp=300,Hp=260,c=STRIPCV|
   const N=Math.min(160,Math.max(16,Math.ceil(Hp*s/2.5)));
   const cw=Math.ceil(Wp*s),ch=Math.ceil(Hp*s);if(c.width!==cw||c.height!==ch){c.width=cw;c.height=ch;}const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cw,ch);
   g.setTransform(s,0,0,s,MX*s,MY*s);drawLayers(g,m,t);
-  for(let i=0;i<N;i++){const y0=i*Hp/N,yc=y0+Hp/(2*N)-MY,th=st.ph-yc*st.freq*Math.PI*2;x.save();
-    x.translate(80,0);x.scale(1-st.amp*(1-Math.cos(th)),1);x.translate(-80,0);
+  /* Nov 7 (moves.js ripple; designer: "a ripple across the other plane, keeping the figure as a 2D piece of paper"): the paper
+     flexes toward and away from the viewer as a hump travels up it. Seen from the front that is foreshortening: a strip on the
+     hump's slope is tilted, so it is drawn shorter (by the cosine of its tilt) and the strips above it stack down onto it; the
+     feet stay on the floor. amp = the hump's depth in puppet units, W its width. Stacked from the feet up, so the loop runs bottom to top. */
+  if(st.mode==='ripple'){const NR=Math.min(N,72),tiltAt=y=>{const d=(y-st.c)/st.W;return Math.atan(st.amp*(-2*d/st.W)*Math.exp(-d*d));};
+    /* Nov 7 (designer: "try the shade"; then "significantly slower"): lit from above and in front — below the crest the paper tilts
+       up toward the light (a touch lighter), above it away (darker), by how steep the tilt is. Painted onto the puppet's own
+       pixels in ONE gradient fill per frame (it was a tinted band per strip: up to 160 composites a frame, too slow on a phone). */
+    g.setTransform(1,0,0,1,0,0);g.globalCompositeOperation='source-atop';const gr=g.createLinearGradient(0,0,0,ch);
+    for(let j=0;j<=24;j++){const y=j/24*Hp-MY,t=tiltAt(y),sh=Math.sin(Math.abs(t));gr.addColorStop(j/24,y<st.c?`rgba(0,0,0,${(.28*sh).toFixed(3)})`:`rgba(255,255,255,${(.14*sh).toFixed(3)})`);}
+    g.fillStyle=gr;g.fillRect(0,0,cw,ch);g.globalCompositeOperation='source-over';
+    let cur=Hp-MY;for(let i=NR-1;i>=0;i--){const y0=i*Hp/NR,yc=y0+Hp/(2*NR)-MY,k=Math.cos(tiltAt(yc)),hh=Hp/NR*k;
+      x.drawImage(c,0,y0*s,cw,Hp/NR*s,-MX,cur-hh,Wp,hh+.4/s);cur-=hh;}return;}
+  for(let i=0;i<N;i++){const y0=i*Hp/N,yc=y0+Hp/(2*N)-MY;x.save();
+    {const th=st.ph-yc*st.freq*Math.PI*2;x.translate(80,0);x.scale(1-st.amp*(1-Math.cos(th)),1);x.translate(-80,0);}
     x.drawImage(c,0,y0*s,cw,Hp/N*s,-MX,y0-MY,Wp,Hp/N+.4/s);x.restore();}}
 /* PATCH07: the shadow: soft, straight under the feet, as wide as the feet (or the drummer's bass drum) plus a margin, same for everyone */
 function shadow(cx,fy,k,w){const rx=Math.max(42,Math.min(72,w/2+20))*k,ry=rx*.17;
@@ -3986,7 +4238,7 @@ function draw(t){if(!W||!H||el.clientWidth!==W||el.clientHeight!==H)size();if(!W
     const mv=window.MOVES&&MOVES.on()?MOVES.pose(m):null,lift=mv?mv.lift:0,sq=mv?mv.sq:1;
     shadow(q.sx+(ft.cx-80)*q.k,fy,q.k*(1-Math.min(.5,lift/90)),ft.w);
     x.save();x.translate(q.sx+(ft.cx-80)*q.k,fy);
-    if(mv){x.translate(0,-lift*q.k);x.rotate(mv.tilt+mv.lean*.5);x.scale(mv.face*(2-sq),sq);}   /* lean: into the hop (moves.js) */
+    if(mv){x.translate((mv.shx||0)*q.k,-lift*q.k);x.rotate(mv.tilt+mv.lean*.5);x.scale(mv.face*(2-sq),sq);}   /* lean: into the hop (moves.js); shx: the indie shuffle's sideways slide (Nov 7) */
     x.translate(-ft.cx*q.k,-ft.y*q.k);x.scale(q.k,q.k);
     if(mv&&mv.strips)drawStrips(m,t,q.k,mv.strips);else drawLayers(x,m,t);x.restore();
     if(cam&&m===order[order.length-1])camLight(cam);   // Oct 9: the spotlight, over the whole band once everyone is drawn
@@ -4762,7 +5014,7 @@ window.HOWTO=(function(){const box=document.getElementById('howBox'),card=box.qu
   box.append(Object.assign(document.createElement('b'),{textContent:'Moves:'}),who);
   const BTN=[   // [label, what it does]  (Nov 2, after the designer's try: bow, flutter, hands up and the Mexican wave dropped)
     ['Hop ←',()=>go('hop',{dx:-.18})],['Hop →',()=>go('hop',{dx:.18})],['Hop forward',()=>go('step',{dy:.14})],['Hop back',()=>go('step',{dy:-.14})],
-    ['Jump',()=>go('jump')],['Turn round',()=>go('turn')],['Windmill',()=>go('mill')],['Keys point',()=>go('point')],['Drum nod',()=>go('nod')],['Singer wave',()=>go('wave')],['Everyone\'s own',()=>MOVES.showOff()],['Sway',()=>go('sway')],['Twist',()=>go('twist')],['Back to places',()=>MOVES.reset()]];
+    ['Jump',()=>go('jump')],['Turn round',()=>go('turn')],['Windmill',()=>go('mill')],['Keys point',()=>go('point')],['Drum nod',()=>go('nod')],['Singer wave',()=>go('wave')],['Arm wave',()=>go('armwave',{dur:4*(window.DIRECTOR&&DIRECTOR.state.P||.5)})],['Ripple',()=>go('ripple',{dur:4*(window.DIRECTOR&&DIRECTOR.state.P||.5)})],['Everyone\'s own',()=>MOVES.showOff()],['Sway',()=>go('sway')],['Twist',()=>go('twist')],['Back to places',()=>MOVES.reset()]];
   const go=(name,o)=>MOVES.go(who.value,name,o);
   for(const [label,fn] of BTN){const b=document.createElement('button');b.textContent=label;b.onclick=fn;box.append(b);}
   /* Nov 2: the Director's readout (bar, beat, who leads, next drop) and its last few calls, on the same panel */
@@ -5083,7 +5335,7 @@ function limbsOf(sh){const J=sh.J,o={};
 const fresh=base=>{const L=limbsOf(base),J=base.J;
   return {sock:Object.fromEntries(['neck','shL','shR','hipL','hipR'].filter(n=>J[n]).map(n=>[n,J[n].slice()])),
     pin:Object.fromEntries(Object.entries(L).map(([k,v])=>[k,v.pin.slice()])),
-    W:Object.fromEntries(Object.entries(base.arms).map(([a,ar])=>[a,ar.W.slice()])),moved:new Set(),rot:{},size:{},selK:null};};
+    W:Object.fromEntries(Object.entries(base.arms).map(([a,ar])=>[a,ar.W.slice()])),moved:new Set(),socked:new Set(),rot:{},size:{},selK:null};};   /* socked (Nov 8): new pieces hung on an old piece's socket — carried into the sheet, but not 'moved' by the user */
 // a piece's turn and size (Oct 21, the Put them together screen): about its own pin. Arms are sized only: the band swings them.
 const ROT=k=>(st.base.arms[k]?0:st.rot[k]||0),SIZE=k=>st.size[k]||1;
 
@@ -5098,7 +5350,7 @@ function offset(k){if(RIDES(k))return st.pin.head?offset('head'):[0,0];
   if(k==='inst'&&st.instAt){const r=(st.results||[]).find(x=>x.key.endsWith('.inst')),d=typeof SLOTS!=='undefined'&&SLOTS.inst;if(r&&d){const [,bx,by,bw,bh]=r.box;return [st.instAt[0]-(bx+d[4]*bw),st.instAt[1]-(by+d[5]*bh)];}}const L=limbsOf(st.base)[k];if(!L)return [0,0];return sub(sockAt(k),st.pin[k]);}
 
 // the sheet to place pieces with: a copy carrying the pins (the printed one, untouched, when nothing moved)
-function sheetFor(mid,base){if(!st||st.mid!==mid||!st.moved.size)return base;
+function sheetFor(mid,base){if(!st||st.mid!==mid||!(st.moved.size||st.socked.size))return base;
   const c=JSON.parse(JSON.stringify(base)),L=limbsOf(base);
   for(const n of Object.keys(st.sock))c.J[n]=st.sock[n].slice();
   if(L.head)c.pivots.head=st.pin.head.slice();
@@ -5123,7 +5375,8 @@ function frame(){const cv=$('jointsCv'),P=pieces();let x0=1e9,y0=1e9,x1=-1e9,y1=
   if(st.bodyArt){const b=st.base.boxes.find(q=>q[0]==='body');grow(b[1],b[2]);grow(b[1]+b[3],b[2]+b[4]);}
   if(!P.length){st.view=null;return;}
   const pad=40;x0-=pad;y0-=pad;x1+=pad;y1+=pad;   // room to drag a limb a little way out
-  const maxW=Math.min(420,cv.parentElement.clientWidth||420),maxH=Math.max(260,Math.min(560,(window.innerHeight||800)*.6)),
+  const host=cv.closest('#plAdj'),   /* Nov 8: inside the player screen the pieces view fits the stage box it is in, not the window */
+    maxW=Math.min(host?560:420,cv.parentElement.clientWidth||420),maxH=host?Math.max(160,host.clientHeight-(($('jointsReset')&&$('jointsReset').offsetHeight)||44)-24):Math.max(260,Math.min(560,(window.innerHeight||800)*.6)),
     sc=Math.min(maxW/(x1-x0),maxH/(y1-y0)),dpr=Math.min(2,window.devicePixelRatio||1),cw=(x1-x0)*sc,chh=(y1-y0)*sc;
   cv.style.width=Math.round(cw)+'px';cv.style.height=Math.round(chh)+'px';cv.width=Math.round(cw*dpr);cv.height=Math.round(chh*dpr);
   st.view={x0,y0,sc,dpr};}
@@ -5217,8 +5470,13 @@ function preset(mid,sock){if(!st||st.mid!==mid)return;const L=limbsOf(st.base);
   for(const [n,p] of Object.entries(sock)){if(!st.sock[n])continue;st.sock[n]=p.slice();for(const [k,l] of Object.entries(L))if(l.sock===n)st.moved.add(k);}
   if(!$('scanJoints').hidden)frame();}
 // pieces already on stage (Add drawings / Edit, Oct 21): their pins where the stage has them; nothing counts as moved yet
-function setup(mid,pins,W){if(!st||st.mid!==mid)return;const L=limbsOf(st.base);
+function setup(mid,pins,W,socks){if(!st||st.mid!==mid)return;const L=limbsOf(st.base);
   for(const [k,p] of Object.entries(pins||{})){if(!L[k])continue;st.pin[k]=p.slice();if(!L[k].sock.startsWith('W:'))st.sock[L[k].sock]=p.slice();}   /* a hand's pin: the end of its arm */
+  /* Nov 8: a new piece replacing one already on stage hangs on the old piece's socket (its pin stays the printed one, where the
+     new drawing was hung), so a head drawn after the body was adjusted still sits on that body's neck */
+  for(const [k,p] of Object.entries(socks||{})){const l=L[k];if(!l||(pins&&pins[k])||l.sock.startsWith('W:'))continue;
+    const printed=st.base.J[l.sock];if(printed&&Math.hypot(p[0]-printed[0],p[1]-printed[1])<3)continue;   /* the body as printed: nothing to carry over (a plain re-upload keeps every saved placement) */
+    st.sock[l.sock]=p.slice();st.socked.add(k);}   /* not moved: a re-upload of a piece the user had nudged still keeps its saved placement (the template rule) */
   for(const [a,w] of Object.entries(W||{}))st.W[a]=w.slice();if(!$('scanJoints').hidden)frame();}
 const touched=k=>!!st&&(RIDES(k)?touched('head'):(st.moved.has(k)||(st.rot[k]||0)!==0||(st.size[k]||1)!==1));
 return {show,clear,sheetFor,moved,preset,finalize,setup,touched,instAt:p=>{if(st){st.instAt=p?p.slice():null;if(!$('scanJoints').hidden)frame();}},_state:()=>st};
@@ -5851,6 +6109,16 @@ function faceMouth(got,sh){const r=got.head;if(!r||!sh.mouthSpot||!r.cv)return f
   const ocx=bx+sx/n/R,ocy=by+sy/n/R;
   got.mouthO={key:'vocals.mouthO',cv:oc,box:['vocals.mouthO',ocx-oc.width/2/R,ocy-oc.height/2/R,oc.width/R,oc.height/R],spot,face:true};
   return true;}
+/* Nov 8 (designer's recording: a head moved by hand, then a new head floated above the body): the player's scale on stage — how
+   many stage units one sheet unit is — used to be read from where the head and legs happen to sit now, so adjusting the head
+   changed the scale and every later placement drifted. Now it is read from the BODY: its size on its sheet when it was placed
+   (layer.sz, saved with the placement) against its size on stage; bands placed before sz existed use the designer's default
+   layout positions (DEF) instead of the moved ones. Shared with add-drawings.js stagePieces (the way back to the sheet). */
+window.PLAYERK=function(mid){const sh=SHEETS2[mid],m=members.find(q=>q.id===mid);if(!sh||!m)return .205;const L=m.layers,B=L.body;
+  if(B&&B.sz>0&&B.s>0)return SLOTS.body[3]*B.s/B.sz;
+  const dy=k=>{const d=(typeof DEF!=='undefined'&&DEF[mid+'.'+k])||{};return +d.y||0;},J=sh.J;
+  if(!SLOTS.head||!SLOTS.legL)return .205;const neckY=SLOTS.head[2]+dy('head'),hipY=(SLOTS.legL[2]+dy('legL')+SLOTS.legR[2]+dy('legR'))/2,
+    v=(hipY-neckY)/((J.hipL?(J.hipL[1]+J.hipR[1])/2:sh.bodyPivot[1])-J.neck[1]);return v>.05&&v<1?v:.205;};
 function v2apply(list){
   const mid=list[0].key.split('.')[0],sh=window.JOINTS?JOINTS.sheetFor(mid,SHEETS2[mid]):SHEETS2[mid],mv=window.JOINTS?JOINTS.moved(mid):new Set(),m=members.find(q=>q.id===mid),L=m.layers,R=V2R,J=sh.J,before=[];before.withAdj=true;
   const got={};for(const r of list)got[r.key.split('.')[1]]=r;
@@ -5870,7 +6138,11 @@ function v2apply(list){
     if(cMax<-29||pMin>29)continue;const s=Math.max(0,Math.min(25,pMin-cMax+4));shift[c]=[d[0]*s,d[1]*s];}
   // one scale for the player: the drawn neck-to-hips height becomes the band's neck-to-hips height
   const neckY=SLOTS.head[2]+L.head.y,hipY=(SLOTS.legL[2]+L.legL.y+SLOTS.legR[2]+L.legR.y)/2;
-  const kOf=Jk=>{const v=(hipY-neckY)/((Jk.hipL?(Jk.hipL[1]+Jk.hipR[1])/2:sh.bodyPivot[1])-Jk.neck[1]);return v>.05&&v<1?v:.205;},k0=kOf(SHEETS2[mid].J);let k=got.body?kOf(J):k0;const resized=Math.abs(k-k0)>1e-9;   /* Oct 21: no new body = the body on stage keeps its size, so pins just move the pieces; Oct 20: drawn hips (the printed hips sit on the body pivot's line) */if(!(k>.05&&k<1))k=.205;
+  const kOf=Jk=>{const v=(hipY-neckY)/((Jk.hipL?(Jk.hipL[1]+Jk.hipR[1])/2:sh.bodyPivot[1])-Jk.neck[1]);return v>.05&&v<1?v:.205;};
+  /* Nov 8: no new body = the player's scale as it is (PLAYERK: from the body, not re-read from a moved head). A new body is
+     scaled from its drawn neck-to-hips as before; "resized" still means its pins were moved off the printed neck / hips
+     (compared the old way, so a plain re-upload keeps every saved placement — full-kit check) */
+  let k=got.body?kOf(J):PLAYERK(mid);const resized=!!got.body&&Math.abs(kOf(J)-kOf(SHEETS2[mid].J))>1e-9;   /* Oct 21: no new body = the body on stage keeps its size, so pins just move the pieces; Oct 20: drawn hips (the printed hips sit on the body pivot's line) */if(!(k>.05&&k<1))k=.205;
   const RB=[SLOTS.body[1]+L.body.x,SLOTS.body[2]+L.body.y],at=jp=>[RB[0]+(jp[0]-sh.bodyPivot[0])*k,RB[1]+(jp[1]-sh.bodyPivot[1])*k];
   // the drum kit keeps its size on stage: the drawn bass drum becomes as big as the bass drum is now
   const KIT=['kick','snare','hat','snareSt','hatSt'],kk=sh.kit?SLOTS.kick[3]*L.kick.s*.92/sh.kit.ref:k;
@@ -5885,7 +6157,7 @@ function v2apply(list){
     const px=Math.max(64,Math.min(720,Math.round(Sz*3))),Ro=px/Sz,cv=document.createElement('canvas');cv.width=cv.height=px;const g=cv.getContext('2d');
     g.translate(fx*px,fy*px);g.rotate(th);g.drawImage(r.cv,(bx+sft[0]-P[0])*Ro,(by+sft[1]-P[1])*Ro,bw*Ro,bh*Ro);
     if(arm)sealArm(cv);   // PATCH03: arms left open at the shoulder still fill
-    out[kk2]={url:cv.toDataURL('image/png'),s:Sz*(KIT.includes(kk2)?kk:k)/d[3],P};}
+    out[kk2]={url:cv.toDataURL('image/png'),s:Sz*(KIT.includes(kk2)?kk:k)/d[3],P,sz:Sz};}
   const key=x=>mid+'.'+x,adjNow=x=>S.adj[key(x)]?Object.assign({},S.adj[key(x)]):undefined,ia=()=>(L.inst&&L.inst.a||0)*Math.PI/180;
   const touched=Object.keys(out);
   const ver=sh.ver||1,keepOn=(typeof KEEP_PLACE==='undefined'||KEEP_PLACE)&&!resized,   /* Oct 21: pinned pieces are placed fresh; a new body pinned at a new neck or hips resizes the player, so then all of this upload is */kept=x=>keepOn&&!mv.has(x)&&!(x==='head'&&got.mouth&&got.mouth.jaw)&&!!out[x]&&(+L[x].v2||0)>=ver&&!(got[x]&&got[x].spot);   // PATCH01 (Oct 12: a mouth drawn on the face always goes where it was drawn)
@@ -5925,8 +6197,8 @@ function v2apply(list){
     let eb=(R2-R1)*180/Math.PI;eb=((eb+540)%360)-180;drum[ak]={a:R1*180/Math.PI,eb};}
   for(const kk2 of touched)before.push([key(kk2),artHold(S.art[key(kk2)]),adjNow(kk2)]);
   for(const kk2 of touched){const ly=L[kk2];
-    if(kept(kk2)){const o={x:ly.x,y:ly.y,s:ly.s,a:ly.a,v2:+ly.v2};if(ARMS.has(kk2)){o.eb=ly.eb||0;o.hand=got[kk2]?(got[kk2].handOn?1:0):(ly.hand||0);if(stickArm(kk2))o.stick=1;}ARTSET[key(kk2)](out[kk2].url);ADJSET[key(kk2)](o);continue;}
-    const o={x:ly.x,y:ly.y,s:out[kk2]?out[kk2].s:ly.s,a:ly.a};if(ARMS.has(kk2))o.eb=ly.eb||0;if(out[kk2])o.v2=ver;
+    if(kept(kk2)){const o={x:ly.x,y:ly.y,s:ly.s,a:ly.a,v2:+ly.v2};if(ly.sz)o.sz=ly.sz;if(ARMS.has(kk2)){o.eb=ly.eb||0;o.hand=got[kk2]?(got[kk2].handOn?1:0):(ly.hand||0);if(stickArm(kk2))o.stick=1;}ARTSET[key(kk2)](out[kk2].url);ADJSET[key(kk2)](o);continue;}
+    const o={x:ly.x,y:ly.y,s:out[kk2]?out[kk2].s:ly.s,a:ly.a};if(ARMS.has(kk2))o.eb=ly.eb||0;if(out[kk2])o.v2=ver;if(kk2==='body'){if(out.body)o.sz=+out.body.sz.toFixed(2);else if(ly.sz)o.sz=ly.sz;}   /* Nov 8: the body remembers its sheet size (PLAYERK) */
     const jp=Object.assign({head:J.neck,legL:J.hipL,legR:J.hipR},Object.fromEntries(Object.entries(sh.arms).map(([a,v])=>[a,v.sock||v.S])))[kk2];   /* Oct 21: an arm sits on the body's shoulder pin (sock), hangs from its own (S) */
     if(jp&&out[kk2]){const pp=at(jp);o.x=pp[0]-SLOTS[kk2][1];o.y=pp[1]-SLOTS[kk2][2];}
     if(kk2==='mouth')o.jaw=got.mouth&&got.mouth.jaw?+(got.mouth.jaw*k).toFixed(2):0;
@@ -6252,6 +6524,54 @@ function splitLegs(img,bl){const Y=img.Y,W=img.W,x0=Math.max(0,Math.round(bl.x0)
   let best=Math.round((x0+x1)/2),bn=1e9;for(let x=Math.round(x0+(x1-x0)*.3);x<=x0+(x1-x0)*.7;x++){let n=0;for(let y=ya;y<y1;y+=2)if(Y[y*W+x]<110)n++;if(n<bn){bn=n;best=x;}}
   const L=[[x0,y0],[best,y0],[best,y1],[x0,y1]],R=[[best,y0],[x1,y0],[x1,y1],[best,y1]];
   return [L,R].map(line=>{const b=blobFromLine(img,line);b.drawn=line;return b;});}
+/* Nov 8 (designer, a whole person drawn joined up: "once the body is known, the parts round it should be an easy deduction"):
+   one tall drawing is cut into head, body, two arms and two legs by reading its silhouette row by row —
+   the neck is the narrowest row in the upper part (the head above it, the shoulders below), the legs begin where the
+   bottom of the shape parts in two down the middle, and the arms are what hangs beside the torso (the torso's sides are
+   read on the rows where the arms stand clear of it; above the armpit the cut runs straight up at the torso's side).
+   Each piece is a drawn-round polygon (like splitLegs), so it behaves like a piece drawn round by hand and turning the
+   photo keeps it. Returns [{key,blob}] or null when the shape doesn't read as a standing figure (then Tap each part
+   asks for the pieces as before). armKeys = the sheet's two arm keys, left as drawn first. */
+function splitFigure(img,bl,armKeys){
+  if(!bl.clip)return null;const x0=bl.x0,y0=bl.y0,W=bl.x1-x0,H=bl.y1-y0;if(H<W*1.3||H<40)return null;
+  const st=Math.max(1,Math.max(W,H)/240),gw=Math.ceil(W/st)+1,gh=Math.ceil(H/st)+1,rows=[];let cells=0,sx=0;
+  for(let j=0;j<gh;j++){const sp=[];let a=-1;for(let i=0;i<=gw;i++){const on=i<gw&&bl.clip.has(x0+i*st,y0+j*st);if(on){cells++;sx+=i;}
+    if(on&&a<0)a=i;if(!on&&a>=0){sp.push([a,i-1]);a=-1;}}rows.push(sp);}
+  if(cells<50)return null;const mx=sx/cells;   /* the figure's middle column */
+  const cen=j=>{const sp=rows[j];let b=null,bd=1e9;sp.forEach(s=>{const d=s[0]>mx?s[0]-mx:s[1]<mx?mx-s[1]:0;if(d<bd){bd=d;b=s;}});return b;};   /* the span nearest the middle */
+  const cw=j=>{const c=cen(j);return c?c[1]-c[0]+1:0;};
+  /* the neck: the row in the upper half that is narrowest COMPARED WITH the widest row above it (the head) and the widest
+     row in the stretch below it (the shoulders) — so a hat's narrow crown or a tuft of hair at the very top isn't taken
+     for a neck (the designer's propeller cap, Nov 8) */
+  let jn=-1,best=0;{let above=0;for(let j=0;j<gh*.5;j++){const w=cw(j);if(j>=gh*.05&&w>0){let below=0;for(let k=j+1;k<Math.min(gh,j+gh*.2);k++)below=Math.max(below,cw(k));
+      const r=above>=gw*.3?Math.min(above,below)/Math.max(w,gw*.08):0;if(r>best){best=r;jn=j;}}above=Math.max(above,w);}}   /* a real head above it (≥ 30% of the width); a hair-thin row (a propeller's stem) counts as 8% wide */
+  if(jn<0||best<1.5)return null;const nw=cw(jn);
+  let jneck=jn;while(jneck+1<gh&&cw(jneck+1)<=nw*1.3)jneck++;   /* the neck's bottom: the head keeps the neck */
+  const yN=y0+(jneck+.5)*st;
+  /* the legs: from the bottom up, the rows where the shape has a gap down the middle; the crotch is the top of that run */
+  const gap=j=>{const sp=rows[j];for(let k=0;k+1<sp.length;k++)if(sp[k][1]<mx&&sp[k+1][0]>mx)return (sp[k][1]+sp[k+1][0])/2;return null;};
+  let jb=gh-1;while(jb>jneck&&!rows[jb].length)jb--;const yB=y0+(jb+1)*st;
+  let jg=jb;while(jg>jneck&&gap(jg)==null)jg--;   /* the lowest row with a gap (one foot may end higher than the other) */
+  let jc=jg,miss=0;while(jc-1>jneck){if(gap(jc-1)!=null){jc--;miss=0;}else if(miss<2){jc--;miss++;}else break;}jc+=miss;
+  if(jg-jc<gh*.1||jc<jneck+gh*.1)return null;   /* no legs to speak of, or no body between neck and legs */
+  const yC=y0+(jc-.5)*st;
+  /* the torso's sides: on the rows between neck and crotch where something stands clear on both sides of the middle span */
+  const L=[],R=[];for(let j=jneck+1;j<jc;j++){const c=cen(j),sp=rows[j];if(!c)continue;if(sp.some(s=>s[1]<c[0]-1))L.push(c[0]);if(sp.some(s=>s[0]>c[1]+1))R.push(c[1]);}
+  const med=a=>{const b=a.slice().sort((p,q)=>p-q);return b[b.length>>1];};
+  const arms=L.length>=gh*.05&&R.length>=gh*.05;   /* each arm stands clear of the torso on enough rows to read the torso's side */
+  const tl=arms?med(L):0,tr=arms?med(R):gw-1,tlx=x0+tl*st,trx=x0+(tr+1)*st;
+  /* how far down each arm reaches (a hand may hang below the crotch): rows below it with ink wholly outside the torso's side */
+  let jaL=jc-1,jaR=jc-1;if(arms){for(let j=jc;j<=jb;j++){if(rows[j].some(s=>s[1]<tl-1))jaL=j;else break;}
+    for(let j=jc;j<=jb;j++){if(rows[j].some(s=>s[0]>tr+1))jaR=j;else break;}}
+  const yAL=Math.max(yC,y0+(jaL+1)*st),yAR=Math.max(yC,y0+(jaR+1)*st),x1=x0+W;
+  /* the line between the legs: the middle of the gap on each row (vertical where a row has none) */
+  const mid=[];let gx=gap(jc);if(gx==null)gx=mx;for(let j=jc;j<=jb;j++){const g=gap(j);if(g!=null)gx=g;mid.push([x0+(gx+.5)*st,y0+(j+.5)*st]);}
+  const out=[];out.push({key:'head',line:[[x0,y0],[x1,y0],[x1,yN],[x0,yN]]});
+  out.push({key:'body',line:[[tlx,yN],[trx,yN],[trx,yC],[tlx,yC]]});
+  if(arms){out.push({key:armKeys[0]||'arm',line:[[x0,yN],[tlx,yN],[tlx,yAL],[x0,yAL]]});out.push({key:armKeys[1]||'arm2',line:[[trx,yN],[x1,yN],[x1,yAR],[trx,yAR]]});}
+  out.push({key:'legL',line:[[tlx,yC],...mid,[x0,yB],[x0,yAL],[tlx,yAL]]});
+  out.push({key:'legR',line:[[trx,yC],[trx,yAR],[x1,yAR],[x1,yB],...mid.slice().reverse()]});
+  return out.map(o=>{const b=blobFromLine(img,o.line);b.drawn=o.line;return {key:o.key,blob:b};});}
 function blobFromLine(img,line){const f=4,xs=line.map(p=>p[0]),ys=line.map(p=>p[1]),X0=Math.max(0,Math.min(...xs)),Y0=Math.max(0,Math.min(...ys)),
     X1=Math.min(img.W,Math.max(...xs)),Y1=Math.min(img.H,Math.max(...ys)),x0=Math.floor(X0/f),y0=Math.floor(Y0/f),cw=Math.max(1,Math.ceil(X1/f)-x0),ch=Math.max(1,Math.ceil(Y1/f)-y0);
   const c=document.createElement('canvas');c.width=cw;c.height=ch;const g=c.getContext('2d',{willReadFrequently:true});g.fillStyle='#fff';g.beginPath();
@@ -6372,7 +6692,7 @@ function names(mid){const arms=Object.keys(SHEETS2[mid].arms||{});   /* printed 
   return SHEETS2[mid].boxes.map(b=>{const i=arms.indexOf(b[0]);return [b[0],i>=0?TXT(i?'upload.armRight':'upload.armLeft'):OWN[b[0]]?TXT(OWN[b[0]]):String(b[5]||b[0]).split(' · ')[0]];});}
 /* Oct 23 (flow v3 tidy): the old plain-paper screen (thumbnails + menus, reached only from the old upload screen) is gone:
    Add drawings (add-drawings.js) uses find, guess and pieces below */
-return {find,guess,pieces,blobFromLine,splitLegs,names:mid=>names(mid)};
+return {find,guess,pieces,blobFromLine,splitLegs,splitFigure,names:mid=>names(mid)};
 })();
 // ===== 5c. A PICTURE AS ONE PIECE (Oct 21): a painting or picture, cut out by drawing round it, made to look printed =====
 // For what the line readers can't do: a painted face, a coloured picture filling the photo. After "no corner squares",
@@ -6552,12 +6872,18 @@ return {close,_state:()=>P,snap,make,outlineOf};
 //  3. Put them together: Adjust joints (adjust-joints.js), with Back.
 //  4. Use these drawings, as every upload.
 window.ADD=(function(){
+let LAST=null;   /* Nov 8: the last photo that landed straight on a player (see start) */
 const $=id=>document.getElementById(id);
 const X=()=>window.__scan;
 let A=null;   // {mid, img, blobs, assign: piece key or '' per drawing, look: 'drawn'|'printed' per drawing, sel, view, path, step}
 
 // ---------- 2. the photo, with the pieces ----------
-function layout(){const cv=$('addCv'),img=A.img,maxW=Math.min(420,cv.parentElement.clientWidth||420),maxH=Math.max(300,(window.innerHeight||800)*.62),
+/* Nov 8: in the player screen the photo fits the stage box with room for everything that sits under it — the guide, its
+   buttons, the Add / Erase row that appears once a piece is drawn round, and Next — so nothing is pushed out of reach
+   (the designer's phone: the box could not be scrolled from on top of the photo). Hidden rows count at their usual height. */
+function reserve(){const h=(id,usual)=>{const e=$(id);if(!e)return 0;return e.hidden||!e.offsetHeight?usual:e.offsetHeight+8;};   /* layout runs before the guide is shown: hidden rows count at their usual height */
+  return (A.guided?h('addGuide',80):0)+(A.guided&&!A.face?h('addGuideBtns',100):0)+h('addSel',104)+60;}
+function layout(){const cv=$('addCv'),img=A.img,host=cv.closest('#plAdj'),maxW=Math.min(host?560:420,cv.parentElement.clientWidth||420),maxH=host?Math.max(160,host.clientHeight-reserve()):Math.max(300,(window.innerHeight||800)*.62),
     sc=Math.min(maxW/img.W,maxH/img.H),dpr=Math.min(2,window.devicePixelRatio||1);
   cv.style.width=Math.round(img.W*sc)+'px';cv.style.height=Math.round(img.H*sc)+'px';cv.width=Math.round(img.W*sc*dpr);cv.height=Math.round(img.H*sc*dpr);A.view={sc,dpr,z:1,ox:0,oy:0};}   /* z, ox, oy: pinch zoom (Oct 23) */
 // Oct 26 (code review): turning the phone re-fits the photo, so taps and loops land where the finger is
@@ -6739,7 +7065,7 @@ function figure(k){const ak=Object.keys((SHEETS2[A.mid]||{}).arms||{}),L=[ak[0]]
 <circle cx="32" cy="12" r="9" ${c(k==='head')}/><rect x="20" y="24" width="24" height="32" rx="3" ${c(k==='body')}/>
 <rect x="6" y="25" width="9" height="30" rx="4" ${c(L.includes(k)||k==='hand')}/><rect x="49" y="25" width="9" height="30" rx="4" ${c(Rr.includes(k)||k==='grip')}/>
 <rect x="21" y="60" width="9" height="32" rx="4" ${c(k==='legL')}/><rect x="34" y="60" width="9" height="32" rx="4" ${c(k==='legR')}/></svg>`;}
-function guide(){const g=$('addGuide');if(!g)return;g.hidden=!A.guided;{const ib=$('addInst');if(ib&&!A.guided)ib.hidden=true;}$('addGuideBtns').hidden=!A.guided;{const h=$('addCheck').querySelector('[data-t="add.checkHelp"]');if(h)h.hidden=!!A.guided;}if(!A.guided){$('addNext').textContent=TXT('add.next');return;}
+function guide(){const g=$('addGuide');if(!g)return;g.hidden=!A.guided;{const ib=$('addInst');if(ib&&!A.guided)ib.hidden=true;}$('addGuideBtns').hidden=!A.guided||!!A.face;   /* Nov 8: a photo of a face has one part — no Not drawn / Previous part */{const h=$('addCheck').querySelector('[data-t="add.checkHelp"]');if(h)h.hidden=!!A.guided;}if(!A.guided){$('addNext').textContent=TXT('add.next');return;}
   const k=cur(),n=A.parts.length;
   $('addGuideNum').textContent=k?TXT('add.gNum',{i:A.gi+1,n}):TXT('add.gAllDone');
   $('addGuideAsk').textContent=k?TXT('add.gTap',{part:nameOf(k)}):TXT('add.gDone');
@@ -6950,8 +7276,7 @@ function jawSplit(r,line){const T=r.toSheet;if(!T)return null;const R=X().V2R,[,
 // same scale. A piece that isn't changed then goes back on exactly as it was. Pieces that hang off others (the strum hand,
 // the neck hand, the drum stands) stay as they are.
 function stagePieces(mid,skip){const sh=SHEETS2[mid],m=members.find(q=>q.id===mid);if(!m||!sh)return {results:[],pins:{},W:{}};const L=m.layers;
-  const neckY=SLOTS.head[2]+L.head.y,hipY=(SLOTS.legL[2]+L.legL.y+SLOTS.legR[2]+L.legR.y)/2,J=sh.J,
-    kk=(hipY-neckY)/((J.hipL?(J.hipL[1]+J.hipR[1])/2:sh.bodyPivot[1])-J.neck[1]),k=kk>.05&&kk<1?kk:.205,
+  const k=window.PLAYERK?PLAYERK(mid):.205,   /* Nov 8: the player's scale from the body (scanner.js PLAYERK), not from where the head sits now */
     RB=[SLOTS.body[1]+L.body.x,SLOTS.body[2]+L.body.y],back=(x,y)=>[sh.bodyPivot[0]+(x-RB[0])/k,sh.bodyPivot[1]+(y-RB[1])/k];
   const results=[],pins={},W={};
   const one=(key,P)=>{const ly=L[key],d=SLOTS[key];if(!ly||!ly.img||!ly.v2||!(ly.s>0)||!(ly.img.width>0))return null;
@@ -6975,7 +7300,12 @@ function stagePieces(mid,skip){const sh=SHEETS2[mid],m=members.find(q=>q.id===mi
   if(!skip.has('grip')&&L.grip&&L.inst){const il=L.inst,g=L.grip,a=-(il.a||0)*Math.PI/180,c=Math.cos(a),sn=Math.sin(a);   /* the guitar is shown upright here: undo its tilt */
     one('grip',back(SLOTS.inst[1]+il.x+g.x*c-g.y*sn,SLOTS.inst[2]+il.y+g.x*sn+g.y*c));}
   const iL=L.inst,iD=SLOTS.inst,instP=iL&&iD?back(iD[1]+iL.x,iD[2]+iL.y):null;   /* Oct 22: where the instrument sits on the player, on the sheet */
-  return {results,pins,W,instP};}
+  /* Nov 8 (designer's recording: after he had moved the head, a new head floated at the printed neck while the body sat
+     elsewhere): a NEW piece hangs where the OLD one was pinned to the body, mapped back to the sheet like the pieces that
+     stay — not at the printed sheet's socket, which no longer matches a body that has been adjusted */
+  const socks={};for(const key of ['head','legL','legR',...Object.keys(sh.arms||{})]){if(!skip.has(key))continue;const ly=L[key],d=SLOTS[key];   /* skip = the keys the new photo brings */
+    if(ly&&d&&ly.v2&&ly.s>0)socks[key]=back(d[1]+ly.x,d[2]+ly.y);}
+  return {results,pins,W,instP,socks};}
 // Edit on a player's card: straight to Put them together with the player as they are
 async function arrange(mid){const {S2,say,sel}=X();$('scan').hidden=false;$('scanWho').hidden=true;if(window.PICTURE)PICTURE.close();
   const st=stagePieces(mid,new Set());if(!st.results.length){say(TXT('add.nothingChanged'));return;}
@@ -7009,7 +7339,7 @@ async function next(){const {say}=X();if(!A.assign.some(Boolean)){say(TXT('add.n
      every pin moved, turn and size. Now a second visit for the same player keeps them; only a first visit sets the pins. */
   const st0=window.JOINTS&&JOINTS._state(),keep=!!(A.again&&st0&&st0.mid===A.mid);
   if(window.JOINTS){if(!keep)JOINTS.clear();step(3);await JOINTS.show(A.mid,SHEETS2[A.mid],results);
-    if(!keep){if(A.stage){JOINTS.setup(A.mid,A.stage.pins,A.stage.W);if(JOINTS.instAt)JOINTS.instAt(A.stage.instP);}if(A.sock&&A.sock.shL)JOINTS.preset(A.mid,A.sock);}}
+    if(!keep){if(A.stage){JOINTS.setup(A.mid,A.stage.pins,A.stage.W,A.stage.socks);if(JOINTS.instAt)JOINTS.instAt(A.stage.instP);}if(A.sock&&A.sock.shL)JOINTS.preset(A.mid,A.sock);}}
   $('scanApply').disabled=false;say(TXT('joints.help'));}
 function step(n){A.step=n;$('addCheck').hidden=n!==2;$('addBack').hidden=n!==3;$('scanParts').hidden=true;
   if(n===2){$('scanJoints').hidden=true;$('scanApply').disabled=true;layout();draw();panel();guide();}}
@@ -7044,9 +7374,26 @@ async function start(mid,opt){opt=opt||{};const {S2,say,tick}=X();say(TXT('uploa
   if(mid==='vocals'&&!A.face&&!A.picture&&blobs.length&&!(A.instChoice==='house'||A.instChoice==='keep'))A.assign=FREEPAPER.guess(mid,blobs,['mouthO']);
   /* Oct 26: trousers found as one drawing ('legs' from the guess) are cut into two legs here */
   for(let i=A.blobs.length-1;i>=0;i--)if(A.assign[i]==='legs'){const [l,r]=FREEPAPER.splitLegs(A.img,A.blobs[i]);A.blobs.splice(i,1,l,r);A.assign.splice(i,1,'legL','legR');A.look.splice(i,1,lookOf(l),lookOf(r));}
+  /* Nov 8 (designer): a whole person drawn joined up — the finder found one tall drawing that is most of what is on the
+     page — is cut into head, body, arms and legs from its silhouette (free-paper.js splitFigure); the smaller drawings
+     keep their names unless a cut piece takes the name. When the shape doesn't read as a figure nothing changes. */
+  if(!A.face&&!A.picture&&A.blobs.length){const area=b=>(b.x1-b.x0)*(b.y1-b.y0);let i=0;A.blobs.forEach((b,n)=>{if(area(b)>area(A.blobs[i]))i=n;});const b=A.blobs[i];
+    if(area(b)>=A.blobs.reduce((t,q)=>t+area(q),0)*.6&&(b.y1-b.y0)>(b.x1-b.x0)*1.3){const ak=Object.keys((SHEETS2[mid]||{}).arms||{}),cut=FREEPAPER.splitFigure(A.img,b,ak);
+      if(cut){const keys=new Set(cut.map(c=>c.key));A.assign=A.assign.map((k,n)=>n!==i&&keys.has(k)?'':k);
+        A.blobs.splice(i,1,...cut.map(c=>c.blob));A.assign.splice(i,1,...cut.map(c=>c.key));A.look.splice(i,1,...cut.map(c=>lookOf(c.blob)));A.figureCut=true;}}}
   setParts();if(A.face){A.parts=['head'];const ib=$('addInst');if(ib)ib.hidden=true;}
   wire();step(2);
   $('addSnap').checked=!!A.picture;   /* Oct 22: snapping is for pictures; on line drawings it pulled loops in and lost bits of arms */
+  /* Nov 8 (the player screen, stage 2 — designer: "we can certainly make improvements on the flow"): a photo taken from the
+     player screen whose parts are all named lands straight on the player, playing — no Check the pieces, no Put them
+     together (they tap the player there to fix anything; Undo takes the photo back). When some parts are missing, only
+     those are asked for. The drummer's logo is optional (not found = the default). */
+  if(window.PLAYER&&PLAYER.isOpen()&&!A.face&&!A.picture&&A.blobs.length){const missing=A.parts.filter(k=>k!=='logo'&&!A.assign.includes(k));
+    if(!missing.length){const me=A,n=A.assign.filter(Boolean).length;A.landing=true;
+      LAST={mid,parts:A.parts.slice(),assign:A.assign.slice(),centers:A.blobs.map(b=>[Math.round((b.x0+b.x1)/2),Math.round((b.y0+b.y1)/2)])};   /* for the tests: what landed */
+      await next();
+      if(A===me&&!$('scanApply').disabled){PLAYER.found(n);$('scanApply').click();return;}}
+    else{A.parts=A.parts.filter(k=>missing.includes(k)||k==='logo');A.onlyMissing=true;}}
   goPart(0);
   const n=A.blobs.length;say((A.face?TXT('mine.faceAsk'):A.picture?TXT('add.picture'):n?TXT('add.foundG',{n,s:n===1?'':'s'}):TXT('add.none')));}
 /* Oct 22 (designer: "the work flow should be the same for drawn sheets and photos"): a printed sheet that was read goes
@@ -7071,7 +7418,7 @@ function pickHouse(mid,n){const inst=INST[mid];if(!inst||!window.HOUSE||!HOUSE[m
 /* Oct 26 (code review): the pieces the instrument choice can change after the drawings go in (the instrument pieces and
    the head, which a guitar or bass lines up against), so Undo can put them back too */
 function undoKeys(mid){return [...(INST[mid]||[]),'head',...(mid==='drums'?['logo']:[])].map(k=>mid+'.'+k).filter(k=>typeof ARTSET!=='undefined'&&ARTSET[k]);}
-return {ask,close,arrange,fromSheet,afterApply,pickHouse,undoKeys,_state:()=>A};
+return {ask,close,arrange,fromSheet,afterApply,pickHouse,undoKeys,_state:()=>A,_last:()=>LAST};
 })();
 // ===== 5e. MAKE THEM MINE (Oct 22, flow v3: "start from the player") =====
 // Designer's flow (sketch: Add drawings flow canvas, row "Draft v3"): Edit band shows the band as it is; each player has one
@@ -7120,7 +7467,11 @@ function card(m){const c=m.cv&&m.cv.closest('.card');if(!c||c.querySelector('.mi
   const box=document.createElement('div');box.className='mine';
   box.innerHTML=`<div class="mgo"><button class="mineGo" data-mine="${m.id}">${TXT('mine.button')}</button><button class="alt mineAdj" data-mine-adj="${m.id}">${TXT('mine.cardAdjust')}</button></div>`+   /* Oct 23 (designer): Adjust = Put them together for this player */(MAIN[m.id]?`<div class="minst"><span class="msmall">${TXT('mine.instQ',{inst:TXT('inst.'+m.id)})}</span><div class="mchips"></div></div>`:'');
   const h=c.querySelector('h2');if(h)h.after(box);else c.prepend(box);
-  box.querySelector('.mineGo').onclick=()=>open(m.id);box.querySelector('.mineAdj').onclick=()=>adjust(m.id);refreshCard(m.id);if(window.UIART&&UIART.mapDress)UIART.mapDress(box);}   /* Oct 26: the designer's drawn words (built after the page was dressed) */
+  box.querySelector('.mineGo').onclick=()=>open(m.id);box.querySelector('.mineAdj').onclick=()=>adjust(m.id);refreshCard(m.id);if(window.UIART&&UIART.mapDress)UIART.mapDress(box);
+  /* Nov 8 (designer: one simplified screen per player): a tap anywhere on the card opens the player screen (player-screen.js);
+     the Make them mine / Adjust buttons and the instrument chips on the card are the designer's now (dev) */
+  c.classList.add('pltap');c.addEventListener('click',e=>{if(document.body.classList.contains('dev')||!window.PLAYER)return;if(e.target.closest('button,input,select,label,details,a'))return;PLAYER.open(m.id);});
+  {const cv=c.querySelector('canvas');cv.tabIndex=0;cv.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!document.body.classList.contains('dev')&&window.PLAYER){e.preventDefault();PLAYER.open(m.id);}});}   /* Nov 9 (code review): the card opens from the keyboard too */c.querySelector('canvas').setAttribute('role','button');c.querySelector('canvas').setAttribute('aria-label',TXT('pl.openCard',{name:role(m.id)}));}   /* Oct 26: the designer's drawn words (built after the page was dressed) */
 function adjust(mid){if(!window.ADD)return;closePanel();T={mid,inst:null,face:false,live:true};$('scan').classList.add('mine');ADD.arrange(mid);}
 function refreshCard(mid){const m=members.find(q=>q.id===mid),c=m&&m.cv&&m.cv.closest('.card'),box=c&&c.querySelector('.mine .mchips');if(!box)return;
   chips(box,mid,current(mid),n=>{if(n==='own'){open(mid,'own');return;}pick(mid,n);});if(window.UIART&&UIART.mapDress)UIART.mapDress(box);}
@@ -7138,19 +7489,22 @@ function closePanel(){$('mineBox').hidden=true;}
 /* Oct 26 (designer: "your logo on the bass drum"): the drummer's panel also picks what is on the front of the bass drum: the
    band name, nothing, or their logo. Our logo with none yet asks for a photo of it straight away; with one, New logo photo
    swaps it. The logo is read on this device like any drawing and stays here (drum-logo.js). */
-function front(msg){const f=$('mineFront');if(!f)return;const on=!!T&&T.mid==='drums'&&!!window.LOGO;f.hidden=!on;if(!on)return;
+function front(msg,mid){const f=$('mineFront');if(!f)return;const on=((!!T&&T.mid==='drums')||mid==='drums')&&!!window.LOGO;f.hidden=!on;if(!on)return;   /* mid: the player screen's drums tray (Nov 8) */
   const cur=S.drumFront||'logo';   /* Oct 26 (designer): nothing picked = the default logo (the oddbop wordmark) */
   f.querySelectorAll('[data-front]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.front===cur)));
   $('mineLogoNew').hidden=cur!=='logo';   /* their own logo photo replaces the default (or an earlier one) */const m=$('mineLogoMsg');m.hidden=!msg;m.textContent=msg||'';}
-function pickFront(v){S.drumFront=v;save();front();}
+function pickFront(v){S.drumFront=v;save();front(null,window.PLAYER&&PLAYER.current&&PLAYER.current()==='drums'?'drums':null);}
 // the example drawing: the designer's photo (src/art/ui/example-drawing) once it is in; until then a simple line drawing
 const EXAMPLE=`<svg viewBox="0 0 360 200" fill="#fff" stroke="#222" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="180" cy="40" r="28"/><circle cx="170" cy="36" r="2.5" fill="#222"/><circle cx="190" cy="36" r="2.5" fill="#222"/><path d="M170 52q10 7 20 0" fill="none"/><rect x="146" y="80" width="68" height="70" rx="8"/><rect x="104" y="82" width="20" height="74" rx="9"/><rect x="236" y="82" width="20" height="74" rx="9"/><rect x="150" y="160" width="22" height="34" rx="8"/><rect x="188" y="160" width="22" height="34" rx="8"/></svg>`;
 function tips(face){const logo=face==='logo';if(logo)face=false;T.face=!!face;T.logo=logo;$('mineMain').hidden=true;$('mineTips').hidden=false;   /* Oct 26: face='logo' = a photo of their logo */
   $('mineTipsT').textContent=logo?TXT('mine.logoTitle'):face?TXT('mine.faceTitle'):TXT('mine.tipsTitle',{name:role(T.mid)});
   const ex=$('mineEx'),pic=!face&&!logo&&window.UISZ&&UISZ['example-drawing'];ex.hidden=!!face||logo;
   if(pic){ex.innerHTML='';ex.style.backgroundImage='var(--ui-example-drawing)';}else{ex.style.backgroundImage='';ex.innerHTML=EXAMPLE;}
-  const li=$('mineTips').querySelectorAll('.mtips li');['1','2','3'].forEach((n,i)=>{if(li[i])li[i].textContent=TXT((logo?'mine.logoTip':face?'mine.faceTip':'mine.tip')+n);});
-  if(!face&&!logo&&T.mid==='vocals'&&li[2]){const mi=T.inst||current('vocals');li[2].textContent=TXT(mi==='own'?'mine.micTip':'mine.micHeld');}   /* the singer's mic: drawn on the arm, or ours held in the hand */
+  const ol=$('mineTips').querySelector('.mtips'),li=ol.querySelectorAll('li');
+  if(face||logo){ol.classList.remove('plain');['1','2','3'].forEach((n,i)=>{if(li[i]){li[i].hidden=false;li[i].textContent=TXT((logo?'mine.logoTip':'mine.faceTip')+n);}});}
+  else{   /* Nov 8 (designer): whole drawings are allowed now, so the drawing tips are one plain sentence (+ the mic note for the singer), no numbered list */
+    ol.classList.add('plain');li[0].hidden=false;li[0].textContent=TXT('mine.tip1');li[2].hidden=true;
+    const mic=T.mid==='vocals';li[1].hidden=!mic;if(mic){const mi=T.inst||current('vocals');li[1].textContent=TXT(mi==='own'?'mine.micTip':'mine.micHeld');}}   /* the singer's mic: drawn on the arm, or ours held in the hand */
   $('mineCamL').querySelector('span').focus&&0;}
 // a photo was taken or chosen: read it for this player
 function go(file){if(!file||!T)return;if(T.logo){logoPhoto(file);return;}if(!window.SCANRUN)return;closePanel();
@@ -7158,7 +7512,7 @@ function go(file){if(!file||!T)return;if(T.logo){logoPhoto(file);return;}if(!win
   T.live=true;const sc=$('scan');sc.classList.add('mine');sc.hidden=false;sc.scrollIntoView({block:'start',behavior:'smooth'});SCANRUN(file);}
 function wire(){if(!$('mineBox'))return;
   $('mineDraw').onclick=()=>tips(false);
-  {const f=$('mineFront');if(f){f.querySelectorAll('[data-front]').forEach(b=>b.onclick=()=>pickFront(b.dataset.front));$('mineLogoNew').onclick=()=>tips('logo');}}$('mineFace').onclick=()=>tips(true);$('mineBack').onclick=()=>{if(T)T.logo=false;$('mineTips').hidden=true;$('mineMain').hidden=false;};
+  {const f=$('mineFront');if(f){f.querySelectorAll('[data-front]').forEach(b=>b.onclick=()=>pickFront(b.dataset.front));$('mineLogoNew').onclick=()=>{const i=$('plLogo');if(i&&window.PLAYER&&PLAYER.isOpen())i.click();else tips('logo');};   /* Nov 9: on the player screen the row sits in the Kit tray and picks its file there */}}$('mineFace').onclick=()=>tips(true);$('mineBack').onclick=()=>{if(T)T.logo=false;$('mineTips').hidden=true;$('mineMain').hidden=false;};
   $('mineClose').onclick=()=>{closePanel();T=null;};
   $('mineBox').addEventListener('keydown',e=>{if(e.key==='Escape'){closePanel();T=null;}});
   $('mineBox').addEventListener('click',e=>{if(e.target===$('mineBox')){closePanel();T=null;}});   // a tap outside the card
@@ -7179,11 +7533,16 @@ function wire(){if(!$('mineBox'))return;
   $('mineFix').onclick=()=>{const mid=done.mid;hideDone();if(!mid||!window.ADD)return;const e=$('goEdit');if(e)e.click();
     setTimeout(()=>{T={mid,inst:null,face:false,live:true};$('scan').classList.add('mine');ADD.arrange(mid);},350);};
   members.forEach(card);}
+// Nov 8: the player screen's Drawing tray — a photo (face: a photo of a face; inst 'own': they drew their instrument too)
+function photo(mid,file,face,inst){T={mid,inst:inst||null,face:!!face,logo:false,live:false};go(file);}
+function resetPlayer(mid){if(mid==='vocals'&&window.MICS){MICS.set(null);save();}const m=members.find(q=>q.id===mid),b=m&&m.cv.closest('.card').querySelector('[data-urs]');if(b){b.click();b.click();}refreshCard(mid);}
+async function logo(file){T={mid:'drums',inst:null,face:false,logo:true,live:false};let ok=false;try{ok=await LOGO.fromPhoto(file);}catch(e){console.warn('logo',e);}
+  T=null;if(ok){if(window.PLAYER&&PLAYER.isOpen())PLAYER.landed('drums');}return ok;}   /* Nov 8: from the player screen's drums tray */
 // the logo photo: cut out and put on the drum, then the stage shows it; nothing found: back to the panel with a note
 async function logoPhoto(file){const t=T;T.logo=false;$('mineTips').hidden=true;$('mineMain').hidden=false;let ok=false;
   try{ok=await LOGO.fromPhoto(file);}catch(e){console.warn('logo',e);}
   if(T!==t)return;if(!ok){front(TXT('mine.logoNone'));return;}
-  closePanel();T=null;const s=$('show');if(s)s.click();done.mid='drums';
+  closePanel();T=null;if(window.PLAYER&&PLAYER.isOpen()){PLAYER.landed('drums');return;}const s=$('show');if(s)s.click();done.mid='drums';
   $('mineDoneT').textContent=TXT('mine.logoOn');$('mineUndo').hidden=true;$('mineDone').hidden=false;clearTimeout(done.t);done.t=setTimeout(hideDone,8000);}
 // a player's own size on stage (S.stage[id].z, 60 % to 160 %)
 const zOf=mid=>{const p=(S.stage||{})[mid];return p&&+p.z>0?+p.z:1;};
@@ -7194,11 +7553,133 @@ function showSize(){const b=$('minePSize');if(b&&T)b.textContent=Math.round(zOf(
 function hideDone(){clearTimeout(done.t);$('mineDone').hidden=true;}
 // after Use these drawings (scanner.js): straight onto the stage, the player in the spotlight
 function done(mid){members.forEach(m=>refreshCard(m.id));if(!T||!T.live)return;T=null;done.mid=mid;$('scan').classList.remove('mine');
+  if(window.PLAYER&&PLAYER.isOpen()){PLAYER.landed(mid);return;}   /* Nov 8: from the player screen, the new drawing lands there, playing */
   const s=$('show');if(s)s.click();
   $('mineDoneT').textContent=TXT('mine.on',{name:Cap(role(mid))});$('mineUndo').hidden=false;$('mineDone').hidden=false;
   clearTimeout(done.t);done.t=setTimeout(hideDone,15000);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
-return {target:()=>T&&T.live?T:null,done};
+return {target:()=>T&&T.live?T:null,done,role,main:mid=>MAIN[mid],refreshCard,photo,logo,chips,current,pick,front,resetPlayer,zOf,resize};   /* Nov 8: the player screen (player-screen.js) builds its trays from these */
+})();
+// ===== 5f. THE PLAYER SCREEN (Nov 8, designer: "one simplified screen that lets you adjust more intuitively") =====
+// Tap a player on Edit band and they get a screen of their own: they stand big in the middle, playing along to the demo
+// the whole time, and everything you do, you do to them directly. Replaces the Make them mine dialog and the Adjust
+// (Put them together) panel as the way in; both still do the work underneath:
+//  - LIVE: the player drawn big (the same drawLayers the cards use), looping while the screen is open.
+//  - ADJUST: tap them and they pause as paper pieces (adjust-joints.js, hosted here with its old chrome hidden): drag a
+//    piece to move it, its dot to move the pin, tap a piece for its turn / size handle. Done puts them back together and
+//    they play again; Cancel leaves them as they were.
+//  - CHIPS under the stage: Drawing (take / choose a photo, a photo of a face, print a guide, back to default),
+//    their instrument (the designs + Draw), Style (the player styles, options.js), Size (− / +). Each opens a small tray.
+//  - Band (top left) goes back to the band page; Undo (top right) is Edit band's own undo of the last drawing change.
+// The photo flow (add-drawings.js) runs inside this screen too and lands back here (MINE.done) rather than on the stage.
+// Design note: claude/player-screen-nov8.md. Stage 2 (photo flow straight to the player, ask only for what is missing) is next.
+window.PLAYER=(function(){
+const $=id=>document.getElementById(id);
+const STYLE_OPT={vocals:'singerStyle',guitar:'guitarStyle',bass:'bassStyle',keys:'keysStyle',drums:'drumsStyle'};   // which option holds each player's style (puppeteer/moves.js)
+let P=null;   // {mid, raf, adj (adjusting or a photo flow is up), tray, home:{parent,next} where #scan came from, timer}
+const member=mid=>members.find(m=>m.id===mid);
+const Cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+/* Nov 9 (code review): the drummer's "On the bass drum" row is BORROWED from the old dialog while the Kit tray shows it. It
+   must go home before the tray is emptied — emptying the tray used to throw the row away, so it was gone (until the page
+   was reloaded) the second time the Kit tray opened, after picking a kit, and from the designer's dialog. */
+let FH=null;   // where the row lives in the old dialog: {parent,next}
+function frontHome(){const f=$('mineFront');if(!f||!FH||f.parentElement===FH.parent)return;f.hidden=true;FH.parent.insertBefore(f,FH.next&&FH.next.parentNode===FH.parent?FH.next:null);}
+
+// ---------- the live puppet ----------
+function fit(){const cv=$('plCv'),box=$('plStage');if(!cv||!box)return;const dpr=Math.min(2,window.devicePixelRatio||1),w=box.clientWidth,h=box.clientHeight;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}cv.style.width=w+'px';cv.style.height=h+'px';}
+function frame(t){if(!P||P.adj)return;const m=member(P.mid),cv=$('plCv');if(!m||!cv){P.raf=0;return;}fit();
+  const g=cv.getContext('2d'),dpr=Math.min(2,window.devicePixelRatio||1),W=cv.width/dpr,H=cv.height/dpr,z=MINE.zOf(m.id),k=Math.min(W/112,H/140)*.7*z;   /* the cards draw the player in a 160 x 140 box; they stand in the middle ~110 wide, so the height sets the size. Nov 8 (designer): their size on stage shows here too — press − / + and they grow or shrink from the feet up */
+  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cv.width,cv.height);g.setTransform(k*dpr,0,0,k*dpr,(W-160*k)/2*dpr,(H*.92-134*k)*dpr);
+  try{drawLayers(g,m,t);}catch(e){}
+  P.raf=requestAnimationFrame(frame);}
+const go=()=>{if(P&&!P.raf&&!P.adj)P.raf=requestAnimationFrame(frame);};
+
+// ---------- open / close ----------
+function open(mid){const m=member(mid);if(!m||!$('plBox'))return;if(P&&P.mid!==mid)close();
+  if(window.PICTURE)PICTURE.close();$('mineBox')&&($('mineBox').hidden=true);
+  P={mid,raf:0,adj:false,tray:null,home:null};
+  $('plName').textContent=TXT('pl.title',{name:MINE.role(mid)});
+  const ic=$('plChipInst');ic.hidden=!MINE.main(mid);if(!ic.hidden)ic.textContent=Cap(TXT('inst.'+mid));
+  $('plChipStyle').hidden=!STYLE_OPT[mid]||!window.OPT||!OPT.list.some(o=>o[0]===STYLE_OPT[mid]);
+  hint(TXT('pl.tapHint'));tray(null);tools(false);$('plCv').hidden=false;$('plAdj').hidden=true;
+  $('plBox').hidden=false;document.body.classList.add('pl-open');undoState();go();
+  setTimeout(()=>{if(P&&P.mid===mid)$('plBack').focus();},50);}
+function close(){if(!P)return;if(P.adj)leaveAdjust(true);if(P.raf)cancelAnimationFrame(P.raf);clearInterval(P.timer);clearTimeout(landed.t);frontHome();$('plTray').innerHTML='';   /* Nov 9 (code review): the borrowed bass drum row goes home; a late hint timer must not write on the next player's screen */
+  $('plBox').hidden=true;document.body.classList.remove('pl-open');P=null;
+  if(window.MINE)members.forEach(m=>MINE.refreshCard(m.id));}
+const isOpen=()=>!!P;
+function hint(t){const h=$('plHint');h.textContent=t||'';h.hidden=!t;}
+function tools(on){$('plTools').hidden=!on;$('plChips').hidden=on;if(!on)$('plTray').hidden=!P||!P.tray;}
+function undoState(){const u=$('wsUndo'),b=$('plUndo');if(b)b.disabled=!u||u.hidden;}
+
+// ---------- adjusting: the pieces view hosted here ----------
+// #scan (the upload / Put them together panel) moves into the screen while it is needed and goes home after
+function hostScan(){const sc=$('scan');if(!sc||sc.parentElement===$('plAdj'))return;P.home={parent:sc.parentElement,next:sc.nextSibling};$('plAdj').appendChild(sc);sc.classList.add('pl');}
+function unhostScan(){const sc=$('scan');if(!sc||!P||!P.home)return;sc.classList.remove('pl','mine');P.home.parent.insertBefore(sc,P.home.next);P.home=null;}
+function watchScan(){clearInterval(P.timer);P.timer=setInterval(()=>{if(!P||!P.adj)return;const sc=$('scan');
+    if(sc.hidden){leaveAdjust(false);return;}   /* Done, Cancel or the photo flow finished (scanner.js hides the panel) */
+    const st=window.ADD&&ADD._state(),three=!!st&&st.step===3;$('plDone').hidden=!three;$('plDone').disabled=$('scanApply').disabled;
+    if(st&&st.step===2&&!st.face&&!st.picture&&!P.asked){P.asked=true;hint(TXT(st.onlyMissing?'pl.missing':'add.checkHelp'));}},150);}
+function enterAdjust(){if(!P||P.adj||!window.ADD)return;P.adj=true;if(P.raf){cancelAnimationFrame(P.raf);P.raf=0;}
+  $('plCv').hidden=true;$('plAdj').hidden=false;hostScan();tray(null);tools(true);hint(TXT('pl.adjHint'));
+  ADD.arrange(P.mid);watchScan();}
+function leaveAdjust(silent){if(!P)return;clearInterval(P.timer);P.adj=false;P.asked=false;
+  const sc=$('scan');if(sc&&!sc.hidden){sc.hidden=true;if(window.JOINTS)JOINTS.clear();if(window.ADD)ADD.close();}
+  unhostScan();$('plAdj').hidden=true;$('plCv').hidden=false;tools(false);if(!silent)hint(TXT('pl.tapHint'));undoState();go();}
+// a photo (or a photo of a face) for this player: the reader runs inside the screen; it lands back here (MINE.done → landed)
+function photo(file,face,inst){if(!P||!file)return;P.adj=true;if(P.raf){cancelAnimationFrame(P.raf);P.raf=0;}
+  $('plCv').hidden=true;$('plAdj').hidden=false;hostScan();tray(null);tools(true);hint(face?TXT('mine.faceAsk'):TXT('upload.freeFinding'));P.found=0;
+  MINE.photo(P.mid,file,face,inst);watchScan();}
+function landed(mid){if(!P||P.mid!==mid)return;leaveAdjust(true);const n=P.found;P.found=0;
+  hint(n?TXT('pl.found',{n,s:n===1?'':'s'}):TXT('mine.on',{name:Cap(MINE.role(mid))}));undoState();   /* stage 2: straight from the photo — say how many pieces, invite a fix */
+  clearTimeout(landed.t);landed.t=setTimeout(()=>{if(P&&P.mid===mid&&!P.adj)hint(TXT('pl.tapHint'));},n?12000:6000);}   /* (Nov 9: not over the adjusting hint) */
+const found=n=>{if(P)P.found=n;};   /* add-drawings.js: the photo's pieces are all named and are going straight on */
+
+// ---------- the chips and their trays ----------
+function tray(which){if(!P)return;const box=$('plTray');P.tray=which;document.querySelectorAll('#plChips button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tray===which)));
+  frontHome();box.innerHTML='';box.hidden=!which;if(!which)return;const mid=P.mid;
+  if(which==='draw'){const t=TXT('mine.tip1'),own=P.wantOwn;P.wantOwn=null;
+    box.innerHTML=`<p class="plp">${own?TXT('pl.drawInst',{inst:TXT('inst.'+mid)})+' ':''}${t}</p>
+      <div class="plrow"><label class="btn" id="plCamL"><span>${TXT('mine.takePhoto')}</span><input id="plCam" type="file" accept="image/*" capture="environment" hidden></label>
+      <label class="btn alt" id="plFileL"><span>${TXT('mine.choosePhoto')}</span><input id="plFile" type="file" accept="image/*" hidden></label></div>
+      <div class="pllinks"><label class="mlink" id="plFaceL"><span>${TXT('mine.face')}</span><input id="plFaceFile" type="file" accept="image/*" hidden></label><button class="mlink" id="plPrint">${TXT('pl.print')}</button><button class="mlink" id="plReset">${TXT('mine.reset')}</button></div>`;
+    const inst=own?'own':null;
+    for(const id of ['plCam','plFile'])$(id).onchange=e=>{const f=e.target.files[0];e.target.value='';photo(f,false,inst);};
+    $('plFaceFile').onchange=e=>{const f=e.target.files[0];e.target.value='';photo(f,true,null);};
+    $('plPrint').onclick=()=>{const m=member(mid),b=m&&m.cv.closest('.card').querySelector('[data-ush]');close();if(b)b.click();};
+    $('plReset').onclick=()=>{MINE.resetPlayer(mid);tray(null);hint(TXT('pl.resetDone'));};}
+  else if(which==='inst'){const chips=document.createElement('div');chips.className='mchips';box.appendChild(chips);
+    MINE.chips(chips,mid,MINE.current(mid),n=>{if(n==='own'){P.wantOwn=true;tray('draw');return;}MINE.pick(mid,n).then(()=>tray('inst'));});
+    if(mid==='drums'){const f=$('mineFront');if(f){if(!FH)FH={parent:f.parentElement,next:f.nextSibling};box.appendChild(f);MINE.front(null,'drums');   /* what is on the bass drum: the drummer's row, borrowed from the old dialog */
+        const i=document.createElement('input');i.id='plLogo';i.type='file';i.accept='image/*';i.hidden=true;box.appendChild(i);   /* New logo photo picks a file here, not in the old dialog */
+        i.onchange=()=>{const file=i.files[0];i.value='';if(!file)return;MINE.logo(file).then(ok=>{if(ok)return;MINE.front(TXT('mine.logoNone'),'drums');});};}}}
+  else if(which==='style'){const key=STYLE_OPT[mid],o=OPT.list.find(x=>x[0]===key),cur=OPT.val(key),row=document.createElement('div');row.className='mchips plstyles';
+    for(const [v,label] of o[3]){const b=document.createElement('button');b.className='alt';b.type='button';b.textContent=label.replace(/\s*\(normal\)\s*/,'');b.setAttribute('aria-pressed',String(v===cur));
+      b.onclick=()=>{OPT.set(key,v);tray('style');};row.appendChild(b);}
+    box.appendChild(row);}
+  else if(which==='size'){box.innerHTML=`<div class="msizer"><button class="alt" id="plSmall" aria-label="Smaller">−</button><b id="plSize"></b><button class="alt" id="plBig" aria-label="Bigger">+</button></div>`;
+    const show=()=>{$('plSize').textContent=Math.round(MINE.zOf(mid)*100)+'%';};show();
+    $('plSmall').onclick=()=>{MINE.resize(mid,-.1);show();};$('plBig').onclick=()=>{MINE.resize(mid,.1);show();};}
+  if(window.UIART&&UIART.mapDress)UIART.mapDress(box);}
+
+// ---------- wiring ----------
+function wire(){const box=$('plBox');if(!box)return;
+  $('plBack').onclick=close;
+  $('plUndo').onclick=()=>{const u=$('wsUndo');if(u&&!u.hidden)u.click();hint(TXT('mine.undone'));undoState();};
+  $('plCv').addEventListener('pointerdown',e=>{e.preventDefault();enterAdjust();});
+  $('plDone').onclick=()=>{const st=window.JOINTS&&JOINTS._state(),ad=window.ADD&&ADD._state(),moved=!!st&&(st.moved.size>0||Object.values(st.rot).some(Boolean)||Object.values(st.size).some(z=>z!==1));
+    if(ad&&ad.arrange&&!moved){leaveAdjust(false);return;}   /* adjusting and nothing moved: back to the show as they were (the apply would only say so); a photo's pieces always go on */
+    const a=$('scanApply');if(a&&!a.disabled)a.click();};
+  $('plCancel').onclick=()=>{const c=$('scanClose');if(c)c.click();};
+  document.querySelectorAll('#plChips button').forEach(b=>b.onclick=()=>tray(P&&P.tray===b.dataset.tray?null:b.dataset.tray));
+  document.addEventListener('keydown',e=>{if(!P||e.key!=='Escape')return;if(P.adj)$('plCancel').click();else close();});   /* Nov 9 (code review): on the page, not the box — after a tap on the player the focus is on no button, and Escape did nothing */
+  window.addEventListener('resize',()=>{if(P&&!P.adj)fit();});
+  // the band page's Undo note changes → the screen's Undo follows
+  const u=$('wsUndo');if(u&&window.MutationObserver)new MutationObserver(undoState).observe(u,{attributes:true,attributeFilter:['hidden']});
+  if(window.UIART&&UIART.mapDress)UIART.mapDress(box);}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
+return {open,close,isOpen,landed,found,current:()=>P&&P.mid,_state:()=>P};
 })();
 /* Oct 12 (remote test 3: "the steps were not obvious at first"; designer: a quick tutorial like the main screen's, with
    arrows pointing at the right spots). A short tour of Edit band: the page dims, a light frames the button for each step,
@@ -7210,8 +7691,9 @@ window.EDITTOUR=(function(){
   const KEY='bandEditTourSeen',$=id=>document.getElementById(id);
   /* Oct 23 (flow v3, "start from the player"): the steps point at the first player's Make them mine button and instrument
      picker (el: an id, or a CSS selector starting with a dot or bracket) */
-  const STEPS=[{el:'.card .mineGo',t:'tour.title1',p:'tour.text1'},{el:'.card .mine .mchips',t:'tour.title2',p:'tour.text2'},
-    {el:null,t:'tour.title3',p:'tour.text3'},{el:'show',t:'tour.title4',p:'tour.text4'}];
+  /* Nov 8 (the player screen): three steps — tap a player, draw then photograph, watch them play. The designer's view (dev)
+     still has the old buttons on the cards, so the light frames the whole card either way. */
+  const STEPS=[{el:'.card',t:'tour.title1',p:'tour.text1'},{el:null,t:'tour.title3',p:'tour.text3'},{el:'show',t:'tour.title4',p:'tour.text4'}];
   const find=e=>!e?null:/^[.\[]/.test(e)?document.querySelector(e):$(e);
   const box=document.createElement('div');box.id='tourBox';box.hidden=true;box.setAttribute('role','dialog');box.setAttribute('aria-modal','true');
   box.innerHTML='<div id="tourHole"></div><svg id="tourArrow" aria-hidden="true"><path/><path/></svg><div id="tourArw" aria-hidden="true"></div>'+
