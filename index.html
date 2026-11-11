@@ -579,6 +579,16 @@ body:not(.dev) #ws .card.pltap{cursor:pointer}
 body:not(.dev) #ws .card.pltap .mine{display:none}
 body:not(.dev) #ws .card.pltap>canvas{grid-row:1/span 2}
 body.pl-open{overflow:hidden}
+/* Nov 9: the heads shelf in the Drawing tray — a scrolling row of round-ish head buttons */
+.plheads{margin-top:10px}.plheads .plp{margin:0 0 6px}
+.plshelf{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 6px;scrollbar-width:thin}
+.plshelf button{flex:0 0 auto;width:64px;height:64px;padding:4px;border-radius:14px;display:flex;align-items:center;justify-content:center}
+.plshelf button img{max-width:100%;max-height:100%;object-fit:contain;pointer-events:none}
+.plshelf button[aria-pressed=true]{outline:3px solid #e8542a;outline-offset:-2px}
+/* Nov 9: outfit colours — round paper swatches */
+.plswatches button{width:48px;height:48px;border-radius:50%;padding:6px}
+.plswatches .swatch{display:block;width:100%;height:100%;border-radius:50%;border:2px solid rgba(28,28,32,.6)}
+.plswatches .swatch.paper{background:#fff}
 </style><style id="ui-art">
 /* PATCH06: the designer's hand-drawn interface, lossless WebP at 2x (made with tools/ui-sheets). Oct 8: the pictures are now files in src/art/ui/; this file keeps only how they are laid out */
 .ui-big-a{--f:var(--ui-big-button-a);--es:84;--ew:42.0px}
@@ -1185,6 +1195,11 @@ window.WTXT={
   'pl.style': 'Style',
   'pl.size': 'Size',
   'pl.print': 'Print a guide',
+  'pl.heads': 'Or pick a head:',
+  'pl.outfit': 'Outfit colour:',
+  'pl.outfitNone': 'Paper',
+  'pl.headPut': 'New head. Tap them if anything is wrong.',
+  'heads.put': '{player} has a new head.',
   'pl.drawInst': 'Draw your own {inst} on the same page.',
   'pl.resetDone': 'Back to the default player.',
   'pl.found': 'Found {n} piece{s}. Tap them if anything is wrong.',
@@ -2781,6 +2796,44 @@ return {set,img,has,cut,use,fromPhoto,dflt,_state:()=>C};
    The edge stays inside the picture's own canvas (pieces keep their see-through margin), so placing maths is unchanged. */
 window.EDGE=(function(){
   const GAP=.5,LINE=.75,INK='rgb(28,28,32)',SKIP=new Set(['mouth','mouthO']),C=new WeakMap();
+  /* Nov 9 (designer: "a choice of outfits where we fill in a colour"): a piece's PAPER can be tinted a colour — the white
+     inside the outline takes the colour, the ink stays ink (a multiply blend, so pencil shading goes darker in the same
+     colour). Only pieces that are still black-and-white are tinted: a photo piece or a coloured drawing keeps its own
+     colours (the Oct 26 rule for the logo). Done here with the paper edge, once per picture, size and colour. */
+  const BW=new WeakMap();   // picture → true when it is (nearly) black-and-white
+  function isBW(im){if(BW.has(im))return BW.get(im);let r=true;try{const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,k=Math.min(1,120/Math.max(w,h)),sw=Math.max(1,Math.round(w*k)),sh=Math.max(1,Math.round(h*k)),
+      t=document.createElement('canvas');t.width=sw;t.height=sh;const g=t.getContext('2d');g.drawImage(im,0,0,sw,sh);const d=g.getImageData(0,0,sw,sh).data;t.width=t.height=0;let n=0,c=0;
+      for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;n++;const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]);if(mx-mn>50&&mx>60)c++;}r=!n||c/n<.08;}catch(e){}BW.set(im,r);return r;}
+  /* Nov 9 (designer's rule): WHERE the colour goes. A drawn line across a piece (the end of a sleeve at the wrist or elbow, the
+     end of shorts or trousers, a belt) splits its paper into regions; the TOP region — nearest the shoulder or hip — is the
+     clothing and gets the colour, the rest stays paper (skin). An arm or leg that is all one shape gets no colour (it is a bare
+     arm, not a sleeve); a body that is all one shape is a shirt and is coloured whole. Worked out once per picture on a small
+     copy (paper = light, opaque; lines = dark): the paper's connected regions, the top one by its middle, grown a little so
+     it reaches under the line. Returns a mask canvas (picture size) or null (no colour), cached per picture + kind. */
+  const LIMB=new Set(['arm','arm2','fore','armV','armS','armH','legL','legR']),MASK=new WeakMap();
+  function regionMask(im,k){const key=LIMB.has(k)?'limb':'body';let mm=MASK.get(im);if(!mm){mm=new Map();MASK.set(im,mm);}if(mm.has(key))return mm.get(key);let out=null;
+    try{const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,sc=Math.min(1,160/Math.max(w,h)),sw=Math.max(2,Math.round(w*sc)),sh=Math.max(2,Math.round(h*sc)),
+        t=document.createElement('canvas');t.width=sw;t.height=sh;const g=t.getContext('2d');g.drawImage(im,0,0,sw,sh);const d=g.getImageData(0,0,sw,sh).data;
+      const paper=new Uint8Array(sw*sh);for(let p=0;p<sw*sh;p++){const q=p*4;if(d[q+3]>128&&d[q]*.3+d[q+1]*.59+d[q+2]*.11>150)paper[p]=1;}
+      const lab=new Int32Array(sw*sh),st=new Int32Array(sw*sh),regs=[];let n=0;
+      for(let s=0;s<sw*sh;s++){if(!paper[s]||lab[s])continue;n++;let sp=0,cnt=0,sy=0;st[sp++]=s;lab[s]=n;
+        while(sp){const p=st[--sp],x=p%sw,y=(p/sw)|0;cnt++;sy+=y;const nb=[x>0?p-1:-1,x<sw-1?p+1:-1,y>0?p-sw:-1,y<sh-1?p+sw:-1];for(const q of nb)if(q>=0&&paper[q]&&!lab[q]){lab[q]=n;st[sp++]=q;}}
+        regs.push({id:n,cnt,cy:sy/cnt});}
+      const total=regs.reduce((a,r)=>a+r.cnt,0),big=regs.filter(r=>r.cnt>=total*.03);   /* specks (a dot of paper inside a letter) don't count as regions */
+      if(!big.length)out=null;
+      else if(big.length===1)out=key==='body'?'all':null;   /* one shape: a body is a shirt, a limb is bare */
+      else{/* a limb: the top region only. A body: a collar or a pocket line would leave a tiny top region, so the body's shirt is
+           its LARGEST region plus everything above it; what is below (under a belt line) stays paper */
+        const top=big.reduce((a,r)=>r.cy<a.cy?r:a),main=big.reduce((a,r)=>r.cnt>a.cnt?r:a),keep=new Set(key==='limb'?[top.id]:big.filter(r=>r.cy<=main.cy).map(r=>r.id));
+        const m=document.createElement('canvas');m.width=sw;m.height=sh;const mg=m.getContext('2d'),id=mg.createImageData(sw,sh);
+        for(let p=0;p<sw*sh;p++)if(keep.has(lab[p])){id.data[p*4+3]=255;}mg.putImageData(id,0,0);
+        const full=document.createElement('canvas');full.width=w;full.height=h;const fg=full.getContext('2d');fg.imageSmoothingEnabled=true;   /* grown by ~1.5 small cells so the colour runs under the dividing line */
+        const r=1.5/sc;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;fg.drawImage(m,Math.cos(a)*r,Math.sin(a)*r,w,h);}fg.drawImage(m,0,0,w,h);out=full;}
+      t.width=t.height=0;}catch(e){out=key==='body'?'all':null;}
+    mm.set(key,out);return out;}
+  function tinted(im,w,h,col,k){if(!isBW(im))return im;const mask=regionMask(im,k);if(!mask)return im;const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(im,0,0,w,h);
+    g.globalCompositeOperation='multiply';g.fillStyle=col;if(mask==='all')g.fillRect(0,0,w,h);else{g.save();g.globalCompositeOperation='source-over';const cc=document.createElement('canvas');cc.width=w;cc.height=h;const cg=cc.getContext('2d');cg.fillStyle=col;cg.fillRect(0,0,w,h);cg.globalCompositeOperation='destination-in';cg.drawImage(mask,0,0);g.globalCompositeOperation='multiply';g.drawImage(cc,0,0);cc.width=cc.height=0;g.restore();}
+    g.globalCompositeOperation='destination-in';g.drawImage(im,0,0,w,h);return c;}
   // a filled copy of the piece's shape grown by r pixels (the shape stamped round a circle)
   function grown(src,w,h,r,col){const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');
     const n=Math.max(12,Math.min(40,Math.round(r*3)));for(let i=0;i<n;i++){const a=i/n*Math.PI*2;g.drawImage(src,Math.cos(a)*r,Math.sin(a)*r);}
@@ -2792,15 +2845,15 @@ window.EDGE=(function(){
       t=document.createElement('canvas');t.width=sw;t.height=sh;const g=t.getContext('2d');g.drawImage(c,0,0,sw,sh);const d=g.getImageData(0,0,sw,sh).data;t.width=t.height=0;
       let x0=sw,y0=sh,x1=-1,y1=-1;for(let y=0;y<sh;y++)for(let x=0;x<sw;x++)if(d[(y*sw+x)*4+3]>0){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;}
       if(x1<0)return null;const p=2;return [Math.max(0,(x0-p)/k),Math.max(0,(y0-p)/k),Math.min(w,(x1+1+p)/k),Math.min(h,(y1+1+p)/k)];}catch(e){return null;}}
-  function make(im,D){const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;if(!w||!h)return im;
+  function make(im,D,tint,k){const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;if(!w||!h)return im;const src=tint?tinted(im,w,h,tint,k):im;
     const ppu=Math.max(w,h)/Math.max(1e-6,D),g1=GAP*ppu,g2=(GAP+LINE)*ppu;   // picture pixels per stage unit
     const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');
     /* Oct 26 (code review): the two scratch canvases are emptied straight away (width 0), and dropped edge copies too; iPad
        Safari counts canvas memory and blanks canvases once the total is too high */
-    const a=grown(im,w,h,g2,INK),b=grown(im,w,h,g1,'#fff');g.drawImage(a,0,0);g.drawImage(b,0,0);g.drawImage(im,0,0,w,h);a.width=a.height=0;b.width=b.height=0;c._ib=box(c);if(im._micHead)c._micHead=im._micHead;return c;}   /* the mic arm keeps where its mic head is */
-  function of(im,D,k){if(!im||SKIP.has(k)||!(D>0))return im;if(im.complete===false||(im.naturalWidth===0&&!(im.width>0)))return im;
-    let m=C.get(im);if(!m){m=new Map();C.set(im,m);}const key=Math.round(D*4);if(!m.has(key)){if(m.size>3){m.forEach(v=>{if(v!==im&&v.getContext){v.width=v.height=0;}});m.clear();}m.set(key,make(im,D));}return m.get(key);}
-  return {of};})();
+    const a=grown(im,w,h,g2,INK),b=grown(im,w,h,g1,'#fff');g.drawImage(a,0,0);g.drawImage(b,0,0);g.drawImage(src,0,0,w,h);if(src!==im)src.width=src.height=0;a.width=a.height=0;b.width=b.height=0;c._ib=box(c);if(im._micHead)c._micHead=im._micHead;return c;}   /* the mic arm keeps where its mic head is */
+  function of(im,D,k,tint){if(!im||SKIP.has(k)||!(D>0))return im;if(im.complete===false||(im.naturalWidth===0&&!(im.width>0)))return im;
+    let m=C.get(im);if(!m){m=new Map();C.set(im,m);}const key=Math.round(D*4)+(tint?'|'+tint:'');if(!m.has(key)){if(m.size>3){m.forEach(v=>{if(v!==im&&v.getContext){v.width=v.height=0;}});m.clear();}m.set(key,make(im,D,tint,k));}return m.get(key);}
+  return {of,_mask:(im,k)=>{const m=regionMask(im,k);return m==null?'none':m==='all'?'all':'top';}};})();   /* _mask: for the tests */
 /* ===== MOVES (Nov 2, try-out "moves"): the paper-puppet vocabulary of the animation kit =====
    A move changes a whole cut-out player the way you could move a paper puppet: slide it, lift it, squash it, flip it over
    like a card, twist it like a paper ribbon. No move needs a new drawing. The band's own playing
@@ -3406,7 +3459,7 @@ function drawLayers(x,m,t){
     if(k==='head'&&!ly.img&&L.body.img)continue;            // a drawn body from an older sheet already has its own head
     const squared=(k==='arm'||k==='arm2')&&(m.id==='guitar'||m.id==='bass')&&!!ly.hand&&!!ly.v2&&!!ly.img;   /* Oct 25: an uploaded arm with its hand, squared up to the sheet layout (sheetArm) */
     if(squared)im=sheetArm(im);
-    if(window.EDGE)im=EDGE.of(im,D,k);   /* Oct 25 (designer): every piece gets the face photos' white gap and dark line (paper-edge.js) */
+    if(window.EDGE)im=EDGE.of(im,D,k,window.OUTFIT?OUTFIT.tint(m.id,k):null);   /* Oct 25 (designer): every piece gets the face photos' white gap and dark line (paper-edge.js); Nov 9: and the outfit colour (outfit.js) */
     let rot=0,sx=1,sy=1,dy=0,tx,ty,hide=false,arm=null,fsR=1;   /* fsR: the forearm drawn shorter, coming toward us (the robot, Nov 8) */
     const peek=ly.peek&&performance.now()<ly.peek,eb=(ly.eb||0)*Math.PI/180,v2arm=!!ly.v2&&!!ly.img&&typeof V2H!=='undefined'&&V2H[k]!=null,el=v2arm?(d[5]+V2H[k])/2:ELBOW,Hp=D*(im.height||150)/Math.max(im.width||150,im.height||150),   // arm picture's height on stage
       l1=(el-d[5])*Hp,l2=(HAND-el)*Hp,Sh={x:d[1]+ly.x,y:d[2]+ly.y},cx=SLOTS.body[1]+(L.body?L.body.x:0),ph=m.ph||0;
@@ -6295,7 +6348,7 @@ async function run(file){
     await process();darkTip(m);
   }catch(e){console.error(e);say(TXT('upload.wentWrong')+e.message,true);}
 }
-window.SCANRUN=run;   /* Oct 22 (flow v3): Make them mine hands its photo straight to the reader */
+window.SCANRUN=run;window.V2APPLY=v2apply;   /* Nov 9: the heads shelf (heads-shelf.js) seats a chosen head the same way */   /* Oct 22 (flow v3): Make them mine hands its photo straight to the reader */
 let timer=0;const later=()=>{clearTimeout(timer);timer=setTimeout(()=>{if(S2.img&&sel.value)process().catch(e=>say(TXT('upload.problem')+e.message,true));},250);};
 $('scanFile').onchange=e=>{const f=e.target.files[0];if(f)run(f);e.target.value='';};
 $('scanCam').onchange=e=>{const f=e.target.files[0];if(f)run(f);e.target.value='';};
@@ -7418,7 +7471,9 @@ function pickHouse(mid,n){const inst=INST[mid];if(!inst||!window.HOUSE||!HOUSE[m
 /* Oct 26 (code review): the pieces the instrument choice can change after the drawings go in (the instrument pieces and
    the head, which a guitar or bass lines up against), so Undo can put them back too */
 function undoKeys(mid){return [...(INST[mid]||[]),'head',...(mid==='drums'?['logo']:[])].map(k=>mid+'.'+k).filter(k=>typeof ARTSET!=='undefined'&&ARTSET[k]);}
-return {ask,close,arrange,fromSheet,afterApply,pickHouse,undoKeys,_state:()=>A,_last:()=>LAST};
+/* Nov 9 (heads shelf): the player's head as ONE new piece, where it sits now, for V2APPLY to seat like a fresh drawing */
+function headPiece(mid){const skip=new Set((SETS[mid]||[]).filter(k=>k!=='head')),r=stagePieces(mid,skip).results.find(x=>x.key===mid+'.head');if(r)r.stage=false;return r||null;}
+return {ask,close,arrange,fromSheet,afterApply,pickHouse,undoKeys,headPiece,_state:()=>A,_last:()=>LAST};
 })();
 // ===== 5e. MAKE THEM MINE (Oct 22, flow v3: "start from the player") =====
 // Designer's flow (sketch: Add drawings flow canvas, row "Draft v3"): Edit band shows the band as it is; each player has one
@@ -7535,7 +7590,7 @@ function wire(){if(!$('mineBox'))return;
   members.forEach(card);}
 // Nov 8: the player screen's Drawing tray — a photo (face: a photo of a face; inst 'own': they drew their instrument too)
 function photo(mid,file,face,inst){T={mid,inst:inst||null,face:!!face,logo:false,live:false};go(file);}
-function resetPlayer(mid){if(mid==='vocals'&&window.MICS){MICS.set(null);save();}const m=members.find(q=>q.id===mid),b=m&&m.cv.closest('.card').querySelector('[data-urs]');if(b){b.click();b.click();}refreshCard(mid);}
+function resetPlayer(mid){if(window.OUTFIT)OUTFIT.set(mid,null);   /* Nov 9: the outfit colour goes too */if(mid==='vocals'&&window.MICS){MICS.set(null);save();}const m=members.find(q=>q.id===mid),b=m&&m.cv.closest('.card').querySelector('[data-urs]');if(b){b.click();b.click();}refreshCard(mid);}
 async function logo(file){T={mid:'drums',inst:null,face:false,logo:true,live:false};let ok=false;try{ok=await LOGO.fromPhoto(file);}catch(e){console.warn('logo',e);}
   T=null;if(ok){if(window.PLAYER&&PLAYER.isOpen())PLAYER.landed('drums');}return ok;}   /* Nov 8: from the player screen's drums tray */
 // the logo photo: cut out and put on the drum, then the stage shows it; nothing found: back to the panel with a note
@@ -7558,7 +7613,7 @@ function done(mid){members.forEach(m=>refreshCard(m.id));if(!T||!T.live)return;T
   $('mineDoneT').textContent=TXT('mine.on',{name:Cap(role(mid))});$('mineUndo').hidden=false;$('mineDone').hidden=false;
   clearTimeout(done.t);done.t=setTimeout(hideDone,15000);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
-return {target:()=>T&&T.live?T:null,done,role,main:mid=>MAIN[mid],refreshCard,photo,logo,chips,current,pick,front,resetPlayer,zOf,resize};   /* Nov 8: the player screen (player-screen.js) builds its trays from these */
+return {target:()=>T&&T.live?T:null,done,role,main:mid=>MAIN[mid],refreshCard,photo,logo,chips,current,pick,front,resetPlayer,zOf,resize,thumb};   /* Nov 8: the player screen (player-screen.js) builds its trays from these */
 })();
 // ===== 5f. THE PLAYER SCREEN (Nov 8, designer: "one simplified screen that lets you adjust more intuitively") =====
 // Tap a player on Edit band and they get a screen of their own: they stand big in the middle, playing along to the demo
@@ -7583,6 +7638,21 @@ const Cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
    must go home before the tray is emptied — emptying the tray used to throw the row away, so it was gone (until the page
    was reloaded) the second time the Kit tray opened, after picking a kit, and from the designer's dialog. */
 let FH=null;   // where the row lives in the old dialog: {parent,next}
+/* Nov 9 (designer): the outfit colour — a row of paper colours; the first button is plain paper (no colour) */
+function outfitRow(box,mid){if(!window.OUTFIT)return;const cur=OUTFIT.get(mid),wrap=document.createElement('div');wrap.className='plheads ploutfit';
+  wrap.innerHTML=`<p class="plp">${TXT('pl.outfit')}</p>`;const row=document.createElement('div');row.className='mchips plshelf plswatches';wrap.appendChild(row);
+  const mk=(col,name)=>{const b=document.createElement('button');b.type='button';b.className='alt';b.setAttribute('aria-pressed',String((col||null)===cur));b.setAttribute('aria-label',name);
+    const s=document.createElement('i');s.className='swatch';if(col)s.style.background=col;else s.classList.add('paper');b.appendChild(s);
+    b.onclick=()=>{OUTFIT.set(mid,col);tray('draw');};row.appendChild(b);};
+  mk(null,TXT('pl.outfitNone'));for(const [col,name] of OUTFIT.COLOURS)mk(col,name);box.appendChild(wrap);}
+/* Nov 9 (designer): the heads shelf — the built-in heads as a row of buttons under the photo buttons; any head on any player */
+function headsRow(box,mid){if(!window.HEADS)return;const heads=HEADS.list();if(heads.length<2)return;const cur=HEADS.current(mid),wrap=document.createElement('div');wrap.className='plheads';
+  wrap.innerHTML=`<p class="plp">${TXT('pl.heads')}</p>`;const row=document.createElement('div');row.className='mchips plshelf';wrap.appendChild(row);
+  for(const h of heads){const b=document.createElement('button');b.type='button';b.className='alt';b.setAttribute('aria-pressed',String(h.pid===cur));b.setAttribute('aria-label',(window.SHEETMAKER&&SHEETMAKER.names[h.pid])||h.pid);
+    const im=document.createElement('img');im.alt='';MINE.thumb(im,artURL(h.art));b.appendChild(im);
+    b.onclick=async()=>{if(b.disabled)return;row.querySelectorAll('button').forEach(x=>x.disabled=true);const ok=await HEADS.put(mid,h.pid);tray('draw');if(ok)hint(TXT('pl.headPut'));undoState();};
+    row.appendChild(b);}
+  box.appendChild(wrap);}
 function frontHome(){const f=$('mineFront');if(!f||!FH||f.parentElement===FH.parent)return;f.hidden=true;FH.parent.insertBefore(f,FH.next&&FH.next.parentNode===FH.parent?FH.next:null);}
 
 // ---------- the live puppet ----------
@@ -7648,7 +7718,8 @@ function tray(which){if(!P)return;const box=$('plTray');P.tray=which;document.qu
     for(const id of ['plCam','plFile'])$(id).onchange=e=>{const f=e.target.files[0];e.target.value='';photo(f,false,inst);};
     $('plFaceFile').onchange=e=>{const f=e.target.files[0];e.target.value='';photo(f,true,null);};
     $('plPrint').onclick=()=>{const m=member(mid),b=m&&m.cv.closest('.card').querySelector('[data-ush]');close();if(b)b.click();};
-    $('plReset').onclick=()=>{MINE.resetPlayer(mid);tray(null);hint(TXT('pl.resetDone'));};}
+    $('plReset').onclick=()=>{MINE.resetPlayer(mid);tray(null);hint(TXT('pl.resetDone'));};
+    headsRow(box,mid);outfitRow(box,mid);}
   else if(which==='inst'){const chips=document.createElement('div');chips.className='mchips';box.appendChild(chips);
     MINE.chips(chips,mid,MINE.current(mid),n=>{if(n==='own'){P.wantOwn=true;tray('draw');return;}MINE.pick(mid,n).then(()=>tray('inst'));});
     if(mid==='drums'){const f=$('mineFront');if(f){if(!FH)FH={parent:f.parentElement,next:f.nextSibling};box.appendChild(f);MINE.front(null,'drums');   /* what is on the bass drum: the drummer's row, borrowed from the old dialog */
@@ -7680,6 +7751,55 @@ function wire(){const box=$('plBox');if(!box)return;
   if(window.UIART&&UIART.mapDress)UIART.mapDress(box);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
 return {open,close,isOpen,landed,found,current:()=>P&&P.mid,_state:()=>P};
+})();
+/* Nov 9 (designer): THE HEADS SHELF. The five built-in heads (the default singer, guitarist, bassist, drummer and keys player)
+   are a shelf anyone can pick from, for any player — a row of heads in the Drawing tray on the player screen. Tap one and it
+   becomes that player's head; the body, arms, legs and instrument stay. The same head on two players is fine (designer:
+   "duplicates fine if that's what users want"). He plans to draw more heads (ten in all); the shelf shows whatever
+   built-in heads exist. Costs nothing: the pictures are already in the page.
+
+   How a head goes on: the picture is put on the player's head layer, then sent round the same path as a head someone
+   photographed on a sheet (stagePieces → V2APPLY, the "new piece" way, not the "already on stage" way) — so it is seated on
+   the neck like a new drawing, and on the singer the mouth drawn on the chosen face is cut out and becomes their singing
+   mouth (scanner.js faceMouth), as it is for a face someone draws. Undo covers it (wsNote, like any new drawing). */
+window.HEADS=(function(){
+  const WHO=['vocals','guitar','bass','drums','keys'];
+  function preset(pid){const l=(typeof PRESETS_BUILTIN!=='undefined'&&PRESETS_BUILTIN[pid])||[];return l.find(p=>p.id==='saved-default')||l.find(p=>p.art&&p.art[pid+'.head'])||null;}
+  /* the shelf: [{pid, art, adj}] — one entry per built-in head */
+  function list(){const out=[];for(const pid of WHO){const p=preset(pid),u=p&&p.art&&p.art[pid+'.head'];if(!u)continue;out.push({pid,art:u,adj:(p.adj&&p.adj[pid+'.head'])||{}});}return out;}
+  /* which shelf head a player wears now, or null (their own drawing, or a photo) */
+  function current(mid){const u=S.art[mid+'.head'];if(!u)return null;if(S.heads&&S.heads[u])return S.heads[u];
+    const v=artURL(u),h=v&&list().find(h=>artURL(h.art)===v);return h?h.pid:null;}
+  const load=u=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=u;});
+  /* the chosen head as a piece on the player's SHEET, as if it had been drawn in the head box: 1 picture pixel = 1/V2R sheet points
+     (the built-in heads were cut at that size), centred over the neck dot, its lowest ink (the neck end) resting on the dot.
+     V2APPLY then seats it exactly as it seats a photographed head, and works out the placement itself. */
+  function piece(mid,im){const sh=SHEETS2[mid],R=(typeof V2R!=='undefined'?V2R:2.5),cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;const g=cv.getContext('2d');g.drawImage(im,0,0);
+    const b=window.inkBox?inkBox(im):[0,0,1,1],w=im.width/R,h=im.height/R,cx=(b[0]+b[2])/2*w,bot=b[3]*h,nk=sh.J.neck;
+    return {key:mid+'.head',cv,url:null,box:[mid+'.head',nk[0]-cx,nk[1]-bot,w,h],ink:1,empty:false,stage:false};}
+  /* put the built-in head of player `src` on player `mid` */
+  async function put(mid,src){const h=list().find(h=>h.pid===src),m=members.find(q=>q.id===mid);if(!h||!m||!window.V2APPLY||typeof SHEETS2==='undefined'||!SHEETS2[mid])return false;
+    let im;try{im=await load(artURL(h.art));}catch(e){return false;}
+    let before;try{before=V2APPLY([piece(mid,im)]);}catch(e){console.error('head',e);return false;}   /* seats it on the neck; cuts the singer's mouth from the face; returns what to undo */
+    S.heads=S.heads||{};if(S.art[mid+'.head'])S.heads[S.art[mid+'.head']]=src;   /* seated picture → shelf head, so the shelf can mark the one they wear (also after Undo) */
+    if(window.JOINTS)JOINTS.clear();save();if(window.MINE)MINE.refreshCard(mid);
+    if(window.wsNote)wsNote(TXT('heads.put',{player:SHEETMAKER.names[mid]}),before,mid);
+    return true;}
+  return {list,current,put};
+})();
+/* Nov 9 (designer: "a choice of outfits where we fill in a colour"): OUTFIT COLOUR per player. A row of paper colours in the
+   Drawing tray on the player screen; the chosen colour tints the paper of the player's body and arms (the clothes), the ink
+   stays ink (paper-edge.js does the tinting, with the edge, once per picture). Nothing new is stored in the page: one colour
+   word per player, saved with the band (S.tint). Back to default clears it. Pieces that are not black-and-white (a photo, a
+   coloured drawing) keep their own colours. */
+window.OUTFIT=(function(){
+  /* the palette: paper colours that still read as paper (the designer's kit blue among them) */
+  const COLOURS=[['#e8542a','Orange'],['#f2c14e','Yellow'],['#7fb069','Green'],['#2E8BC0','Blue'],['#8e7cc3','Purple'],['#e78fb3','Pink'],['#5bc0be','Teal'],['#9a9a9a','Grey']];
+  const KEYS=new Set(['body','arm','arm2','fore','armV','armS','armH','legL','legR']);   // the clothes: body, arms and legs — WHERE on the piece is paper-edge.js regionMask's rule (above the line across)
+  function tint(mid,k){const t=S.tint&&S.tint[mid];return t&&KEYS.has(k)?t:null;}
+  function get(mid){return (S.tint&&S.tint[mid])||null;}
+  function set(mid,col){S.tint=S.tint||{};if(col)S.tint[mid]=col;else delete S.tint[mid];save();if(window.MINE)MINE.refreshCard(mid);}
+  return {COLOURS,tint,get,set};
 })();
 /* Oct 12 (remote test 3: "the steps were not obvious at first"; designer: a quick tutorial like the main screen's, with
    arrows pointing at the right spots). A short tour of Edit band: the page dims, a light frames the button for each step,
