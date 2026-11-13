@@ -2810,25 +2810,33 @@ window.EDGE=(function(){
      arm, not a sleeve); a body that is all one shape is a shirt and is coloured whole. Worked out once per picture on a small
      copy (paper = light, opaque; lines = dark): the paper's connected regions, the top one by its middle, grown a little so
      it reaches under the line. Returns a mask canvas (picture size) or null (no colour), cached per picture + kind. */
-  const LIMB=new Set(['arm','arm2','fore','armV','armS','armH','legL','legR']),MASK=new WeakMap();
-  function regionMask(im,k){const key=LIMB.has(k)?'limb':'body';let mm=MASK.get(im);if(!mm){mm=new Map();MASK.set(im,mm);}if(mm.has(key))return mm.get(key);let out=null;
-    try{const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,sc=Math.min(1,160/Math.max(w,h)),sw=Math.max(2,Math.round(w*sc)),sh=Math.max(2,Math.round(h*sc)),
-        t=document.createElement('canvas');t.width=sw;t.height=sh;const g=t.getContext('2d');g.drawImage(im,0,0,sw,sh);const d=g.getImageData(0,0,sw,sh).data;
-      const paper=new Uint8Array(sw*sh);for(let p=0;p<sw*sh;p++){const q=p*4;if(d[q+3]>128&&d[q]*.3+d[q+1]*.59+d[q+2]*.11>150)paper[p]=1;}
-      const lab=new Int32Array(sw*sh),st=new Int32Array(sw*sh),regs=[];let n=0;
-      for(let s=0;s<sw*sh;s++){if(!paper[s]||lab[s])continue;n++;let sp=0,cnt=0,sy=0;st[sp++]=s;lab[s]=n;
-        while(sp){const p=st[--sp],x=p%sw,y=(p/sw)|0;cnt++;sy+=y;const nb=[x>0?p-1:-1,x<sw-1?p+1:-1,y>0?p-sw:-1,y<sh-1?p+sw:-1];for(const q of nb)if(q>=0&&paper[q]&&!lab[q]){lab[q]=n;st[sp++]=q;}}
-        regs.push({id:n,cnt,cy:sy/cnt});}
-      const total=regs.reduce((a,r)=>a+r.cnt,0),big=regs.filter(r=>r.cnt>=total*.03);   /* specks (a dot of paper inside a letter) don't count as regions */
-      if(!big.length)out=null;
-      else if(big.length===1)out=key==='body'?'all':null;   /* one shape: a body is a shirt, a limb is bare */
-      else{/* a limb: the top region only. A body: a collar or a pocket line would leave a tiny top region, so the body's shirt is
-           its LARGEST region plus everything above it; what is below (under a belt line) stays paper */
-        const top=big.reduce((a,r)=>r.cy<a.cy?r:a),main=big.reduce((a,r)=>r.cnt>a.cnt?r:a),keep=new Set(key==='limb'?[top.id]:big.filter(r=>r.cy<=main.cy).map(r=>r.id));
-        const m=document.createElement('canvas');m.width=sw;m.height=sh;const mg=m.getContext('2d'),id=mg.createImageData(sw,sh);
-        for(let p=0;p<sw*sh;p++)if(keep.has(lab[p])){id.data[p*4+3]=255;}mg.putImageData(id,0,0);
-        const full=document.createElement('canvas');full.width=w;full.height=h;const fg=full.getContext('2d');fg.imageSmoothingEnabled=true;   /* grown by ~1.5 small cells so the colour runs under the dividing line */
-        const r=1.5/sc;for(let i=0;i<12;i++){const a=i/12*Math.PI*2;fg.drawImage(m,Math.cos(a)*r,Math.sin(a)*r,w,h);}fg.drawImage(m,0,0,w,h);out=full;}
+  /* Nov 11 (designer: "the top section is what gets colour should work anyway" — one rule, every arm and leg alike): the piece is
+     read as SECTIONS from the top down. A section is a patch of paper closed off by ink, or a patch of solid ink (a coloured-in
+     shoe or glove). Thin strips of paper (the halo left outside the outline when a piece is cut out) are not sections, whatever
+     their size; a small shoe is one however small. The picture is cropped to its ink first so a small piece in a big frame is
+     read at full detail. */
+  const MASK=new WeakMap(),isLimb=k=>k!=='body';
+  function regionMask(im,k){const key=isLimb(k)?'limb':'body';let mm=MASK.get(im);if(!mm){mm=new Map();MASK.set(im,mm);}if(mm.has(key))return mm.get(key);let out=null;
+    try{const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height,bx=window.inkBox?inkBox(im):[0,0,1,1],cx=Math.floor(bx[0]*w),cy=Math.floor(bx[1]*h),cw=Math.max(2,Math.ceil((bx[2]-bx[0])*w)),ch=Math.max(2,Math.ceil((bx[3]-bx[1])*h)),
+        sc=Math.min(1,200/Math.max(cw,ch)),sw=Math.max(2,Math.round(cw*sc)),sh=Math.max(2,Math.round(ch*sc)),t=document.createElement('canvas');t.width=sw;t.height=sh;const g=t.getContext('2d');g.drawImage(im,cx,cy,cw,ch,0,0,sw,sh);const d=g.getImageData(0,0,sw,sh).data,N=sw*sh;
+      const paper=new Uint8Array(N),ink=new Uint8Array(N);for(let p=0;p<N;p++){const q=p*4;if(d[q+3]>128){if(d[q]*.3+d[q+1]*.59+d[q+2]*.11>150)paper[p]=1;else ink[p]=1;}}
+      /* solid ink = ink that is still ink 4 cells in from its edge (an outline, however bold, is not) */
+      const R=4,solid=new Uint8Array(N);for(let y=R;y<sh-R;y++)for(let x=R;x<sw-R;x++){const p=y*sw+x;if(!ink[p])continue;let ok=1;for(let dy=-R;dy<=R&&ok;dy+=R)for(let dx=-R;dx<=R;dx+=R)if(!ink[p+dy*sw+dx]){ok=0;break;}if(ok)solid[p]=1;}
+      const st=new Int32Array(N);
+      function parts(src,lab){const regs=[];let n=0;for(let s=0;s<N;s++){if(!src[s]||lab[s])continue;n++;let sp=0,cnt=0,sy=0,x0=sw,x1=0,y0=sh,y1=0;st[sp++]=s;lab[s]=n;
+          while(sp){const p=st[--sp],x=p%sw,y=(p/sw)|0;cnt++;sy+=y;if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;
+            if(x>0&&src[p-1]&&!lab[p-1]){lab[p-1]=n;st[sp++]=p-1;}if(x<sw-1&&src[p+1]&&!lab[p+1]){lab[p+1]=n;st[sp++]=p+1;}if(y>0&&src[p-sw]&&!lab[p-sw]){lab[p-sw]=n;st[sp++]=p-sw;}if(y<sh-1&&src[p+sw]&&!lab[p+sw]){lab[p+sw]=n;st[sp++]=p+sw;}}
+          regs.push({id:n,cnt,cy:sy/cnt,thick:cnt/Math.max(x1-x0+1,y1-y0+1)});}return regs;}
+      const lab=new Int32Array(N),all=parts(paper,lab),total=all.reduce((a,r)=>a+r.cnt,0),pap=all.filter(r=>r.thick>=3.5&&r.cnt>=total*.005);   /* not the halo strips, not specks */
+      const inkS=parts(solid,new Int32Array(N)).filter(r=>r.cnt>=Math.max(12,total*.004));   /* coloured-in shoes and gloves */
+      if(!pap.length)out=null;
+      else if(pap.length+inkS.length===1)out=key==='body'?'all':null;   /* one shape: a body is a shirt, a limb is bare */
+      else{/* a limb: the top paper section only. A body: a collar or pocket would leave a tiny top section, so the shirt is its
+             LARGEST section plus everything above it; what is below (under a belt line) stays paper */
+        const top=pap.reduce((a,r)=>r.cy<a.cy?r:a),main=pap.reduce((a,r)=>r.cnt>a.cnt?r:a),keep=new Set(key==='limb'?[top.id]:pap.filter(r=>r.cy<=main.cy).map(r=>r.id));
+        const m=document.createElement('canvas');m.width=sw;m.height=sh;const mg=m.getContext('2d'),id=mg.createImageData(sw,sh);for(let p=0;p<N;p++)if(keep.has(lab[p]))id.data[p*4+3]=255;mg.putImageData(id,0,0);
+        const full=document.createElement('canvas');full.width=w;full.height=h;const fg=full.getContext('2d'),r=1.5/sc;   /* grown ~1.5 cells so the colour runs under the dividing line */
+        for(let i=0;i<12;i++){const a=i/12*Math.PI*2;fg.drawImage(m,cx+Math.cos(a)*r,cy+Math.sin(a)*r,cw,ch);}fg.drawImage(m,cx,cy,cw,ch);out=full;}
       t.width=t.height=0;}catch(e){out=key==='body'?'all':null;}
     mm.set(key,out);return out;}
   function tinted(im,w,h,col,k){if(!isBW(im))return im;const mask=regionMask(im,k);if(!mask)return im;const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(im,0,0,w,h);
@@ -2853,7 +2861,7 @@ window.EDGE=(function(){
     const a=grown(im,w,h,g2,INK),b=grown(im,w,h,g1,'#fff');g.drawImage(a,0,0);g.drawImage(b,0,0);g.drawImage(src,0,0,w,h);if(src!==im)src.width=src.height=0;a.width=a.height=0;b.width=b.height=0;c._ib=box(c);if(im._micHead)c._micHead=im._micHead;return c;}   /* the mic arm keeps where its mic head is */
   function of(im,D,k,tint){if(!im||SKIP.has(k)||!(D>0))return im;if(im.complete===false||(im.naturalWidth===0&&!(im.width>0)))return im;
     let m=C.get(im);if(!m){m=new Map();C.set(im,m);}const key=Math.round(D*4)+(tint?'|'+tint:'');if(!m.has(key)){if(m.size>3){m.forEach(v=>{if(v!==im&&v.getContext){v.width=v.height=0;}});m.clear();}m.set(key,make(im,D,tint,k));}return m.get(key);}
-  return {of,_mask:(im,k)=>{const m=regionMask(im,k);return m==null?'none':m==='all'?'all':'top';}};})();   /* _mask: for the tests */
+  return {of,_maskCv:regionMask,_mask:(im,k)=>{const m=regionMask(im,k);return m==null?'none':m==='all'?'all':'top';}};})();   /* _mask: for the tests */
 /* ===== MOVES (Nov 2, try-out "moves"): the paper-puppet vocabulary of the animation kit =====
    A move changes a whole cut-out player the way you could move a paper puppet: slide it, lift it, squash it, flip it over
    like a card, twist it like a paper ribbon. No move needs a new drawing. The band's own playing
@@ -2895,7 +2903,8 @@ window.MOVES=(function(){
     step:[0,(mv,o)=>{o.dx=o.dx||0;o.dy=o.dy==null?.14:o.dy;o.hops=1;o.per=.42;o.height=14;SPEC.hop[1](mv,o);},(mv,u,o)=>SPEC.hop[2](mv,u,o)],
     // turns round: flipped like a card about its middle; ends facing the other way (no back drawing needed: it is the same
     // drawing mirrored, which is how a paper puppet turned over looks)
-    turn:[.5,(mv,o)=>{o.f0=mv.face;},(mv,u,o)=>{mv.face=o.f0*Math.cos(Math.PI*u);if(u>=1)mv.face=-o.f0;}],
+    turn:[.5,(mv,o)=>{o.f0=mv.face<0?-1:1;},   /* Nov 11: always from fully facing one way (never from a half-finished turn's in-between width) */
+(mv,u,o)=>{mv.face=o.f0*Math.cos(Math.PI*u);if(u>=1)mv.face=-o.f0;}],
     // twists like a paper ribbon: each strip turned a different amount, so it looks wound round its own middle
     twist:[2,null,(mv,u,o,e)=>{const a=Math.min(1,u/.25,(1-u)/.25);mv.strips={mode:'twist',amp:a,freq:(o.freq||.0025),ph:e*Math.PI*2*(o.rate||.6)};}],
     // the windmill (designer: "like Pete Townshend"): the strum arm straightens and swings one full circle, out, up over the
@@ -2955,7 +2964,8 @@ window.MOVES=(function(){
       if(name!==name0){if(name==='nod')o.amt=.6;if(name==='sway'){o.rate=o.rate||.8;o.amount=o.amount||.1;delete o.height;delete o.dur;}}if(name==='wave')delete o.dur;   /* a plain wave keeps its own length (the Director passes a bar for the arm wave it may become) */
       if(o.delay)o._wait=o.delay;   // seconds to wait before it starts
       for(let i=list.length-1;i>=0;i--)if(list[i].m===m&&list[i].name===name){const a=list[i];list.splice(i,1);   // the same move again restarts it
-        if(a.t0!=null&&(name==='hop'||name==='step')){mv.dx=a.x0+(a.dx||0);mv.dy=a.y0+(a.dy||0);}}   // a hop cut short still lands where it was going (no drift)
+        if(a.t0!=null&&(name==='hop'||name==='step')){mv.dx=a.x0+(a.dx||0);mv.dy=a.y0+(a.dy||0);}
+        if(a.t0!=null&&name==='turn')mv.face=-a.f0;}   /* Nov 11 (designer: "the guitar gets skinny, like it doesn't complete the rotation"): a turn cut short by the next turn is finished first — it used to start the new one from the in-between width and END there, leaving the player thin for good */   // a hop cut short still lands where it was going (no drift)
       list.push(Object.assign({m,name,t0:null,dur:sp[0]},o));}}
   /* ===== STYLES (Nov 7, try-out "Singer style"): the same player, carrying themself differently =====
      A style is a small page of its own: which moves it will not do (and what it does instead), plus a MANNERISM — something
@@ -3028,7 +3038,9 @@ window.MOVES=(function(){
     for(let i=0;i<list.length;i++){const a=list[i],mv=mvOf(a.m);
       if(a.t0==null){if(a._wait>0){a._wait-=1/60;continue;}a.t0=t;const sp=SPEC[a.name];if(sp[1])sp[1](mv,a,a.m);if(a.dur==null||!(a.dur>0))a.dur=a.dur||1;}
       const e=(t-a.t0)/1000,u=Math.min(1,e/a.dur);SPEC[a.name][2](mv,u,a,e);
-      if(u>=1){list.splice(i,1);i--;}}}
+      if(u>=1){list.splice(i,1);i--;}}
+    /* Nov 11: nobody is left part-turned — a player with no turn running stands fully facing one way, however the turn ended */
+    for(const m of members){const mv=m.mv;if(mv&&mv.face!==1&&mv.face!==-1&&!list.some(a=>a.m===m&&a.name==='turn'))mv.face=mv.face<0?-1:1;}}
   // each player's own move at once: windmills, the keys point, the drummer's nod, the singer's wave
   const OWN={guitar:'mill',bass:'mill',keys:'point',drums:'nod',vocals:'wave'};
   function showOff(){for(const id in OWN)go(id,OWN[id]);}
@@ -7795,11 +7807,12 @@ window.HEADS=(function(){
 window.OUTFIT=(function(){
   /* the palette: paper colours that still read as paper (the designer's kit blue among them) */
   const COLOURS=[['#e8542a','Orange'],['#f2c14e','Yellow'],['#7fb069','Green'],['#2E8BC0','Blue'],['#8e7cc3','Purple'],['#e78fb3','Pink'],['#5bc0be','Teal'],['#9a9a9a','Grey']];
-  const KEYS=new Set(['body','arm','arm2','fore','armV','armS','armH','legL','legR']);   // the clothes: body, arms and legs — WHERE on the piece is paper-edge.js regionMask's rule (above the line across)
-  function tint(mid,k){const t=S.tint&&S.tint[mid];return t&&KEYS.has(k)?t:null;}
+  /* Nov 11 (designer: all arms treated the same): no list of names — the body and anything called an arm or a leg (arm, arm2, armL, armS, fore, legL …), on any player or future puppet set */
+  const wears=k=>k==='body'||/^(arm|fore|leg)/.test(k);
+  function tint(mid,k){const t=S.tint&&S.tint[mid];return t&&wears(k)?t:null;}
   function get(mid){return (S.tint&&S.tint[mid])||null;}
   function set(mid,col){S.tint=S.tint||{};if(col)S.tint[mid]=col;else delete S.tint[mid];save();if(window.MINE)MINE.refreshCard(mid);}
-  return {COLOURS,tint,get,set};
+  return {COLOURS,tint,get,set,wears};
 })();
 /* Oct 12 (remote test 3: "the steps were not obvious at first"; designer: a quick tutorial like the main screen's, with
    arrows pointing at the right spots). A short tour of Edit band: the page dims, a light frames the button for each step,
