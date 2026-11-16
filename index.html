@@ -1234,6 +1234,8 @@ window.WTXT={
   'pl.drawInst': 'Draw your own {inst} on the same page.',
   'pl.resetDone': 'Back to the default player.',
   'pl.found': 'Found {n} piece{s}. Tap them if anything is wrong.',
+  'pl.moveUndone': 'Last move taken back.',
+  'pl.check': 'Found {n} piece{s}. Drag or tap anything that looks wrong, then Done.',
   'pl.missing': 'We couldn\'t find everything. Tap each part we ask for, or draw round it.',
   'mine.button': 'Make them mine',
   'mine.title': 'Make the {name} yours',
@@ -5485,6 +5487,9 @@ function frame(){const cv=$('jointsCv'),P=pieces();let x0=1e9,y0=1e9,x1=-1e9,y1=
   if(st.bodyArt){const b=st.base.boxes.find(q=>q[0]==='body');grow(b[1],b[2]);grow(b[1]+b[3],b[2]+b[4]);}
   if(!P.length){st.view=null;return;}
   const pad=40;x0-=pad;y0-=pad;x1+=pad;y1+=pad;   // room to drag a limb a little way out
+  /* Nov 15 (designer: "it tends to put the player at the top of the box making it difficult to edit the head size angle and
+     position"): half a head of extra room above, so the head can be made bigger, tilted or lifted without leaving the box */
+  {const h=P.find(r=>r.key.split('.')[1]==='head');if(h)y0-=Math.max(30,h.box[4]*.5);}
   const host=cv.closest('#plAdj'),   /* Nov 8: inside the player screen the pieces view fits the stage box it is in, not the window */
     maxW=Math.min(host?560:420,cv.parentElement.clientWidth||420),maxH=host?Math.max(160,host.clientHeight-(($('jointsReset')&&$('jointsReset').offsetHeight)||44)-24):Math.max(260,Math.min(560,(window.innerHeight||800)*.6)),
     sc=Math.min(maxW/(x1-x0),maxH/(y1-y0)),dpr=Math.min(2,window.devicePixelRatio||1),cw=(x1-x0)*sc,chh=(y1-y0)*sc;
@@ -5503,6 +5508,12 @@ function draw(t){const cv=$('jointsCv');if(!st||!st.view)return;const g=cv.getCo
       if(k==='hand'){const ar=L.hand.sock.slice(2),q=turn[ar];if(q){g.translate(q.p[0],q.p[1]);g.rotate(q.a);g.translate(-q.p[0],-q.p[1]);}}
       g.translate(piv[0],piv[1]);g.rotate(a+ROT(hk));g.scale(SIZE(hk),SIZE(hk));g.translate(-piv[0],-piv[1]);turn[k]={p:piv,a};}
     g.translate(o[0],o[1]);g.drawImage(r.cv,bx,by,bw,bh);g.restore();
+    /* Nov 15 (designer: "the dress does not show on the arrange screen"): a skirt the player wears is drawn over the body, hanging
+       from the hips, so the figure reads as it will on stage (it is not a piece: it can't be moved here) */
+    const pend=window.ADD&&ADD._state()&&ADD._state().mid===st.mid&&ADD._state().skirtPic;   /* a skirt found on the photo being put together: not on the player yet */
+    if(k==='body'&&st.base.J.hipL&&(pend||(window.LEGS&&LEGS.current(st.mid)&&!(window.ADD&&ADD._state()&&ADD._state().figureCut)))){const m=members.find(q=>q.id===st.mid),sk=pend?{img:pend.cv}:m&&LEGS.ensure(m);
+      if(sk&&sk.img&&sk.img.width){const w=sk.img.width/2.5,h=sk.img.height/2.5,hl=L.legL?sockAt('legL'):st.base.J.hipL,hr=L.legR?sockAt('legR'):st.base.J.hipR,own=!!pend||LEGS.current(st.mid)==='own';
+        g.drawImage(sk.img,(hl[0]+hr[0])/2-w/2,(hl[1]+hr[1])/2-(own?SCAN_CONFIG.frameBand+3.5:3),w,h);}}
     if(st.drag===k){g.setLineDash([4/sc,4/sc]);g.lineWidth=1.5/sc;g.strokeStyle='#e8553d';g.strokeRect(bx+o[0],by+o[1],bw,bh);g.setLineDash([]);}}
   // the selected piece: a dashed line from its pin to the handle that turns and sizes it
   if(st.selK&&L[st.selK]){const piv=sockAt(st.selK),h=handleAt(st.selK);if(h){g.setLineDash([5/sc,4/sc]);g.lineWidth=1.5/sc;g.strokeStyle='#e8553d';g.beginPath();g.moveTo(piv[0],piv[1]);g.lineTo(h[0],h[1]);g.stroke();g.setLineDash([]);
@@ -5539,15 +5550,21 @@ function at(e){const cv=$('jointsCv'),b=cv.getBoundingClientRect(),{x0,y0,sc}=st
 function inked(r,k,q){const [,bx,by,bw,bh]=r.box,o=offset(k),x=q[0]-o[0]-bx,y=q[1]-o[1]-by;if(x<0||y<0||x>=bw||y>=bh)return false;
   r.al=r.al||r.cv.getContext('2d').getImageData(0,0,r.cv.width,r.cv.height).data;
   const i=Math.floor(x/bw*r.cv.width),j=Math.floor(y/bh*r.cv.height);return r.al[(j*r.cv.width+i)*4+3]>60;}
+/* Nov 16 (designer's recording: on this screen he pressed Undo to take back a drag — it took the whole photo off the player
+   underneath instead, and Done then left a half-and-half player with no skirt): every move made here is remembered, and
+   Undo on this screen takes back the last one (player-screen.js sends its Undo button here while the pieces are out). */
+const snap=()=>({j:JSON.stringify({pin:st.pin,W:st.W,sock:st.sock,rot:st.rot,size:st.size}),moved:[...st.moved],socked:[...(st.socked||[])]});
+const remember=s=>{if(st&&s)(st.hist=st.hist||[]).push(s);};
+function undo(){if(!st||!st.hist||!st.hist.length)return false;const s=st.hist.pop();Object.assign(st,JSON.parse(s.j));st.moved=new Set(s.moved);st.socked=new Set(s.socked);st.selK=null;st.drag=null;st.grab=null;frame();return true;}
 function wire(){const cv=$('jointsCv');if(cv.dataset.wired)return;cv.dataset.wired='1';
   // Oct 26 (code review): one finger at a time; a second finger used to take over the drag and make pieces jump
   cv.addEventListener('pointerdown',e=>{if(!st||!st.view||st.drag)return;st.pid=e.pointerId;const q=at(e);let hit=null,bd=(22/st.view.sc)**2;
     if(st.selK){const h=handleAt(st.selK);if(h&&Math.hypot(h[0]-q[0],h[1]-q[1])<26/st.view.sc){const k=st.selK,piv=sockAt(k);e.preventDefault();st.drag=k;
-      st.grab={handle:true,q,piv,a0:Math.atan2(q[1]-piv[1],q[0]-piv[0]),d0:Math.hypot(q[0]-piv[0],q[1]-piv[1])||1,rot:st.rot[k]||0,size:SIZE(k)};try{cv.setPointerCapture(e.pointerId);}catch(_){}return;}}
+      st.grab={handle:true,was:snap(),q,piv,a0:Math.atan2(q[1]-piv[1],q[0]-piv[0]),d0:Math.hypot(q[0]-piv[0],q[1]-piv[1])||1,rot:st.rot[k]||0,size:SIZE(k)};try{cv.setPointerCapture(e.pointerId);}catch(_){}return;}}
     for(const k of Object.keys(pins())){const p=sockAt(k),d=(p[0]-q[0])**2+(p[1]-q[1])**2;if(d<bd){bd=d;hit={dot:k};}}
     if(!hit){const L=limbsOf(st.base);for(const r of pieces().reverse()){const k=r.key.split('.')[1];if(L[k]&&inked(r,k,q)){hit={limb:k};break;}}}
     if(!hit){if(st.selK){st.selK=null;}return;}   /* a tap on empty space lets go of the selected piece */
-    e.preventDefault();st.drag=hit.dot||hit.limb;st.grab=Object.assign(hit,{q,sock:sockAt(st.drag),pin:st.pin[st.drag].slice()});
+    e.preventDefault();st.drag=hit.dot||hit.limb;{const was=snap();st.grab=Object.assign(hit,{was,q,sock:sockAt(st.drag),pin:st.pin[st.drag].slice()});}
     try{cv.setPointerCapture(e.pointerId);}catch(_){}cv.style.cursor='grabbing';});
   cv.addEventListener('pointermove',e=>{if(!st||!st.drag||e.pointerId!==st.pid)return;const k=st.drag,G=st.grab,d=sub(at(e),G.q),L=limbsOf(st.base)[k];
     if(G.handle){const q=at(e),an=Math.atan2(q[1]-G.piv[1],q[0]-G.piv[0]),dn=Math.hypot(q[0]-G.piv[0],q[1]-G.piv[1]);   /* round: turn; in or out: size */
@@ -5557,8 +5574,9 @@ function wire(){const cv=$('jointsCv');if(cv.dataset.wired)return;cv.dataset.wir
     st.moved.add(k);});
   const up=e=>{if(!st||!st.drag||e.pointerId!==st.pid)return;const G=st.grab,k=st.drag;
     if(G&&G.limb&&Math.hypot(...sub(at(e),G.q))*st.view.sc<5){st.pin[k]=G.pin;st.selK=st.selK===k?null:k;}   /* a tap, not a slide: select (or let go of) that piece */
+    else if(G&&G.was&&G.was.j!==snap().j)remember(G.was);   /* a real move: Undo can take it back */
     st.drag=null;st.grab=null;cv.style.cursor='';frame();};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
-  $('jointsReset').onclick=()=>{if(!st)return;Object.assign(st,fresh(st.base));frame();};
+  $('jointsReset').onclick=()=>{if(!st)return;const was=snap(),h=st.hist;Object.assign(st,fresh(st.base));st.hist=h;if(was.j!==snap().j)remember(was);frame();};
   $('scanParts').addEventListener('change',()=>{if(!st)return;$('scanJoints').hidden=false;frame();$('scanJoints').hidden=!st.view;go();});}
 
 // the body already on stage, put back where it was drawn on the sheet, for an upload without a body
@@ -5589,7 +5607,7 @@ function setup(mid,pins,W,socks){if(!st||st.mid!==mid)return;const L=limbsOf(st.
     st.sock[l.sock]=p.slice();st.socked.add(k);}   /* not moved: a re-upload of a piece the user had nudged still keeps its saved placement (the template rule) */
   for(const [a,w] of Object.entries(W||{}))st.W[a]=w.slice();if(!$('scanJoints').hidden)frame();}
 const touched=k=>!!st&&(RIDES(k)?touched('head'):(st.moved.has(k)||(st.rot[k]||0)!==0||(st.size[k]||1)!==1));
-return {show,clear,sheetFor,moved,preset,finalize,setup,touched,instAt:p=>{if(st){st.instAt=p?p.slice():null;if(!$('scanJoints').hidden)frame();}},_state:()=>st};
+return {show,clear,sheetFor,moved,preset,finalize,setup,touched,undo,canUndo:()=>!!(st&&st.hist&&st.hist.length),instAt:p=>{if(st){st.instAt=p?p.slice():null;if(!$('scanJoints').hidden)frame();}},_state:()=>st};
 })();
 
 // ===== 5. SHEET SCANNER: photo of a printed sheet -> artwork pieces =====
@@ -6306,6 +6324,13 @@ function v2apply(list){
     const R2=ang(sub(P,E))-dl0;
     let eb=(R2-R1)*180/Math.PI;eb=((eb+540)%360)-180;drum[ak]={a:R1*180/Math.PI,eb};}
   for(const kk2 of touched)before.push([key(kk2),artHold(S.art[key(kk2)]),adjNow(kk2)]);
+  /* Nov 15 (designer's recording: after the pumpkin head, a photo of a drawn figure left the pumpkin's chin on the new face): a
+     picture head's jaw is a piece of THAT head. A new drawn head with no mouth of its own found on it puts the singer's mouth
+     back to ours; Undo brings the jaw back with the old head. */
+  if(mid==='vocals'&&got.head&&!got.head.stage&&!got.head.picture&&!got.mouth&&L.mouth&&L.mouth.jaw&&ADJSET[key('mouth')]){
+    before.push([key('mouth'),artHold(S.art[key('mouth')]),adjNow('mouth')]);
+    if(window.HOUSE&&HOUSE.vocals&&HOUSE.vocals.apply)HOUSE.vocals.apply(['mouth'],1);   /* our mouth, where ours sits */
+    else{if(ARTCLEAR[key('mouth')])ARTCLEAR[key('mouth')]();ADJSET[key('mouth')]({x:0,y:0,s:1,a:0,jaw:0});}}
   for(const kk2 of touched){const ly=L[kk2];
     if(kept(kk2)){const o={x:ly.x,y:ly.y,s:ly.s,a:ly.a,v2:+ly.v2};if(ly.sz)o.sz=ly.sz;if(ARMS.has(kk2)){o.eb=ly.eb||0;o.hand=got[kk2]?(got[kk2].handOn?1:0):(ly.hand||0);if(stickArm(kk2))o.stick=1;}ARTSET[key(kk2)](out[kk2].url);ADJSET[key(kk2)](o);continue;}
     const o={x:ly.x,y:ly.y,s:out[kk2]?out[kk2].s:ly.s,a:ly.a};if(ARMS.has(kk2))o.eb=ly.eb||0;if(out[kk2])o.v2=ver;if(kk2==='body'){if(out.body)o.sz=+out.body.sz.toFixed(2);else if(ly.sz)o.sz=ly.sz;}   /* Nov 8: the body remembers its sheet size (PLAYERK) */
@@ -6428,6 +6453,7 @@ $('scanApply').onclick=()=>{
       if(window.JOINTS)list=JOINTS.finalize(list);   /* Oct 21: pieces turned or sized on Put them together */
       const before=v2apply(list),mid=list[0].key.split('.')[0],n=list.length;
       if(window.ADD&&ADD.undoKeys)ADD.undoKeys(mid).forEach(k=>{if(!before.some(b=>b[0]===k))before.push([k,artHold(S.art[k]),S.adj[k]?Object.assign({},S.adj[k]):undefined]);});   // Oct 26: Undo also undoes the instrument choice
+      if(window.LEGS&&LEGS.undoEntry)before.push(LEGS.undoEntry(mid,artHold));   /* Nov 15: Undo puts a skirt back too */
       if(window.ADD)ADD.afterApply(mid,list);if(window.JOINTS)JOINTS.clear();   /* Oct 22: the picked instrument */if(window.PICTURE)PICTURE.close();if(window.ADD)ADD.close();
       $('scan').hidden=true;$('scanParts').innerHTML='';$('scanApply').disabled=true;say(TXT('upload.start'));
       if(window.wsNote)wsNote(TXT('upload.newInPlace',{player:SHEETMAKER.names[mid],n,s:n===1?'':'s'})+(colourShare(list)<.08?' '+TXT('upload.colourTip'):''),before,mid);
@@ -6642,51 +6668,151 @@ function splitLegs(img,bl){const Y=img.Y,W=img.W,x0=Math.max(0,Math.round(bl.x0)
    Each piece is a drawn-round polygon (like splitLegs), so it behaves like a piece drawn round by hand and turning the
    photo keeps it. Returns [{key,blob}] or null when the shape doesn't read as a standing figure (then Tap each part
    asks for the pieces as before). armKeys = the sheet's two arm keys, left as drawn first. */
-function splitFigure(img,bl,armKeys){
-  if(!bl.clip)return null;const x0=bl.x0,y0=bl.y0,W=bl.x1-x0,H=bl.y1-y0;if(H<W*1.3||H<40)return null;
+function splitFigure(img,bl,armKeys,found){
+  const why=m=>{if(window.__fpWhy)window.__fpWhy.push('figure: '+m);return null;};   /* (finder debugging: set window.__fpWhy=[] before the scan) */
+  if(!bl.clip)return why('no outline');const x0=bl.x0,y0=bl.y0,W=bl.x1-x0,H=bl.y1-y0;if(H<W*1.3||H<40)return why('not tall');
   const st=Math.max(1,Math.max(W,H)/240),gw=Math.ceil(W/st)+1,gh=Math.ceil(H/st)+1,rows=[];let cells=0,sx=0;
   for(let j=0;j<gh;j++){const sp=[];let a=-1;for(let i=0;i<=gw;i++){const on=i<gw&&bl.clip.has(x0+i*st,y0+j*st);if(on){cells++;sx+=i;}
     if(on&&a<0)a=i;if(!on&&a>=0){sp.push([a,i-1]);a=-1;}}rows.push(sp);}
-  if(cells<50)return null;const mx=sx/cells;   /* the figure's middle column */
+  if(cells<50)return why('too small');const mx=sx/cells;   /* the figure's middle column */
+  if(window.__fpRows)window.__fpRows.push({rows,mx,gw,gh,st});   /* (finder debugging: the figure's silhouette, row by row) */
   const cen=j=>{const sp=rows[j];let b=null,bd=1e9;sp.forEach(s=>{const d=s[0]>mx?s[0]-mx:s[1]<mx?mx-s[1]:0;if(d<bd){bd=d;b=s;}});return b;};   /* the span nearest the middle */
   const cw=j=>{const c=cen(j);return c?c[1]-c[0]+1:0;};
   /* the neck: the row in the upper half that is narrowest COMPARED WITH the widest row above it (the head) and the widest
      row in the stretch below it (the shoulders) — so a hat's narrow crown or a tuft of hair at the very top isn't taken
      for a neck (the designer's propeller cap, Nov 8) */
-  let jn=-1,best=0;{let above=0;for(let j=0;j<gh*.5;j++){const w=cw(j);if(j>=gh*.05&&w>0){let below=0;for(let k=j+1;k<Math.min(gh,j+gh*.2);k++)below=Math.max(below,cw(k));
-      const r=above>=gw*.3?Math.min(above,below)/Math.max(w,gw*.08):0;if(r>best){best=r;jn=j;}}above=Math.max(above,w);}}   /* a real head above it (≥ 30% of the width); a hair-thin row (a propeller's stem) counts as 8% wide */
-  if(jn<0||best<1.5)return null;const nw=cw(jn);
+  /* Nov 15 (designer's dress photo at full size on the singer: "it cuts off the head" — the head was cut at the eyes): a face
+     drawn with open lines is not one solid shape, so a row across the face can have only a thin line (the nose) in the middle
+     and look like a neck. A neck row is narrow all the way across: first only rows whose whole width (hair and all) is under
+     three quarters of the head above are tried; if none will do (arms held up beside the neck), any row, as before. */
+  let jn=-1,best=0;const ext=j=>{const sp=rows[j];return sp.length?sp[sp.length-1][1]-sp[0][0]+1:0;};
+  for(const strict of [true,false]){if(best>=1.5)break;jn=-1;best=0;let above=0;for(let j=0;j<gh*.5;j++){const w=cw(j);if(j>=gh*.05&&w>0&&!(strict&&ext(j)>above*.75)){let below=0;for(let k=j+1;k<Math.min(gh,j+gh*.2);k++)below=Math.max(below,cw(k));
+      const r=above>=gw*.3?Math.min(above,below)/Math.max(w,gw*.08):0;if(r>best){best=r;jn=j;}}above=Math.max(above,ext(j));}}   /* a real head above it (≥ 30% of the width); a hair-thin row (a propeller's stem) counts as 8% wide */
+  if(jn<0||best<1.5)return why('no neck '+best.toFixed(2));const nw=cw(jn);
   let jneck=jn;while(jneck+1<gh&&cw(jneck+1)<=nw*1.3)jneck++;   /* the neck's bottom: the head keeps the neck */
   const yN=y0+(jneck+.5)*st;
   /* the legs: from the bottom up, the rows where the shape has a gap down the middle; the crotch is the top of that run */
   const gap=j=>{const sp=rows[j];for(let k=0;k+1<sp.length;k++)if(sp[k][1]<mx&&sp[k+1][0]>mx)return (sp[k][1]+sp[k+1][0])/2;return null;};
   let jb=gh-1;while(jb>jneck&&!rows[jb].length)jb--;const yB=y0+(jb+1)*st;
   let jg=jb;while(jg>jneck&&gap(jg)==null)jg--;   /* the lowest row with a gap (one foot may end higher than the other) */
-  let jc=jg,miss=0;while(jc-1>jneck){if(gap(jc-1)!=null){jc--;miss=0;}else if(miss<2){jc--;miss++;}else break;}jc+=miss;
-  if(jg-jc<gh*.1||jc<jneck+gh*.1)return null;   /* no legs to speak of, or no body between neck and legs */
-  const yC=y0+(jc-.5)*st;
+  /* Nov 16 (the designer's short skirt, tools/neck-probe/designer-1776.jpg: the legs were cut at the knees and the skirt was
+     missed): the figure's middle column is the average of all its ink, so arms drawn unevenly pull it to one side, and
+     further up the gap between the legs no longer lay across it. The gap is FOLLOWED upward from the lowest row instead: on
+     the next row up it is the gap whose middle lies inside the gap just below. (A gap beside an arm lies outside the body,
+     and the body is what closes the legs' gap, so it is never followed by mistake.) */
+  const gapIv=(j,ref)=>{const sp=rows[j];for(let k=0;k+1<sp.length;k++){const a=sp[k][1],b=sp[k+1][0],m=(a+b)/2;if(ref?m>=ref[0]-1&&m<=ref[1]+1:a<mx&&b>mx)return [a,b];}return null;};
+  const legGap={};let ref=gapIv(jg);if(ref)legGap[jg]=ref;
+  let jcF=jg,miss=0;while(jcF-1>jneck){const g=(ref?gapIv(jcF-1,ref):null)||gapIv(jcF-1);   /* (followed, or lying across the middle as before: between turned-out feet the gap jumps about) */if(g){jcF--;miss=0;ref=g;legGap[jcF]=g;}else if(miss<2){jcF--;miss++;}else break;}jcF+=miss;
+  let jcS=jg;miss=0;while(jcS-1>jneck){if(gap(jcS-1)!=null){jcS--;miss=0;}else if(miss<2){jcS--;miss++;}else break;}jcS+=miss;   /* (the old test alone) */
+  let jc=jcS;
+  /* a hem drawn right across the shape: ink in nearly every column, somewhere in the few rows around row j (so it need not be level) */
+  const hemAt=j=>{const c=cen(Math.max(jneck+1,j-2));if(!c)return 0;const dk=(u,v)=>{const x=Math.round(u),y=Math.round(v);return x>=0&&y>=0&&x<img.W&&y<img.H&&img.Y[y*img.W+x]<bl.clip.paper*.72;};
+    const ya=y0+(j-Math.ceil(gh*.03))*st,yb=y0+(j+2)*st;let n=0,t=0;for(let i=c[0]+1;i<c[1];i+=.5){t++;for(let y=ya;y<=yb;y+=1.5)if(dk(x0+i*st,y)){n++;break;}}return t?n/t:0;};
+  /* Nov 15 (designer: "if a user draws a player with a skirt, does it read and add correctly?" — it did not: the skirt was taken
+     as more body, the body-plus-skirt was squeezed into the body's place and the player came out small with tiny legs).
+     A SKIRT: just above where the legs part, the shape is clearly wider than the torso and stays wide down to the legs, and
+     the two legs together are narrower than its hem. The waist is where that widening starts. The skirt is cut as its own
+     piece (worn as an overlay, legs-shelf.js); the body ends at the waist, so the player's size is read from the real torso. */
+  /* Nov 15, later (the designer's own drawing, tools/neck-probe/designer-1773.jpg — a long skirt with only the feet showing, arms
+     joined to the body down to the elbows — was not read as a skirt): the torso's width is the NARROW end of the widths between
+     neck and legs (the 20th percentile: arms joined on at the shoulders make the upper rows wide, so the middle value was no
+     good); the hem is the widest row just above the legs (a hem is rarely level); legs may be short. The waist is the drawn
+     line across it when there is one (the darkest row right across the shape, looked for from where the widening shows up to a
+     quarter of the figure higher), else where the widening starts. */
+  const waistFor=(jc,shortLegs)=>{let jw=-1;{const ws=[];for(let j=jneck+1;j<jc;j++){const w=cw(j);if(w)ws.push(w);}ws.sort((a,b)=>a-b);
+    const tw=ws.length?ws[Math.floor(ws.length*.2)]:0;let hem=0,jh=jc-1;for(let j=jc-1;j>=Math.max(jneck+1,jc-gh*.06);j--){const w=cw(j);if(w>hem){hem=w;jh=j;}}
+    let legW=0;for(let j=jc+1;j<Math.min(gh,jc+1+gh*.06);j++){const sp=rows[j];if(sp.length>=2)legW=Math.max(legW,sp[sp.length-1][1]-sp[0][0]+1);}
+    if(window.__fpWhy)window.__fpWhy.push('figure: torso '+tw+' hem '+hem+' legs '+legW+' rows neck '+jneck+' crotch '+jc+' bottom '+jg+' of '+gh);
+    /* Nov 16 (the designer's short straight skirt, designer-1776: its legs are nearly as wide as its hem, so "the legs are
+       narrower than the hem" did not hold): what a skirt has and trousers or shorts never have is A HEM DRAWN RIGHT ACROSS AT
+       THE TOP OF THE LEGS — their hems are lower down, one on each leg. Looked for as ink in nearly every column of the
+       shape, somewhere in the few rows around where the legs part (so it need not be level). */
+    const hemLine=hemAt(jc);
+    if(window.__fpWhy)window.__fpWhy.push('figure: hem line '+hemLine.toFixed(2));
+    if(tw&&hem>=tw*1.35&&legW&&(legW<=hem*.85||shortLegs||hemLine>=.9)){   /* (only feet showing: turned-out feet can be wider than the hem — designer-1774) */let j=jh;while(j-1>jneck&&cw(j-1)>=tw*1.12)j--;   /* (up from the hem's widest row: its lowest rows curve in) */
+      /* the drawn waist line: of the rows from there up, the one where most of the way across is ink */
+      const dark=(u,v)=>{const x=Math.round(u),y=Math.round(v);return x>=0&&y>=0&&x<img.W&&y<img.H&&img.Y[y*img.W+x]<bl.clip.paper*.72;};
+      const inkRow=jj=>{const c=cen(jj);if(!c)return 0;let best=0;for(let o=0;o<st;o+=Math.max(1,st/5)){let n=0,t=0;for(let i=c[0]+1;i<c[1];i+=.5){t++;if(dark(x0+i*st,y0+jj*st+o)||dark(x0+i*st,y0+jj*st+o+1.5))n++;}if(t)best=Math.max(best,n/t);}return best;};
+      let jl=-1,bl2=.6;for(let jj=Math.min(jc-2,j+Math.ceil(gh*.04));jj>Math.max(jneck+gh*.08,j-gh*.09);jj--)   /* (only a line near where the skirt starts to widen: higher up it is a neckline or the top of a bib — designer-1774) */{const f=inkRow(jj);if(f>bl2){bl2=f;jl=jj;}}
+      if(window.__fpWhy)window.__fpWhy.push('figure: widening from row '+j+', waist line row '+jl+' ('+bl2.toFixed(2)+'), widths '+[j-2,j,j+5].map(q=>cw(q)).join('/'));
+      if(jl>0)j=jl+1;
+      if(jc-j>=gh*.07&&j>jneck+gh*.08)jw=j;}}
+    return jw;};
+  /* Nov 16: the legs start where the old test puts them when a skirt is read there (a notch in a zigzag hem is not more leg —
+     designer-1778); otherwise where the followed gap ends (designer-1776: the old test stopped at the knees). */
+  const short=j=>jg-j<gh*.1;   /* legs under a tenth of the figure: only a figure in a long skirt has those */
+  let jw=waistFor(jcS,short(jcS));if(jw<0&&jcF<jcS){jc=jcF;jw=waistFor(jcF,short(jcF));}
+  if(jg-jc<gh*.03||jc<jneck+gh*.1)return why('no legs or no body: legs '+(jg-jc)+' of '+gh+', neck '+jneck+', crotch '+jc);   /* no legs at all, or no body between neck and legs */
+  const shortLegs=short(jc),yC=y0+(jc-.5)*st;
+  if(shortLegs&&jw<0)return why('short legs and no skirt');   /* short legs and no skirt: not a figure we can cut */
+  const yW=jw>0?y0+(jw-.5)*st:yC;   /* the body's bottom: the waist when there is a skirt, else the crotch */
   /* the torso's sides: on the rows between neck and crotch where something stands clear on both sides of the middle span */
-  const L=[],R=[];for(let j=jneck+1;j<jc;j++){const c=cen(j),sp=rows[j];if(!c)continue;if(sp.some(s=>s[1]<c[0]-1))L.push(c[0]);if(sp.some(s=>s[0]>c[1]+1))R.push(c[1]);}
-  const med=a=>{const b=a.slice().sort((p,q)=>p-q);return b[b.length>>1];};
+  const jt=jw>0?jw:jc;   /* (the torso's own rows: down to the waist when there is a skirt) */
+  let L=[],R=[];for(let j=jneck+1;j<jt;j++){const c=cen(j),sp=rows[j];if(!c)continue;if(sp.some(s=>s[1]<c[0]-1))L.push(c[0]);if(sp.some(s=>s[0]>c[1]+1))R.push(c[1]);}
+  let med=a=>{const b=a.slice().sort((p,q)=>p-q);return b[b.length>>1];};
+  /* a high waist (a dress with a bib — designer-1774) leaves too few torso rows to see the arms beside: read the sides over every
+     row down to the legs instead, and take the torso's side from the NARROW end (the skirt's rows are wider) */
+  if(jw>0&&(L.length<gh*.05||R.length<gh*.05)){L=[];R=[];for(let j=jneck+1;j<jc;j++){const c=cen(j),sp=rows[j];if(!c)continue;if(sp.some(s=>s[1]<c[0]-1))L.push(c[0]);if(sp.some(s=>s[0]>c[1]+1))R.push(-c[1]);}
+    const hi=a=>{const b=a.slice().sort((p,q)=>p-q);return b[Math.floor(b.length*.8)];};const m0=hi(L),m1=-hi(R);L=L.map(()=>m0);R=R.map(()=>m1);}
+  if(window.__fpWhy)window.__fpWhy.push('figure: arm rows '+L.length+'/'+R.length+' need '+(gh*.05).toFixed(0));
   const arms=L.length>=gh*.05&&R.length>=gh*.05;   /* each arm stands clear of the torso on enough rows to read the torso's side */
   const tl=arms?med(L):0,tr=arms?med(R):gw-1,tlx=x0+tl*st,trx=x0+(tr+1)*st;
+  if(window.__fpWhy)window.__fpWhy.push('figure: sides '+tl+'..'+tr+' of '+gw+'; rows '+[jneck+3,jneck+12,jw,jw+15,jw+40,jc-5].map(j=>j+':'+JSON.stringify(rows[j])).join(' '));
   /* how far down each arm reaches (a hand may hang below the crotch): rows below it with ink wholly outside the torso's side */
   let jaL=jc-1,jaR=jc-1;if(arms){for(let j=jc;j<=jb;j++){if(rows[j].some(s=>s[1]<tl-1))jaL=j;else break;}
     for(let j=jc;j<=jb;j++){if(rows[j].some(s=>s[0]>tr+1))jaR=j;else break;}}
   const yAL=Math.max(yC,y0+(jaL+1)*st),yAR=Math.max(yC,y0+(jaR+1)*st),x1=x0+W;
   /* the line between the legs: the middle of the gap on each row (vertical where a row has none) */
-  const mid=[];let gx=gap(jc);if(gx==null)gx=mx;for(let j=jc;j<=jb;j++){const g=gap(j);if(g!=null)gx=g;mid.push([x0+(gx+.5)*st,y0+(j+.5)*st]);}
+  const gapMid=j=>legGap[j]?(legGap[j][0]+legGap[j][1])/2:gap(j);   /* (the followed gap where there is one) */
+  const mid=[];let gx=gapMid(jc);if(gx==null)gx=mx;for(let j=jc;j<=jb;j++){const g=gapMid(j);if(g!=null)gx=g;mid.push([x0+(gx+.5)*st,y0+(j+.5)*st]);}
   const out=[];out.push({key:'head',line:[[x0,y0],[x1,y0],[x1,yN],[x0,yN]]});
-  out.push({key:'body',line:[[tlx,yN],[trx,yN],[trx,yC],[tlx,yC]]});
-  if(arms){out.push({key:armKeys[0]||'arm',line:[[x0,yN],[tlx,yN],[tlx,yAL],[x0,yAL]]});out.push({key:armKeys[1]||'arm2',line:[[trx,yN],[x1,yN],[x1,yAR],[trx,yAR]]});}
+  out.push({key:'body',line:[[tlx,yN],[trx,yN],[trx,yW],[tlx,yW]]});
+  /* the skirt's own outline, row by row (one cell outside its edge), and the same edges for the arms to stop at */
+  const skL=[],skR=[];if(jw>0)for(let j=jw;j<jc;j++){const c=cen(j);if(!c)continue;const y=y0+(j+.5)*st;skL.push([x0+(c[0]-.5)*st,y]);skR.push([x0+(c[1]+1.5)*st,y]);}
+  if(arms){const aL=[[x0,yN],[tlx,yN]],aR=[[trx,yN],[x1,yN],[x1,yAR]];
+    if(skL.length){
+      /* beside a skirt each arm's cut ends just under the arm's own lowest ink, not at the hem (designer-1774/1775: the long strip of
+         bare paper beside a dress took in the photo's shading, and the arm came out as a grey slab) */
+      let bL=jw,bR=jw;for(let j=jneck+1;j<jc;j++){const c=cen(j);if(!c)continue;if(rows[j].some(s=>s[1]<c[0]))bL=j;if(rows[j].some(s=>s[0]>c[1]))bR=j;}
+      const yL=Math.min(yC,y0+(bL+2)*st),yR=Math.min(yC,y0+(bR+2)*st),sL=skL.filter(p=>p[1]<yL),sR=skR.filter(p=>p[1]<yR);
+      aL.push([tlx,yW],...sL.map(p=>[Math.min(tlx,p[0]),p[1]]));aL.push([aL[aL.length-1][0],yL],[x0,yL]);
+      aR.length=2;aR.push([x1,yR],[sR.length?Math.max(trx,sR[sR.length-1][0]):trx,yR],...sR.slice().reverse().map(p=>[Math.max(trx,p[0]),p[1]]),[trx,yW]);}
+    else{aL.push([tlx,yAL],[x0,yAL]);aR.push([trx,yAR]);}
+    out.push({key:armKeys[0]||'arm',line:aL});out.push({key:armKeys[1]||'arm2',line:aR});}
+  /* (its top reaches 3 cells up into the torso, to take the waist line with it when one is drawn) */
+  if(skL.length)out.push({key:'skirt',line:[[Math.min(skL[0][0],tlx-st),yW-3*st],[Math.max(skR[0][0],trx+st),yW-3*st],...skR,[skR[skR.length-1][0],yC],[skL[skL.length-1][0],yC],...skL.slice().reverse()]});
   out.push({key:'legL',line:[[tlx,yC],...mid,[x0,yB],[x0,yAL],[tlx,yAL]]});
   out.push({key:'legR',line:[[trx,yC],[trx,yAR],[x1,yAR],[x1,yB],...mid.slice().reverse()]});
-  return out.map(o=>{const b=blobFromLine(img,o.line);b.drawn=o.line;return {key:o.key,blob:b};});}
-function blobFromLine(img,line){const f=4,xs=line.map(p=>p[0]),ys=line.map(p=>p[1]),X0=Math.max(0,Math.min(...xs)),Y0=Math.max(0,Math.min(...ys)),
+  /* (under a skirt only the feet may show: a foot is wider than it is tall, and the placing code would take it for a leg drawn
+     lying down and turn it — these legs are known to hang straight down) */
+  if(window.__fpWhy)window.__fpWhy.push('figure: box '+[x0,y0,x0+W,y0+H].map(Math.round)+' st '+st+' cuts '+out.map(o=>o.key+':'+JSON.stringify(o.line.map(p=>p.map(Math.round)))).join(' '));
+  /* Nov 15 (designer: "the arms are placed in the middle of the body" — he dragged them back out to the shoulders after every
+     photo): an arm's cut is a block of the page, and the arm was hung from the middle of that block's top edge, pointing
+     straight down, so it landed half a block inside the body and turned inward. Each arm now says where it really joins (the
+     top of the torso's side) and where its hand is (the middle of its lowest ink), so it hangs from the shoulder the way it
+     was drawn. */
+  const armEnds={};if(arms){const side=(left)=>{let best=null,run=null,gapN=0;   /* the longest stretch of rows with ink outside the body on that side (a wisp of hair beside the neck is a short one) */
+      for(let j=jneck+1;j<=jb;j++){const c=j<jc?cen(j):null,th=left?(c?c[0]:tl):(c?c[1]:tr);
+        const s=left?rows[j].filter(q=>q[1]<th)[0]:rows[j].filter(q=>q[0]>th).pop();
+        if(s){if(!run)run={n:0};run.n++;run.last=j;run.span=s;gapN=0;if(!best||run.n>best.n)best=run;}else if(run&&++gapN>3)run=null;
+        if(j>=jc&&!run)break;}   /* (below the crotch only an arm already running counts: a foot is not a hand) */
+      return !best?null:{el:3,ends:[[left?tlx:trx,yN+2*st],[x0+((best.span[0]+best.span[1])/2+.5)*st,y0+(best.last+.5)*st]]};};
+    armEnds[armKeys[0]||'arm']=side(true);armEnds[armKeys[1]||'arm2']=side(false);}
+  if(window.__fpWhy)window.__fpWhy.push('figure: arm ends '+JSON.stringify(armEnds)+' sides '+Math.round(tlx)+'..'+Math.round(trx)+' neck y '+Math.round(yN));
+  /* Nov 16 (designer-1780: a scrap of paper landed beside the singer's foot): a cut is a block of the page, and the photo's
+     shading in a corner of that block came out as a piece of its own. A cut keeps only what the finder found as a drawing —
+     the figure itself and the small drawings on the page (eyes, a mouth) — with a little room round it for the line's edge. */
+  const fd=(found&&found.length?found:[bl]).filter(q=>q.clip&&q.clip.has),pad=1.5*st,near=[[0,0],[pad,0],[-pad,0],[0,pad],[0,-pad],[pad*.7,pad*.7],[-pad*.7,pad*.7],[pad*.7,-pad*.7],[-pad*.7,-pad*.7]];
+  const within=(u,v)=>fd.some(q=>u>=q.x0-pad&&u<=q.x1+pad&&v>=q.y0-pad&&v<=q.y1+pad&&near.some(d=>q.clip.has(u+d[0],v+d[1])));
+  return out.map(o=>{const b=blobFromLine(img,o.line,within);b.drawn=o.line;if(jw>0&&(o.key==='legL'||o.key==='legR'))b.pca=null;if(armEnds[o.key])b.pca=armEnds[o.key];
+    if(window.__fpWhy){const ys=[];for(let y=b.y0;y<b.y1;y+=6)for(let x=b.x0;x<b.x1;x+=6)if(b.clip.has(x,y))ys.push(img.Y[Math.floor(y)*img.W+Math.floor(x)]);ys.sort((p,q)=>p-q);window.__fpWhy.push('figure: '+o.key+' paper '+b.clip.paper.toFixed(0)+' inside 10/50/90% '+[.1,.5,.9].map(f=>ys[Math.floor(ys.length*f)]).map(Math.round)+' el '+(b.pca?b.pca.el.toFixed(2):'-'));}
+    return {key:o.key,blob:b};});}
+function blobFromLine(img,line,within){const f=4,xs=line.map(p=>p[0]),ys=line.map(p=>p[1]),X0=Math.max(0,Math.min(...xs)),Y0=Math.max(0,Math.min(...ys)),
     X1=Math.min(img.W,Math.max(...xs)),Y1=Math.min(img.H,Math.max(...ys)),x0=Math.floor(X0/f),y0=Math.floor(Y0/f),cw=Math.max(1,Math.ceil(X1/f)-x0),ch=Math.max(1,Math.ceil(Y1/f)-y0);
   const c=document.createElement('canvas');c.width=cw;c.height=ch;const g=c.getContext('2d',{willReadFrequently:true});g.fillStyle='#fff';g.beginPath();
   line.forEach((p,i)=>{const x=p[0]/f-x0,y=p[1]/f-y0;i?g.lineTo(x,y):g.moveTo(x,y);});g.closePath();g.fill();
   const d=g.getImageData(0,0,cw,ch).data,keep=new Uint8Array(cw*ch);for(let q=0;q<cw*ch;q++)keep[q]=d[q*4]>127?1:0;
+  if(within)for(let y=0;y<ch;y++)for(let x=0;x<cw;x++)if(keep[y*cw+x]&&!within((x+x0+.5)*f,(y+y0+.5)*f))keep[y*cw+x]=0;   /* (a figure's cut: only where a drawing was found) */
   // the paper beside it: the bright end of what's inside the line (lines are dark), in grey and colour
   const vals=[];for(let y=0;y<ch;y+=2)for(let x=0;x<cw;x+=2)if(keep[y*cw+x]){const i=((y+y0)*f*img.W+(x+x0)*f);vals.push(i);}
   vals.sort((a,b)=>img.Y[a]-img.Y[b]);const top=vals.slice(Math.floor(vals.length*.7));let r=0,gg=0,b=0;for(const i of top){r+=img.RGB[i*4];gg+=img.RGB[i*4+1];b+=img.RGB[i*4+2];}
@@ -6762,6 +6888,7 @@ const unit=v=>{const l=Math.hypot(v[0],v[1])||1;return [v[0]/l,v[1]/l];};
    1000 px), roughly twice the biggest box on a printed sheet; normal drawings are well under it. */
 function scaleFor(mid,blobs,assign){const s=scaleFor0(mid,blobs,assign);let big=1;
   assign.forEach((k,n)=>{if(k&&blobs[n])big=Math.max(big,blobs[n].x1-blobs[n].x0,blobs[n].y1-blobs[n].y0);});
+  {const hn=assign.indexOf('head'),hb=SHEETS2[mid].boxes.find(b=>b[0]==='head');if(window.__fpWhy&&hn>=0&&hb&&blobs[hn])window.__fpWhy.push('figure: scale '+Math.min(s,400/big).toFixed(3)+' head needs '+[(blobs[hn].x1-blobs[hn].x0),(blobs[hn].y1-blobs[hn].y0)].map(v=>Math.round(v*Math.min(s,400/big)))+' box '+hb.slice(3)+' cap400 '+(s>400/big));}
   return Math.min(s,400/big);}
 function scaleFor0(mid,blobs,assign){const sh=SHEETS2[mid],i=assign.indexOf('body');
   if(i>=0)return (sh.bodyPivot[1]-sh.J.neck[1])/Math.max(1,blobs[i].y1-blobs[i].y0);   // the drawn body spans neck to hips
@@ -6802,7 +6929,17 @@ function names(mid){const arms=Object.keys(SHEETS2[mid].arms||{});   /* printed 
   return SHEETS2[mid].boxes.map(b=>{const i=arms.indexOf(b[0]);return [b[0],i>=0?TXT(i?'upload.armRight':'upload.armLeft'):OWN[b[0]]?TXT(OWN[b[0]]):String(b[5]||b[0]).split(' · ')[0]];});}
 /* Oct 23 (flow v3 tidy): the old plain-paper screen (thumbnails + menus, reached only from the old upload screen) is gone:
    Add drawings (add-drawings.js) uses find, guess and pieces below */
-return {find,guess,pieces,blobFromLine,splitLegs,splitFigure,names:mid=>names(mid)};
+/* Nov 15: a skirt found on a drawn figure, cut out like any piece (same scale as the figure's other pieces); w, h = its size in
+   sheet points, m = the paper margin round it in the picture */
+function skirtPiece(mid,blobs,assign,bl){const {S2,extract2,inkNow}=X(),ink=inkNow(),s=scaleFor(mid,blobs,assign),bi=assign.indexOf('body'),
+    bodyC=bi>=0?[(blobs[bi].x0+blobs[bi].x1)/2,(blobs[bi].y0+blobs[bi].y1)/2]:null;if(bodyC)bodyC.box=[blobs[bi].x0,blobs[bi].y0,blobs[bi].x1,blobs[bi].y1];
+  const pl=placeOf(mid,'legL',Object.assign({},bl,{pca:null}),s,bodyC);S2.h=pl.h;S2.clip=bl.clip;const r=extract2(pl.box,ink);S2.clip=null;
+  /* a skirt drawn with no line across the waist is open at the top, and the cut-out lost its whole middle: paper is laid under
+     everything inside its outline (the app's paper edge then draws the line round it) */
+  if(bl.line){const g=r.cv.getContext('2d'),R=X().V2R;g.save();g.globalCompositeOperation='destination-over';g.fillStyle='#fff';g.beginPath();
+    bl.line.forEach((p,i)=>{const q=pl.toSheet(p),x=(q[0]-pl.box[1])*R,y=(q[1]-pl.box[2])*R;i?g.lineTo(x,y):g.moveTo(x,y);});g.closePath();g.fill();g.restore();}
+  return {cv:r.cv,url:r.cv.toDataURL('image/png'),w:(bl.x1-bl.x0)*s,h:(bl.y1-bl.y0)*s,m:SCAN_CONFIG.frameBand+3.5};}
+return {find,guess,pieces,blobFromLine,splitLegs,splitFigure,skirtPiece,names:mid=>names(mid)};
 })();
 // ===== 5c. A PICTURE AS ONE PIECE (Oct 21): a painting or picture, cut out by drawing round it, made to look printed =====
 // For what the line readers can't do: a painted face, a coloured picture filling the photo. After "no corner squares",
@@ -7196,6 +7333,13 @@ function rotImg(img,q){const W=q%2?img.H:img.W,H=q%2?img.W:img.H,cv=document.cre
   const d=g.getImageData(0,0,W,H).data,Y=new Uint8Array(W*H);for(let i=0,j=0;j<Y.length;i+=4,j++)Y[j]=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8;
   return {Y,RGB:d,W,H,bmp:cv};}
 const rotPt=(img,q)=>([x,y])=>q===1?[img.H-y,x]:q===2?[img.W-x,img.H-y]:q===3?[y,img.W-x]:[x,y];
+// a figure drawn lying on its side: how many quarter turns stand it up (0 = leave the photo as it is)
+function lyingFigure(img,blobs,mid){const area=b=>(b.x1-b.x0)*(b.y1-b.y0),big=bs=>{let i=0;bs.forEach((b,n)=>{if(area(b)>area(bs[i]))i=n;});return bs[i];};
+  if(!blobs.length)return 0;const b0=big(blobs);if(area(b0)<blobs.reduce((t,q)=>t+area(q),0)*.6||(b0.x1-b0.x0)<=(b0.y1-b0.y0)*1.3)return 0;
+  /* a figure standing on its head does not read as a figure (no neck over shoulders), so one way reads and the other doesn't;
+     if both ways read, nothing is turned and the parts are asked for as before */
+  const ak=Object.keys((SHEETS2[mid]||{}).arms||{}),reads=[1,3].filter(q=>{const im=rotImg(img,q),f=FREEPAPER.find(im).blobs;return f.length&&!!FREEPAPER.splitFigure(im,big(f),ak);});
+  if(window.__fpWhy)window.__fpWhy.push('lying: reads as a figure turned '+JSON.stringify(reads));return reads.length===1?reads[0]:0;}
 // turn the photo: find the drawings again on the turned copy, keep every name, drawing round and cut-out
 function turn(q){const {S2}=X(),T=rotPt(A.img,q),img=rotImg(A.img,q);
   const old=A.blobs.map((b,n)=>({c:T([(b.x0+b.x1)/2,(b.y0+b.y1)/2]),k:A.assign[n],look:A.look[n],drawn:b.drawn&&b.drawn.map(T),mouth:b.mouth&&b.mouth.map(T),cuts:(b.cuts||[]).map(l=>l.map(T))}));
@@ -7242,6 +7386,8 @@ async function closeNeck(mid,list){if(!list.some(r=>!r.stage&&(r.key===mid+'.hea
   const bodyTop=edge(bl,'body','top'),headBot=edge(hl,'head','bot'),dy=bodyTop+1.2-headBot;if(Math.abs(dy)<.6||Math.abs(dy)>25)return;
   for(const k of ['head','mouth','mouthO']){const ly=L[k];if(!ly||!ADJSET[mid+'.'+k])continue;ADJSET[mid+'.'+k](Object.assign({},adjOf(ly),{y:+(ly.y+dy).toFixed(2)}));}save();}
 function afterApply(mid,list){if(!A||A.mid!==mid)return;const inst=INST[mid]||[];
+  if(A.arrange&&A.legsOn&&window.LEGS&&LEGS.keep)LEGS.keep(mid);   /* Nov 16: adjusting a leg does not take the skirt off */
+  if(A.skirt&&window.LEGS&&LEGS.own){try{LEGS.own(mid,A.skirt,A.img,A.blobs,A.assign,A.skirtDrop);}catch(e){console.warn('skirt',e);}A.skirt=null;}
   if(A.guided)closeNeck(mid,list).catch(e=>console.warn('neck',e));
   /* Oct 22: the singer's mic: ours or one of our designs, or the one they drew (a printed sheet's mic box too) */
   if(mid==='vocals'){if(window.MICS){if(A.micPiece&&A.instChoice!=='house'&&A.instChoice!=='keep')MICS.set(A.micPiece.url);else if(A.instChoice==='house')MICS.set((A.house||1)>1?HOUSE.vocals.art('mic',A.house):null);save();}return;}
@@ -7419,7 +7565,7 @@ function stagePieces(mid,skip){const sh=SHEETS2[mid],m=members.find(q=>q.id===mi
 // Edit on a player's card: straight to Put them together with the player as they are
 async function arrange(mid){const {S2,say,sel}=X();$('scan').hidden=false;$('scanWho').hidden=true;if(window.PICTURE)PICTURE.close();
   const st=stagePieces(mid,new Set());if(!st.results.length){say(TXT('add.nothingChanged'));return;}
-  A={mid,img:null,blobs:[],assign:[],look:[],sel:-1,step:3,arrange:true};S2.free={redo:()=>Promise.resolve()};S2.results=st.results;sel.value='v2_'+mid;
+  A={mid,img:null,blobs:[],assign:[],look:[],sel:-1,step:3,arrange:true,legsOn:!!(window.LEGS&&LEGS.current(mid))};   /* (legsOn: a shelf set or their own skirt is worn — it stays worn after the adjust) */S2.free={redo:()=>Promise.resolve()};S2.results=st.results;sel.value='v2_'+mid;
   $('scanParts').innerHTML=st.results.map(r=>`<input type="checkbox" hidden checked data-key="${r.key}">`).join('');
   if(window.JOINTS){JOINTS.clear();step(3);$('addBack').hidden=true;await JOINTS.show(mid,SHEETS2[mid],st.results);JOINTS.setup(mid,st.pins,st.W);}
   $('scanApply').disabled=false;say(TXT('add.arrange'));$('scanJoints').scrollIntoView({block:'start',behavior:'smooth'});}
@@ -7433,12 +7579,23 @@ async function build(){const {S2,say,tick,sel}=X();say(TXT('upload.cutting'));aw
     if(bl.res)results.push(bl.res);   /* Oct 22: read from a printed sheet's box, exactly as before */
     else if(A.look[n]==='printed'){const line=bl.line||[[bl.x0,bl.y0],[bl.x1,bl.y0],[bl.x1,bl.y1],[bl.x0,bl.y1]];results.push(PICTURE.make(A.mid,k,line,A.img));}
     else if(drawn.by[n]&&!drawn.by[n].empty)results.push(drawn.by[n]);});
+  /* Nov 15 (designer's recording: every new photo of a figure in a skirt made the player twice as big): legs under a skirt hang
+     from the hem, not the hip. They used to be moved down on stage afterwards, and the next photo read the player's size from
+     hips that were now far too low. Now each leg is moved on the SHEET before it is applied (down by the skirt's height, and as
+     far from the middle as it was drawn), like a leg drawn low in its box: the hips stay where they are. */
+  if(A.skirt){try{A.skirtPic=FREEPAPER.skirtPiece(A.mid,A.blobs,A.assign,A.skirt);}catch(e){A.skirtPic=null;}   /* (its picture, for Put them together to show before it is on the player) */
+    const sc=drawn.scale,sk=A.skirt,J=SHEETS2[A.mid].J,scx=(sk.x0+sk.x1)/2,down=(sk.y1-sk.y0)*sc*.94;A.skirtDrop=down;
+    if(J.hipL)for(const kk of ['legL','legR']){const r=results.find(q=>q.key===A.mid+'.'+kk),bl=A.blobs[A.assign.indexOf(kk)];if(!r||!bl||!r.box)continue;
+      const dx=((bl.x0+bl.x1)/2-scx)*sc-(J[kk==='legL'?'hipL':'hipR'][0]-(J.hipL[0]+J.hipR[0])/2);r.box=r.box.slice();r.box[1]+=dx;r.box[2]+=down;if(r.spot)r.spot=[r.spot[0]+dx,r.spot[1]+down];}}
   const hn=A.assign.indexOf('head'),hb=A.blobs[hn],hi=results.findIndex(r=>r.key===A.mid+'.head');
   if(A.mid==='vocals'&&hb&&hb.mouth&&hi>=0){const j=jawSplit(results[hi],hb.mouth);if(j){results[hi]=j.head;results.push(j.mouth);}}
   /* Oct 22 (designer): hands are drawn on the arms. Arms drawn here carry their hands; the separate hand pieces go */
   if(A.guided&&['guitar','bass'].includes(A.mid))results.forEach(r=>{const k=r.key.split('.')[1];if(k==='arm'||k==='arm2')r.handOn=true;});
   {const mi=results.findIndex(r=>r.key===A.mid+'.mic');A.micPiece=mi>=0?results.splice(mi,1)[0]:null;}   /* Oct 22: the drawn mic, held in the hand (mic-hold.js) */
   const have=new Set(results.map(r=>r.key.split('.')[1]));if(A.guided&&(A.instChoice==='house'||A.instChoice==='keep'))(INST[A.mid]||[]).forEach(k=>have.add(k));if(results.some(r=>r.handOn&&r.key.endsWith('.arm')))have.add('hand');if(results.some(r=>r.handOn&&r.key.endsWith('.arm2')))have.add('grip');
+  /* Nov 15 (designer: "still getting the chin left over" — on Put them together, now that every photo stops there): a picture
+     head's jaw on stage is part of the head being replaced, so it is not carried over as a piece (v2apply then puts our mouth back) */
+  if(A.mid==='vocals'&&have.has('head')&&!have.has('mouth')){const ml=members.find(m=>m.id==='vocals').layers.mouth,hr=results.find(r=>r.key==='vocals.head');if(ml&&ml.jaw&&hr&&!hr.picture)have.add('mouth');}
   const extra=stagePieces(A.mid,have);A.stage=extra;results.push(...extra.results);
   S2.results=results;sel.value='v2_'+A.mid;A.sock=drawn.sock;
   // the cards under the pins hold the tick boxes Use these drawings reads (hidden: the pins view shows the pieces)
@@ -7464,7 +7621,12 @@ function ask(){const {S2,say}=X();if(!S2.img)return;
 /* opt (Oct 22, flow v3, from Make them mine): face = a photo of a face, for the head only; inst = the instrument already
    picked on the card (1, 2, 3 = our designs; 'own' = drawn; 'keep' = leave it as it is) */
 async function start(mid,opt){opt=opt||{};const {S2,say,tick}=X();say(TXT('upload.freeFinding'));await tick();
-  const found=FREEPAPER.find(S2.img),blobs=found.blobs;
+  /* Nov 16 (designer's photos: three of five skirt drawings arrived lying on their side, and none was read): when the page
+     holds one big drawing that is wider than it is tall, the photo is tried turned each way, and the way that reads as a
+     figure standing up is used from here on. */
+  let found=FREEPAPER.find(S2.img);
+  if(!opt.face){const q=lyingFigure(S2.img,found.blobs,mid);if(q){S2.img=rotImg(S2.img,q);found=FREEPAPER.find(S2.img);}}
+  const blobs=found.blobs;
   A={mid,img:S2.img,blobs,assign:FREEPAPER.guess(mid,blobs),look:blobs.map(()=>'drawn'),sel:-1,step:2};
   // a picture, not drawings on paper (designer's cartoon test, Oct 21): what the finder found is mostly painted or photo,
   // so it found bits of the picture (a jacket, buttons), not pieces. Nothing is found then: the user draws round the parts.
@@ -7488,9 +7650,20 @@ async function start(mid,opt){opt=opt||{};const {S2,say,tick}=X();say(TXT('uploa
      page — is cut into head, body, arms and legs from its silhouette (free-paper.js splitFigure); the smaller drawings
      keep their names unless a cut piece takes the name. When the shape doesn't read as a figure nothing changes. */
   if(!A.face&&!A.picture&&A.blobs.length){const area=b=>(b.x1-b.x0)*(b.y1-b.y0);let i=0;A.blobs.forEach((b,n)=>{if(area(b)>area(A.blobs[i]))i=n;});const b=A.blobs[i];
-    if(area(b)>=A.blobs.reduce((t,q)=>t+area(q),0)*.6&&(b.y1-b.y0)>(b.x1-b.x0)*1.3){const ak=Object.keys((SHEETS2[mid]||{}).arms||{}),cut=FREEPAPER.splitFigure(A.img,b,ak);
+    if(area(b)>=A.blobs.reduce((t,q)=>t+area(q),0)*.6&&(b.y1-b.y0)>(b.x1-b.x0)*1.3){const ak=Object.keys((SHEETS2[mid]||{}).arms||{}),cut=FREEPAPER.splitFigure(A.img,b,ak,A.blobs);
+      /* Nov 15: a skirt found on the figure is not one of the player's six pieces — it is kept aside and put on as an overlay
+         once the pieces are on (afterApply → LEGS.own) */
+      if(cut){const si=cut.findIndex(c=>c.key==='skirt');if(si>=0)A.skirt=cut.splice(si,1)[0].blob;}
+      /* Nov 15 (designer's dress photo at full size: "it cuts off the head" — the head came out from the eyes down): hair drawn
+         as its own line, not quite touching the face, is found as a separate drawing sitting on top of the figure. A drawing
+         that sits on the figure's head (over it, reaching down to it, above the neck) is part of the head: the head's cut
+         grows to take it in, and it stops being a drawing of its own. */
+      if(cut){const hc=cut.find(c=>c.key==='head'),Hh=b.y1-b.y0;if(hc){let X0=hc.blob.x0,Y0=hc.blob.y0,X1=hc.blob.x1,any=false;
+          A.blobs.forEach((q,n)=>{if(n===i)return;const ox=Math.min(q.x1,b.x1)-Math.max(q.x0,b.x0);
+            if(ox>=(q.x1-q.x0)*.5&&q.y1>=b.y0-Hh*.03&&q.y0<b.y0+Hh*.1&&(q.y0+q.y1)/2<hc.blob.y1){X0=Math.min(X0,q.x0);Y0=Math.min(Y0,q.y0);X1=Math.max(X1,q.x1);q.eaten=true;any=true;}});
+          if(any){const line=[[X0,Y0],[X1,Y0],[X1,hc.blob.y1],[X0,hc.blob.y1]],nb=FREEPAPER.blobFromLine(A.img,line);nb.drawn=line;hc.blob=nb;}}}
       if(cut){const keys=new Set(cut.map(c=>c.key));A.assign=A.assign.map((k,n)=>n!==i&&keys.has(k)?'':k);
-        A.blobs.splice(i,1,...cut.map(c=>c.blob));A.assign.splice(i,1,...cut.map(c=>c.key));A.look.splice(i,1,...cut.map(c=>lookOf(c.blob)));A.figureCut=true;}}}
+        A.blobs.splice(i,1,...cut.map(c=>c.blob));A.assign.splice(i,1,...cut.map(c=>c.key));A.look.splice(i,1,...cut.map(()=>A.look[i]));{const kp=A.blobs.map((q,n)=>n).filter(n=>!A.blobs[n].eaten);if(kp.length<A.blobs.length){A.look=kp.map(n=>A.look[n]);A.assign=kp.map(n=>A.assign[n]);A.blobs=kp.map(n=>A.blobs[n]);}}A.figureCut=true;   /* (Nov 15: a cut of a drawn figure is drawn too — an arm's cut, mostly bare paper with shading in the photo, was judged a picture and came out as a grey slab: designer-1774/1775) */}}}
   setParts();if(A.face){A.parts=['head'];const ib=$('addInst');if(ib)ib.hidden=true;}
   wire();step(2);
   $('addSnap').checked=!!A.picture;   /* Oct 22: snapping is for pictures; on line drawings it pulled loops in and lost bits of arms */
@@ -7499,10 +7672,14 @@ async function start(mid,opt){opt=opt||{};const {S2,say,tick}=X();say(TXT('uploa
      together (they tap the player there to fix anything; Undo takes the photo back). When some parts are missing, only
      those are asked for. The drummer's logo is optional (not found = the default). */
   if(window.PLAYER&&PLAYER.isOpen()&&!A.face&&!A.picture&&A.blobs.length){const missing=A.parts.filter(k=>k!=='logo'&&!A.assign.includes(k));
-    if(!missing.length){const me=A,n=A.assign.filter(Boolean).length;A.landing=true;
+    if(!missing.length){const me=A,n=A.assign.filter(Boolean).length+(A.skirt?1:0);A.landing=true;   /* (a skirt found on the figure counts as a piece) */
       LAST={mid,parts:A.parts.slice(),assign:A.assign.slice(),centers:A.blobs.map(b=>[Math.round((b.x0+b.x1)/2),Math.round((b.y0+b.y1)/2)])};   /* for the tests: what landed */
       await next();
-      if(A===me&&!$('scanApply').disabled){PLAYER.found(n);$('scanApply').click();return;}}
+      /* Nov 15 (designer: "it should always stop, at least for now as we work out bugs. If we can get it to be seamless I'd say
+         skip"): the photo no longer lands by itself — it stops at Put them together, where the pieces can be moved, turned and
+         sized, and Done puts them on the player. LAND_STRAIGHT brings the old way back when the reading is trusted (the older
+         tests still set it: window.__LAND_STRAIGHT). */
+      if(A===me&&!$('scanApply').disabled){if(window.__LAND_STRAIGHT){PLAYER.found(n);$('scanApply').click();}else if(PLAYER.check)PLAYER.check(n);return;}}
     else{A.parts=A.parts.filter(k=>missing.includes(k)||k==='logo');A.onlyMissing=true;}}
   goPart(0);
   const n=A.blobs.length;say((A.face?TXT('mine.faceAsk'):A.picture?TXT('add.picture'):n?TXT('add.foundG',{n,s:n===1?'':'s'}):TXT('add.none')));}
@@ -7752,32 +7929,39 @@ function close(){if(!P)return;if(P.adj)leaveAdjust(true);if(P.raf)cancelAnimatio
   $('plBox').hidden=true;document.body.classList.remove('pl-open');P=null;
   if(window.MINE)members.forEach(m=>MINE.refreshCard(m.id));}
 const isOpen=()=>!!P;
+/* (Nov 16, for the checks: the last few things this screen did and when — the full kit on GitHub lost a photo here three times
+   and could not say how; PLAYER._log() is printed by the check when a photo never arrives) */
+const LOG=[],plog=m=>{LOG.push(m+' @'+Math.round(performance.now()));if(LOG.length>40)LOG.shift();};
 function hint(t){const h=$('plHint');h.textContent=t||'';h.hidden=!t;}
 function tools(on){$('plTools').hidden=!on;$('plChips').hidden=on;if(!on)$('plTray').hidden=!P||!P.tray;}
-function undoState(){const u=$('wsUndo'),b=$('plUndo');if(b)b.disabled=!u||u.hidden;}
+/* (Nov 16: while the pieces are out, Undo belongs to that screen — it takes back the last move there, never a drawing underneath) */
+function undoState(){const u=$('wsUndo'),b=$('plUndo');if(!b)return;b.disabled=P&&P.adj?!(window.JOINTS&&JOINTS.canUndo&&JOINTS.canUndo()):!u||u.hidden;}
 
 // ---------- adjusting: the pieces view hosted here ----------
 // #scan (the upload / Put them together panel) moves into the screen while it is needed and goes home after
 function hostScan(){const sc=$('scan');if(!sc||sc.parentElement===$('plAdj'))return;P.home={parent:sc.parentElement,next:sc.nextSibling};$('plAdj').appendChild(sc);sc.classList.add('pl');}
 function unhostScan(){const sc=$('scan');if(!sc||!P||!P.home)return;sc.classList.remove('pl','mine');P.home.parent.insertBefore(sc,P.home.next);P.home=null;}
 function watchScan(){clearInterval(P.timer);P.timer=setInterval(()=>{if(!P||!P.adj)return;const sc=$('scan');
-    if(sc.hidden){leaveAdjust(false);return;}   /* Done, Cancel or the photo flow finished (scanner.js hides the panel) */
-    const st=window.ADD&&ADD._state(),three=!!st&&st.step===3;$('plDone').hidden=!three;$('plDone').disabled=$('scanApply').disabled;
+    if(sc.hidden){plog('panel found hidden');leaveAdjust(false);return;}   /* Done, Cancel or the photo flow finished (scanner.js hides the panel) */
+    undoState();const st=window.ADD&&ADD._state(),three=!!st&&st.step===3;$('plDone').hidden=!three;$('plDone').disabled=$('scanApply').disabled;
+    if(three&&P.checkN){hint(TXT('pl.check',{n:P.checkN,s:P.checkN===1?'':'s'}));P.checkN=0;}
     if(st&&st.step===2&&!st.face&&!st.picture&&!P.asked){P.asked=true;hint(TXT(st.onlyMissing?'pl.missing':'add.checkHelp'));}},150);}
-function enterAdjust(){if(!P||P.adj||!window.ADD)return;P.adj=true;if(P.raf){cancelAnimationFrame(P.raf);P.raf=0;}
+function enterAdjust(){if(!P||P.adj||!window.ADD)return;plog('tap: pieces out');P.adj=true;if(P.raf){cancelAnimationFrame(P.raf);P.raf=0;}
   $('plCv').hidden=true;$('plAdj').hidden=false;hostScan();tray(null);tools(true);hint(TXT('pl.adjHint'));
   ADD.arrange(P.mid);watchScan();}
-function leaveAdjust(silent){if(!P)return;clearInterval(P.timer);P.adj=false;P.asked=false;
+function leaveAdjust(silent){if(!P)return;plog('pieces away'+(silent?' (landed)':''));clearInterval(P.timer);P.adj=false;P.asked=false;
   const sc=$('scan');if(sc&&!sc.hidden){sc.hidden=true;if(window.JOINTS)JOINTS.clear();if(window.ADD)ADD.close();}
   unhostScan();$('plAdj').hidden=true;$('plCv').hidden=false;tools(false);if(!silent)hint(TXT('pl.tapHint'));undoState();go();}
 // a photo (or a photo of a face) for this player: the reader runs inside the screen; it lands back here (MINE.done → landed)
-function photo(file,face,inst){if(!P||!file)return;P.adj=true;if(P.raf){cancelAnimationFrame(P.raf);P.raf=0;}
+function photo(file,face,inst){plog('photo '+(file?file.size:'none')+(P?'':' no player'));if(!P||!file)return;P.adj=true;if(P.raf){cancelAnimationFrame(P.raf);P.raf=0;}
   $('plCv').hidden=true;$('plAdj').hidden=false;hostScan();tray(null);tools(true);hint(face?TXT('mine.faceAsk'):TXT('upload.freeFinding'));P.found=0;
-  MINE.photo(P.mid,file,face,inst);watchScan();}
-function landed(mid){if(!P||P.mid!==mid)return;leaveAdjust(true);const n=P.found;P.found=0;
+  MINE.photo(P.mid,file,face,inst);plog('reader started, panel '+($('scan').hidden?'hidden':'shown'));watchScan();}
+function landed(mid){if(!P||P.mid!==mid)return;leaveAdjust(true);const n=P.found;P.found=0;P.checkN=0;
   hint(n?TXT('pl.found',{n,s:n===1?'':'s'}):TXT('mine.on',{name:Cap(MINE.role(mid))}));undoState();   /* stage 2: straight from the photo — say how many pieces, invite a fix */
   clearTimeout(landed.t);landed.t=setTimeout(()=>{if(P&&P.mid===mid&&!P.adj)hint(TXT('pl.tapHint'));},n?12000:6000);}   /* (Nov 9: not over the adjusting hint) */
-const found=n=>{if(P)P.found=n;};   /* add-drawings.js: the photo's pieces are all named and are going straight on */
+const found=n=>{if(P)P.found=n;};
+/* Nov 15: the photo's pieces are all named and wait on Put them together for a look (and Done) before they go on */
+const check=n=>{if(!P)return;P.asked=true;P.checkN=n;};   /* add-drawings.js: the photo's pieces are all named and are going straight on */
 
 // ---------- the chips and their trays ----------
 function tray(which){if(!P)return;const box=$('plTray');P.tray=which;document.querySelectorAll('#plChips button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.tray===which)));
@@ -7810,7 +7994,7 @@ function tray(which){if(!P)return;const box=$('plTray');P.tray=which;document.qu
 // ---------- wiring ----------
 function wire(){const box=$('plBox');if(!box)return;
   $('plBack').onclick=close;
-  $('plUndo').onclick=()=>{const u=$('wsUndo');if(u&&!u.hidden)u.click();hint(TXT('mine.undone'));undoState();};
+  $('plUndo').onclick=()=>{if(P&&P.adj){if(window.JOINTS&&JOINTS.undo&&JOINTS.undo())hint(TXT('pl.moveUndone'));undoState();return;}const u=$('wsUndo');if(u&&!u.hidden)u.click();hint(TXT('mine.undone'));undoState();};
   $('plCv').addEventListener('pointerdown',e=>{e.preventDefault();enterAdjust();});
   $('plDone').onclick=()=>{const st=window.JOINTS&&JOINTS._state(),ad=window.ADD&&ADD._state(),moved=!!st&&(st.moved.size>0||Object.values(st.rot).some(Boolean)||Object.values(st.size).some(z=>z!==1));
     if(ad&&ad.arrange&&!moved){leaveAdjust(false);return;}   /* adjusting and nothing moved: back to the show as they were (the apply would only say so); a photo's pieces always go on */
@@ -7823,7 +8007,7 @@ function wire(){const box=$('plBox');if(!box)return;
   const u=$('wsUndo');if(u&&window.MutationObserver)new MutationObserver(undoState).observe(u,{attributes:true,attributeFilter:['hidden']});
   if(window.UIART&&UIART.mapDress)UIART.mapDress(box);}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire);else wire();
-return {open,close,isOpen,landed,found,current:()=>P&&P.mid,_state:()=>P};
+return {_log:()=>LOG.slice(),open,close,isOpen,landed,found,check,current:()=>P&&P.mid,_state:()=>P};
 })();
 /* Nov 9 (designer): THE HEADS SHELF. The five built-in heads (the default singer, guitarist, bassist, drummer and keys player)
    are a shelf anyone can pick from, for any player — a row of heads in the Drawing tray on the player screen. Tap one and it
@@ -7900,8 +8084,9 @@ window.LEGS=(function(){
     return {key:mid+'.'+k,cv,url:null,box:[mid+'.'+k,hip[0]-w/2,hip[1],w,h],ink:1,empty:false,stage:false};}
   /* the skirt layer for this frame (made, updated or removed to match what is saved) */
   const IM={};
-  function ensure(m){const st=worn(m.id),L=m.layers;if(!st||st.set!=='skirt'||!A().skirt){if(L.skirt)delete L.skirt;return null;}
-    if(!L.skirt){const u=A().skirt.skirt;if(!IM[u]){IM[u]=new Image();IM[u].src=u;}L.skirt={img:IM[u],x:0,y:0,s:1,a:0};}
+  function ensure(m){const st=worn(m.id),L=m.layers;if(!st||!(st.set==='own'||(st.set==='skirt'&&A().skirt))){if(L.skirt)delete L.skirt;return null;}
+    const u=st.set==='own'?artURL(S.art[m.id+'.skirt']):A().skirt.skirt;if(!u){if(L.skirt)delete L.skirt;return null;}
+    if(!IM[u]){IM[u]=new Image();IM[u].src=u;}if(!L.skirt)L.skirt={img:IM[u],x:0,y:0,s:1,a:0};L.skirt.img=IM[u];
     L.skirt.x=st.x||0;L.skirt.y=st.y||0;L.skirt.s=st.s||1;return L.skirt;}
   /* put a set on a player */
   async function put(mid,name){const m=members.find(q=>q.id===mid),set=A()[name];if(!m||!set||!can(mid)||!window.V2APPLY)return false;
@@ -7911,12 +8096,35 @@ window.LEGS=(function(){
     if(iS){/* the skirt: its waist centred between the two hips, a little above them; its size from the player's own scale */
       const L=m.layers,k=window.PLAYERK?PLAYERK(mid):.2,hx=(SLOTS.legL[1]+L.legL.x+SLOTS.legR[1]+L.legR.x)/2,hy=(SLOTS.legL[2]+L.legL.y+SLOTS.legR[2]+L.legR.y)/2;
       st.s=Math.max(iS.width,iS.height)/R*k;st.x=hx-SLOTS.skirt[1];st.y=hy-3-SLOTS.skirt[2];}
-    S.legs=S.legs||{};S.legs[mid]=st;ensure(m);
+    delete S.art[mid+'.skirt'];S.legs=S.legs||{};S.legs[mid]=st;ensure(m);
     if(window.JOINTS)JOINTS.clear();save();if(window.MINE)MINE.refreshCard(mid);
     if(window.wsNote)wsNote(TXT('legs.put',{player:SHEETMAKER.names[mid]}),before,mid);
     return true;}
-  function clear(mid){if(S.legs&&S.legs[mid]){delete S.legs[mid];const m=members.find(q=>q.id===mid);if(m)ensure(m);}}
-  return {list,current,put,clear,ensure,can,bare,thumb:n=>A()[n]&&A()[n].thumb};
+  function clear(mid){delete S.art[mid+'.skirt'];if(S.legs&&S.legs[mid]){delete S.legs[mid];const m=members.find(q=>q.id===mid);if(m)ensure(m);}}
+  /* Nov 15 (designer: a skirt on the shelf "points the user to that being an option for them too, but is it??" — now it is):
+     THE USER'S OWN SKIRT. A whole figure drawn with a skirt is cut by free-paper.js splitFigure into the six pieces plus the
+     skirt; add-drawings.js keeps the skirt aside and calls this once the pieces are on. The skirt is cut out like any piece and
+     worn as the same overlay as the shelf skirt (its picture is saved with the band as S.art[mid+'.skirt']). The legs were drawn
+     from the hem down, so they hang that much lower than the hips, where the app pins a leg. */
+  /* (Nov 15, later: the legs are no longer moved here — add-drawings.js moves them on the sheet before they are applied, so the
+     hips stay put; `down` is that move in sheet points) */
+  function own(mid,blob,img,blobs,assign,down){const m=members.find(q=>q.id===mid);if(!m||!can(mid)||!window.FREEPAPER||!FREEPAPER.skirtPiece)return false;
+    const sk=FREEPAPER.skirtPiece(mid,blobs,assign,blob),k=window.PLAYERK?PLAYERK(mid):.2,L=m.layers,drop=(down!=null?down:sk.h*.94)*k;
+    S.art[mid+'.skirt']=sk.url;save();   /* (saving files the picture with the band's other drawings and leaves its reference here) */
+    const hx=(SLOTS.legL[1]+L.legL.x+SLOTS.legR[1]+L.legR.x)/2,hy=(SLOTS.legL[2]+L.legL.y+SLOTS.legR[2]+L.legR.y)/2;   /* (the legs hang at the hips; their pictures start lower) */
+    S.legs=S.legs||{};S.legs[mid]={set:'own',bare:1,art:[S.art[mid+'.legL'],S.art[mid+'.legR']],   /* bare: legs under a skirt are legs, not trousers — no outfit colour on them, as under the shelf skirt */s:Math.max(sk.cv.width,sk.cv.height)/R*k,x:hx-SLOTS.skirt[1],y:hy-sk.m*k-SLOTS.skirt[2]};
+    ensure(m);save();if(window.MINE)MINE.refreshCard(mid);return true;}
+  /* Nov 15 (designer: after Undo the dress was gone and the feet were left hanging): Undo puts the skirt back as it was before the
+     photo. `undoEntry` is the skirt's line in an Undo list (taken BEFORE the new drawings go in); the handlers below put it back. */
+  /* Nov 16 (designer's recording: "dress disappeared again after moving legs"): moving, turning or sizing a leg on the adjust
+     screen makes that leg's picture again, so the set no longer matched the legs it had put on and counted as taken off — the
+     skirt went. The legs are still that set's legs: after an adjust, the set is pointed at the pictures they are now. */
+  function keep(mid){const st=S.legs&&S.legs[mid],m=members.find(q=>q.id===mid);if(!st||!m)return;if(st.art)st.art=[S.art[mid+'.legL'],S.art[mid+'.legR']];ensure(m);save();}
+  function undoEntry(mid,hold){const st=S.legs&&S.legs[mid],u=S.art[mid+'.skirt'];return [mid+'.skirt',u?(hold?hold(u):u):null,st?Object.assign({},st):{none:1}];}
+  if(typeof ARTSET!=='undefined'&&typeof members!=='undefined')for(const m of members){const k=m.id+'.skirt';
+    ARTSET[k]=u=>{S.art[k]=u;};ARTCLEAR[k]=()=>{delete S.art[k];};
+    ADJSET[k]=a=>{S.legs=S.legs||{};if(!a||a.none)delete S.legs[m.id];else{S.legs[m.id]=Object.assign({},a,{art:[S.art[m.id+'.legL'],S.art[m.id+'.legR']]});}ensure(m);};}
+  return {list,current,put,clear,ensure,can,bare,own,keep,undoEntry,thumb:n=>A()[n]&&A()[n].thumb};
 })();
 /* Nov 14 (designer's experiment): THE ARMS SHELF — three pairs of arms he drew (bare, short sleeves, long sleeves) as a row in
    the Drawing tray, next to the heads and legs. Any pair on any player (the drummer too, since Nov 15).
