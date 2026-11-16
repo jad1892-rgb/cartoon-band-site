@@ -7919,19 +7919,20 @@ window.LEGS=(function(){
   return {list,current,put,clear,ensure,can,bare,thumb:n=>A()[n]&&A()[n].thumb};
 })();
 /* Nov 14 (designer's experiment): THE ARMS SHELF — three pairs of arms he drew (bare, short sleeves, long sleeves) as a row in
-   the Drawing tray, next to the heads and legs. Any pair on any player.
+   the Drawing tray, next to the heads and legs. Any pair on any player (the drummer too, since Nov 15).
 
    Every player's sheet says where each of their two arms hangs: from a shoulder dot (S) to a wrist dot (W) — SHEETS2[mid].arms.
    A shelf arm is a picture standing upright (shoulder top middle, hand at the bottom); it is laid along that player's own
    shoulder-to-wrist line, sized so its hand starts where the sheet expects (the arm's `h` share of its length), and sent through
    V2APPLY as if it had been drawn in that arm's box — so the app finds the hand and fits the arm to the instrument exactly as
-   it does for a photographed arm (the hands rule is the app's job, not the drawing's). The left picture goes on the arm whose
+   it does for a photographed arm (the hands rule is the app's job, not the drawing's). The drummer's arms then hold our sticks.
+   The left picture goes on the arm whose
    shoulder is on the left of the page. State: S.arms[mid] = {set, art:[…]} — worn only while the arms are the ones it put on. */
 window.ARMSHELF=(function(){
   const NAMES=['bare','short','long'],R=2.5;
   const A=()=>window.ARMSART||{};
   const spec=mid=>typeof SHEETS2!=='undefined'&&SHEETS2[mid]&&SHEETS2[mid].arms;
-  const can=mid=>{const a=spec(mid);return mid!=='drums'&&!!a&&Object.keys(a).length===2;};   /* not the drummer yet: their arms hold the sticks, and a shelf arm has a hand and no stick */
+  const can=mid=>{const a=spec(mid);return !!a&&Object.keys(a).length===2;};   /* not the drummer yet: their arms hold the sticks, and a shelf arm has a hand and no stick */
   const list=()=>NAMES.filter(n=>A()[n]);
   const worn=mid=>{const st=S.arms&&S.arms[mid],a=spec(mid);if(!st||!a)return null;return Object.keys(a).every((k,i)=>S.art[mid+'.'+k]===st.art[i])?st:null;};
   const current=mid=>{const st=worn(mid);return st?st.set:null;};
@@ -7946,6 +7947,10 @@ window.ARMSHELF=(function(){
   async function put(mid,name){const m=members.find(q=>q.id===mid),set=A()[name],a=spec(mid);if(!m||!set||!can(mid)||!window.V2APPLY)return false;
     const keys=Object.keys(a).sort((p,q)=>a[p].S[0]-a[q].S[0]);let iL,iR;try{iL=await load(set.L);iR=await load(set.R);}catch(e){return false;}
     let before;try{before=V2APPLY([piece(mid,keys[0],iL,a[keys[0]]),piece(mid,keys[1],iR,a[keys[1]])]);}catch(e){console.error('arms',e);return false;}
+    /* Nov 15 (designer: "why can't the drummer have the same arms as the others?"): the drummer's new arms hold our sticks, exactly
+       as arms drawn for them on plain paper do (add-drawings afterApply, Oct 23) — without this the app took the arm for an arm
+       drawn WITH a stick, stretched it to reach the hi-hat and left the hand empty in the air */
+    if(mid==='drums')for(const k of keys){const ly=m.layers[k];if(ly&&ADJSET['drums.'+k])ADJSET['drums.'+k](Object.assign({},adjOf(ly),{stick:1,s:Math.min(ly.s,1.15)}));}
     S.arms=S.arms||{};S.arms[mid]={set:name,art:Object.keys(a).map(k=>S.art[mid+'.'+k])};
     if(window.JOINTS)JOINTS.clear();save();if(window.MINE)MINE.refreshCard(mid);
     if(window.wsNote)wsNote(TXT('arms.put',{player:SHEETMAKER.names[mid]}),before,mid);
