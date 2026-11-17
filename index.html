@@ -1342,11 +1342,11 @@ window.OPT=(function(){
                   // afterRec (C), scanBeats + soundSync=auto, and moves + director + bars (Beat 1 moves) + moodLights (Nov 3, the designer tried jazz and classical too) were signed off and are now normal behaviour. Add new ones here as ['key','Label','tip'] (a tick box) or
                   // ['key','Label','tip',[['value','Choice label'],...]] (a choice; the first is the normal behaviour); dropped ones are deleted.
     ['stillBand','Still band (no stage moves)','Nov 3: switches OFF the stage moves and the Director (normal behaviour since Nov 3) to compare with the band that only bobs in place. Beat 1 lean and mood lights stay on'],
-    ['singerStyle','Singer style','Nov 7: how the singer carries themself. Pop singer = the choreography as it is. Hip hop = no jumps or twists (a sway instead), a nod on beat 1, and while they are clearly singing the free hand comes up and swings side to side with the beat. Hip hop + syllables = the same, plus the hand flicks on each vocal pulse (syllable) while they are clearly singing. Later a choice next to each player on Edit band',[['pop','Pop singer (normal)'],['hiphop','Hip hop'],['hiphop2','Hip hop + syllables']]],
-    ['guitarStyle','Guitar style','Nov 7: Rock = the choreography as it is. Indie = no Director moves at all; a shuffle instead — beats 1 and 2 the whole body bobs to the left, 3 and 4 to the right; the head shakes side to side between the bobs; the guitar is lifted head-up on beat 4 every second bar while playing; a double turn (a full 360) on the drop; staccato strumming. Later a choice next to each player on Edit band',[['rock','Rock (normal)'],['indie','Indie']]],
-    ['bassStyle','Bass style','Nov 8: Rock = the choreography as it is. Dub = very still: no hops, jumps, twists or windmill; a deep slow sway, a head nod on 2 and 4 (against the drummer), and the ripple as the signature on the drop and the 16-bar pulse',[['rock','Rock (normal)'],['dub','Dub']]],
-    ['keysStyle','Keys style','Nov 8: Showman = the choreography as it is. Synth-pop robot = moves in steps with hard stops: the head turns in clicks on the beat, and in busy keys spells (1 bar in 16 otherwise) steps barely off the neck — up, left, right, down on beats 1 to 4; on the drop, the 16-bar pulse and when the keys come in, the ROBOT arms — forearms turning in depth about a flat elbow, half a turn a beat, two bars',[['showman','Showman (normal)'],['robot','Synth-pop robot']]],
-    ['drumsStyle','Drums style','Nov 8: Rock = the choreography as it is (a hard nod on beat 3). Metal = a headbang on every beat at full force, and the sticks thrown up overhead for a beat on the drop and after a fill',[['rock','Rock (normal)'],['metal','Metal']]],
+    ['singerStyle','Singer style','Nov 16 (designer): named like characters, and the alternates are now the normal ones. Paper Maker = Hip hop, Pop-Up = Pop singer. Nov 7: how the singer carries themself. Pop singer = the choreography as it is. Hip hop = no jumps or twists (a sway instead), a nod on beat 1, and while they are clearly singing the free hand comes up and swings side to side with the beat. Hip hop + syllables = the same, plus the hand flicks on each vocal pulse (syllable) while they are clearly singing. Later a choice next to each player on Edit band',[['hiphop','Paper Maker (normal)'],['pop','Pop-Up'],['hiphop2','Paper Maker + syllables']]],
+    ['guitarStyle','Guitar style','Nov 16 (designer): named like characters, and the alternates are now the normal ones. Zine = Indie, Shredder = Rock. Nov 7: Rock = the choreography as it is. Indie = no Director moves at all; a shuffle instead — beats 1 and 2 the whole body bobs to the left, 3 and 4 to the right; the head shakes side to side between the bobs; the guitar is lifted head-up on beat 4 every second bar while playing; a double turn (a full 360) on the drop; staccato strumming. Later a choice next to each player on Edit band',[['indie','Zine (normal)'],['rock','Shredder']]],
+    ['bassStyle','Bass style','Nov 16 (designer): named like characters, and the alternates are now the normal ones. CC = Dub, Paperweight = Rock. Nov 8: Rock = the choreography as it is. Dub = very still: no hops, jumps, twists or windmill; a deep slow sway, a head nod on 2 and 4 (against the drummer), and the ripple as the signature on the drop and the 16-bar pulse',[['dub','CC (normal)'],['rock','Paperweight']]],
+    ['keysStyle','Keys style','Nov 16 (designer): named like characters, and the alternates are now the normal ones. A1 = Synth-pop robot, Tabloid = Showman. Nov 8: Showman = the choreography as it is. Synth-pop robot = moves in steps with hard stops: the head turns in clicks on the beat, and in busy keys spells (1 bar in 16 otherwise) steps barely off the neck — up, left, right, down on beats 1 to 4; on the drop, the 16-bar pulse and when the keys come in, the ROBOT arms — forearms turning in depth about a flat elbow, half a turn a beat, two bars',[['robot','A1 (normal)'],['showman','Tabloid']]],
+    ['drumsStyle','Drums style','Nov 16 (designer): named like characters, and the alternates are now the normal ones. Slug = Metal, Beater = Rock. Nov 8: Rock = the choreography as it is (a hard nod on beat 3). Metal = a headbang on every beat at full force, and the sticks thrown up overhead for a beat on the drop and after a fill',[['metal','Slug (normal)'],['rock','Beater']]],
     ['soundSync','Sound sync','Oct 27: phones play a song ~0.1-0.2 s after the band hears it, so the band moves slightly early. This holds the band back so it moves to what you hear: the phone\'s own figure, or a fixed amount (more for Bluetooth headphones). Song files only',[['auto','Phone\'s own figure (normal since Nov 3)'],['off','Off'],['150','0.15 s'],['250','0.25 s (Bluetooth)']]],
   ];
   let v={};try{v=JSON.parse(localStorage.getItem('bandOpt')||'{}')||{};}catch(e){}
@@ -3002,9 +3002,11 @@ window.MOVES=(function(){
     // sways side to side on the spot (a paper puppet rocked on its feet)
     sway:[2.4,null,(mv,u,o,e)=>{const a=Math.min(1,u/.2,(1-u)/.2);mv.tilt+=Math.sin(e*Math.PI*2*(o.rate||.8))*(o.amount||.1)*a;}],
   };
+  /* Nov 16 (designer: "B is best"): a style that keeps to its own routine (Zine, CC, A1) still takes part in the moments the whole
+     band shares — the Director marks those moves big (the front line routine, the jump at the song's end) */
   function go(id,name0,o0){if(!SPEC[name0])return;
     const who=id==='all'?members:members.filter(m=>m.id===id);
-    for(const m of who){if(trait(m.id,'none')&&!(trait(m.id,'only')||{})[name0])continue;   // Nov 7: a style with no moves at all but its own few (indie guitar: the shuffle is the act, plus neckup)
+    for(const m of who){if(trait(m.id,'none')&&!(trait(m.id,'only')||{})[name0]&&!(o0&&o0.big))continue;   // Nov 7: a style with no moves at all but its own few (indie guitar: the shuffle is the act, plus neckup)
       const mv=mvOf(m),name=swap(m.id,name0),sp=SPEC[name],o=Object.assign({},o0||{});   // Nov 7: the player's style may do another move instead (a swapped-in nod is a gentle one)
       if(name!==name0){if(name==='nod')o.amt=.6;if(name==='sway'){o.rate=o.rate||.8;o.amount=o.amount||.1;delete o.height;delete o.dur;}}if(name==='wave')delete o.dur;   /* a plain wave keeps its own length (the Director passes a bar for the arm wave it may become) */
       if(o.delay)o._wait=o.delay;   // seconds to wait before it starts
@@ -3025,7 +3027,7 @@ window.MOVES=(function(){
     dub:{swap:{},none:true,only:{ripple:1},dubGroove:1},
     showman:{swap:{}},robot:{swap:{},none:true,only:{robot:1,headbox:1},robotHead:1},
     metal:{swap:{},headbang:1}};   // Nov 8 (designer): drums option 2, Metal — headbang every beat, sticks up overhead on the drop / after a fill; keeps the rest of the drummer's choreography   // Nov 8 (designer): keys option 2, the synth-pop ROBOT — stepped moves with hard stops; the head lifts off the body and travels at right angles, classic robot arms   // Nov 8 (designer): bass option 2, Dub — very still; a deep slow sway and a nod on 2 and 4 (mannerism), the ripple as the signature   // Nov 7 (designer, second go): guitar option 2, Indie — no Director moves except its own (neckup: the guitar's head lifted, beat 4 every 2 bars while playing); a shuffle (beats 1-2 the whole body bobs left, 3-4 right, the leg on that side stepping out first), the head shakes between bobs, staccato strumming
-  const STYLE_OPT={vocals:['singerStyle','pop'],guitar:['guitarStyle','rock'],bass:['bassStyle','rock'],keys:['keysStyle','showman'],drums:['drumsStyle','rock']};   // which try-out option holds each player's style, and the normal one
+  const STYLE_OPT={vocals:['singerStyle','hiphop'],guitar:['guitarStyle','indie'],bass:['bassStyle','dub'],keys:['keysStyle','robot'],drums:['drumsStyle','metal']};   /* Nov 16 (designer): the alternates are the normal ones now (Paper Maker, Zine, CC, A1, Slug) — "the most distinct characters" */   // which try-out option holds each player's style, and the normal one
   const style=id=>{const so=STYLE_OPT[id];if(!so)return 'pop';const v=window.OPT&&OPT.val(so[0]);return v&&STYLES[v]?v:so[1];};
   const is=(id,st)=>{let k=style(id);while(k){if(k===st)return true;k=STYLES[k].base;}return false;};   // this style, or one built on it
   const trait=(id,f)=>{let k=style(id);while(k){if(STYLES[k][f]!=null)return STYLES[k][f];k=STYLES[k].base;}return null;};
@@ -3097,7 +3099,7 @@ window.MOVES=(function(){
   const away=id=>{const m=members.find(q=>q.id===id);return m&&m.mv?Math.hypot(m.mv.dx,m.mv.dy):0;};
   const sliding=id=>list.some(a=>a.m.id===id&&(a.name==='hop'||a.name==='step'));
   function home(id,per){const m=members.find(q=>q.id===id);if(!m||!m.mv||sliding(id))return false;if(away(id)<.02){m.mv.dx=0;m.mv.dy=0;return false;}
-    go(id,'hop',{dx:-m.mv.dx,dy:-m.mv.dy,per:per||.36});return true;}
+    go(id,'hop',{dx:-m.mv.dx,dy:-m.mv.dy,per:per||.36,big:1});return true;}   /* Nov 16 (code review): the hop home is marked big, so a style with its own routine (Zine, CC, A1) is never left off its spot after joining the front line routine */
   // let one player go: his moves stop and his slide is forgotten (the stage folds it into his spot when he is dragged)
   function release(id){for(let i=list.length-1;i>=0;i--)if(list[i].m.id===id)list.splice(i,1);const m=members.find(q=>q.id===id);if(m&&m.mv){m.mv.dx=0;m.mv.dy=0;}}
   function reset(){list.length=0;for(const m of members)m.mv={dx:0,dy:0,face:1};}
@@ -3224,7 +3226,8 @@ window.DIRECTOR=(function(){
     const what=l.vary?l.vary[Math.min(l.vary.length-1,Math.floor(rnd()*l.vary.length))]:(odd&&l.alt?l.alt:l.what);   // vary: one of several, picked at random (Nov 2 evening: was by bar count — "samey")
     for(const [mv,o0] of what){let o=Object.assign({},o0);   // (Nov 7: a move the player's style won't do is swapped for its stand-in in MOVES.go, per player, so 'all' lines work too)
       if((mv==='hop'||mv==='step')&&!(RULES[when]||{}).owns&&owned(l.who)){continue;}   // owned by the routine: this slide is dropped
-      const must=(RULES[when]||{}).owns||when==='end';let name=mv;if(!must&&rnd()>=Math.min(1,(1.6-(COST[mv]||.5))*(.5+D.energy)*grooveK(D.groove)))continue;   // the move's own dice (cost × energy × groove)
+      const must=(RULES[when]||{}).owns||when==='end';let name=mv;if(must)o.big=1;   /* Nov 16: a moment the whole band shares (moves.js go: even a style with its own routine joins in) */
+      if(!must&&rnd()>=Math.min(1,(1.6-(COST[mv]||.5))*(.5+D.energy)*grooveK(D.groove)))continue;   // the move's own dice (cost × energy × groove)
       /* the leap gradient (designer, Nov 2 late): on a calm song a jump or a side hop is a slow sway instead (left to right over
          two beats); as the energy rises the hops grow from a shuffle to a real leap */
       if(!must&&(name==='jump'||(name==='hop'&&o.dx))&&D.energy<CALM){name='sway';o={beat:o.beat||0,rate:1/(4*P),amount:.1,dur:4*P};}
@@ -4312,13 +4315,22 @@ function floorLines(order){const fl={};let row=[];
   for(const m of order){if(row.length&&Q(m.id).y-Q(row[0].id).y>=.03)close();row.push(m);}close();return fl;}
 /* Nov 2: a player drawn in paper strips, each turned a different amount about his middle (the twist). The player is drawn
    once onto a scratch canvas (at the stage's own sharpness), then copied over in strips. */
-let STRIPCV=null;
-function drawStrips(m,t,k,st){const s=k*dpr,MX=70,MY=80,Wp=300,Hp=260,c=STRIPCV||(STRIPCV=document.createElement('canvas'));
+let STRIPCV=null,STRIPCV2=null;
+function drawStrips(m,t,k,st){const s=k*dpr,MX=70,MY=80,Wp=300,Hp=260,c=STRIPCV||(STRIPCV=document.createElement('canvas')),stage=x;
   /* Nov 2 (designer: the twist "a little janky"): strips about 2.5 screen pixels tall (at most 160 of them), so the curve is smooth
      instead of stepped; a few hundred tiny copies a frame, only while a twist runs */
   const N=Math.min(160,Math.max(16,Math.ceil(Hp*s/2.5)));
   const cw=Math.ceil(Wp*s),ch=Math.ceil(Hp*s);if(c.width!==cw||c.height!==ch){c.width=cw;c.height=ch;}const g=c.getContext('2d');g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,cw,ch);
   g.setTransform(s,0,0,s,MX*s,MY*s);drawLayers(g,m,t);
+  /* Nov 16 (speed; found when CC and Zine became the normal styles): a player who is leaning or swaying (the dub sway, the indie
+     shuffle) had every one of his strips copied onto the stage at a slant, and a slanted copy costs the browser far more than a
+     straight one — a paper-flex move on a tilted player took about three times as long (on a slow phone a whole bar of the ripple
+     at half speed). Now the strips of a tilted player are put together STRAIGHT on a second scratch canvas, and that one finished
+     picture is copied onto the stage at the slant. A player standing straight is drawn as before. out = where the strips go. */
+  const T=stage.getTransform(),slant=Math.abs(T.b)>1e-4||Math.abs(T.c)>1e-4;let out=stage;
+  if(slant){const c2=STRIPCV2||(STRIPCV2=document.createElement('canvas'));if(c2.width!==cw||c2.height!==ch){c2.width=cw;c2.height=ch;}
+    out=c2.getContext('2d');out.setTransform(1,0,0,1,0,0);out.clearRect(0,0,cw,ch);out.setTransform(s,0,0,s,MX*s,MY*s);}
+  const done=()=>{if(slant)stage.drawImage(STRIPCV2,0,0,cw,ch,-MX,-MY,Wp,Hp);};
   /* Nov 7 (moves.js ripple; designer: "a ripple across the other plane, keeping the figure as a 2D piece of paper"): the paper
      flexes toward and away from the viewer as a hump travels up it. Seen from the front that is foreshortening: a strip on the
      hump's slope is tilted, so it is drawn shorter (by the cosine of its tilt) and the strips above it stack down onto it; the
@@ -4331,10 +4343,10 @@ function drawStrips(m,t,k,st){const s=k*dpr,MX=70,MY=80,Wp=300,Hp=260,c=STRIPCV|
     for(let j=0;j<=24;j++){const y=j/24*Hp-MY,t=tiltAt(y),sh=Math.sin(Math.abs(t));gr.addColorStop(j/24,y<st.c?`rgba(0,0,0,${(.28*sh).toFixed(3)})`:`rgba(255,255,255,${(.14*sh).toFixed(3)})`);}
     g.fillStyle=gr;g.fillRect(0,0,cw,ch);g.globalCompositeOperation='source-over';
     let cur=Hp-MY;for(let i=NR-1;i>=0;i--){const y0=i*Hp/NR,yc=y0+Hp/(2*NR)-MY,k=Math.cos(tiltAt(yc)),hh=Hp/NR*k;
-      x.drawImage(c,0,y0*s,cw,Hp/NR*s,-MX,cur-hh,Wp,hh+.4/s);cur-=hh;}return;}
-  for(let i=0;i<N;i++){const y0=i*Hp/N,yc=y0+Hp/(2*N)-MY;x.save();
-    {const th=st.ph-yc*st.freq*Math.PI*2;x.translate(80,0);x.scale(1-st.amp*(1-Math.cos(th)),1);x.translate(-80,0);}
-    x.drawImage(c,0,y0*s,cw,Hp/N*s,-MX,y0-MY,Wp,Hp/N+.4/s);x.restore();}}
+      out.drawImage(c,0,y0*s,cw,Hp/NR*s,-MX,cur-hh,Wp,hh+.4/s);cur-=hh;}done();return;}
+  for(let i=0;i<N;i++){const y0=i*Hp/N,yc=y0+Hp/(2*N)-MY;out.save();
+    {const th=st.ph-yc*st.freq*Math.PI*2;out.translate(80,0);out.scale(1-st.amp*(1-Math.cos(th)),1);out.translate(-80,0);}
+    out.drawImage(c,0,y0*s,cw,Hp/N*s,-MX,y0-MY,Wp,Hp/N+.4/s);out.restore();}done();}
 /* PATCH07: the shadow: soft, straight under the feet, as wide as the feet (or the drummer's bass drum) plus a margin, same for everyone */
 function shadow(cx,fy,k,w){const rx=Math.max(42,Math.min(72,w/2+20))*k,ry=rx*.17;
   const g=x.createRadialGradient(0,0,0,0,0,rx);g.addColorStop(0,'rgba(0,0,0,.6)');g.addColorStop(.6,'rgba(0,0,0,.42)');g.addColorStop(1,'rgba(0,0,0,0)');
@@ -5127,7 +5139,7 @@ window.HOWTO=(function(){const box=document.getElementById('howBox'),card=box.qu
   const BTN=[   // [label, what it does]  (Nov 2, after the designer's try: bow, flutter, hands up and the Mexican wave dropped)
     ['Hop ←',()=>go('hop',{dx:-.18})],['Hop →',()=>go('hop',{dx:.18})],['Hop forward',()=>go('step',{dy:.14})],['Hop back',()=>go('step',{dy:-.14})],
     ['Jump',()=>go('jump')],['Turn round',()=>go('turn')],['Windmill',()=>go('mill')],['Keys point',()=>go('point')],['Drum nod',()=>go('nod')],['Singer wave',()=>go('wave')],['Arm wave',()=>go('armwave',{dur:4*(window.DIRECTOR&&DIRECTOR.state.P||.5)})],['Ripple',()=>go('ripple',{dur:4*(window.DIRECTOR&&DIRECTOR.state.P||.5)})],['Everyone\'s own',()=>MOVES.showOff()],['Sway',()=>go('sway')],['Twist',()=>go('twist')],['Back to places',()=>MOVES.reset()]];
-  const go=(name,o)=>MOVES.go(who.value,name,o);
+  const go=(name,o)=>MOVES.go(who.value,name,Object.assign({big:1},o));   /* Nov 16: the designer's buttons work on every style (the normal styles Zine, CC and A1 refuse moves that are not theirs unless marked big) */
   for(const [label,fn] of BTN){const b=document.createElement('button');b.textContent=label;b.onclick=fn;box.append(b);}
   /* Nov 2: the Director's readout (bar, beat, who leads, next drop) and its last few calls, on the same panel */
   const sep=document.createElement('span');sep.className='sep';const ro=document.createElement('span');ro.id='mvRead';ro.style.cssText='opacity:.85;white-space:pre-line;font-size:11px';box.append(sep,ro);
