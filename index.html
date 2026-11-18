@@ -122,6 +122,8 @@ body:not(.dev) .pv.empty{display:none}
    page while it starts, but its words only fade in if starting takes more than 2.5 s (e.g. a preview that can't run the
    band); an error shows at once. */
 #bootMsg>*{opacity:0;animation:bootIn .4s ease-out 2.5s forwards}#bootMsg.err>*{animation:none;opacity:1}
+/* Nov 17: the advice about a preview that can't play the band waits half a minute (a slow download is not a broken page); gone when a real error is shown */
+#bootMsg>.late{opacity:0;animation-delay:30s}#bootMsg.err>.late{display:none}
 @keyframes bootIn{to{opacity:1}}
 /* Oct 7: with Save my band / Open my band added, the menu was taller than a sideways phone. On short screens the card is
    wider so the small buttons sit two to a row, and the gaps and big buttons are a little tighter. */
@@ -682,7 +684,10 @@ button.alt:not(.ui-f).ui-w::after,button.alt:not(.ui-f) .ui-w::after,button.alt:
 #songBox .ui-f{--ew:16px!important;padding-left:6px;padding-right:6px}
 </style></head><body>
 <div id="bandCurtain" aria-live="polite"><span></span></div><script>try{var n=sessionStorage.getItem("bandOpening");if(n)document.querySelector("#bandCurtain span").textContent="Opening "+n+"…"}catch(e){}</script>
-<div id="bootMsg"><b>Starting the band…</b><small>If this stays on screen, you are looking at a preview that can't play the band. Open the file in Safari or Chrome instead (on iPhone: Share → Open in Safari, or save it to Files and open it from there).</small></div>
+<!-- Nov 17 (designer saw this for minutes on a slow download and took the site for broken): while the page is still arriving it only
+     says it is loading. The advice about a preview that can't play the band comes in after half a minute (class late, base.css) —
+     or straight away where scripts are switched off, which is what such a preview is. -->
+<div id="bootMsg"><b>Loading the band…</b><small>The first load can take a little while on a slow connection.</small><small class="late">Still nothing? You may be looking at a preview that can't play the band. Open it in Safari or Chrome instead (on iPhone: Share → Open in Safari, or save it to Files and open it from there).</small><noscript><style>#bootMsg .late{animation-delay:2.5s}</style></noscript></div>
 <div id="ws">
 <div class="wshead"><h1 data-t="edit.title">Edit band</h1><span class="wsr"><button id="show" data-t="edit.backToShow">▶ Back to the show</button></span></div>
 <div class="bar devonly" id="devBar">
